@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1083089753833",
+    "project_id": "ddfilms",
+    "storage_bucket": "ddfilms.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083089753833:android:7315665c83b9be242dc278",
+        "android_client_info": {
+          "package_name": "com.merino.ddfilms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYK-zpD72NkdZSODAAltbP1wgB8GfrZHk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
