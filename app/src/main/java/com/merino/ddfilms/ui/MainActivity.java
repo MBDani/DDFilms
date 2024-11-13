@@ -21,8 +21,6 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private TMDBService tmdbService;
-    private EditText searchEditText;
-    private RecyclerView movieListRecyclerView;
     private MovieAdapter movieAdapter;
 
     @Override
@@ -31,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         tmdbService = TMDBClient.getClient().create(TMDBService.class);
-        searchEditText = findViewById(R.id.search_edit_text);
-        movieListRecyclerView = findViewById(R.id.movie_list_recycler_view);
+        EditText searchEditText = findViewById(R.id.search_edit_text);
+        RecyclerView movieListRecyclerView = findViewById(R.id.movie_list_recycler_view);
 
         movieAdapter = new MovieAdapter();
         movieListRecyclerView.setAdapter(movieAdapter);
