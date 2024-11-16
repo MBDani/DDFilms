@@ -11,15 +11,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.merino.ddfilms.R;
-import com.merino.ddfilms.model.MovieResponse;
+import com.merino.ddfilms.model.Movie;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
-    private List<MovieResponse> movies = new ArrayList<>();
+    private List<Movie> movies = new ArrayList<>();
 
-    public void setMovies(List<MovieResponse> movies) {
+    public void setMovies(List<Movie> movies) {
         this.movies = movies;
     }
 
@@ -33,7 +33,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
-        MovieResponse movie = movies.get(position);
+        Movie movie = movies.get(position);
         holder.bind(movie);
     }
 
@@ -56,7 +56,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             voteAverageTextView = itemView.findViewById(R.id.vote_average_text_view);
         }
 
-        public void bind(MovieResponse movie) {
+        public void bind(Movie movie) {
             Glide.with(itemView.getContext())
                     .load("https://image.tmdb.org/t/p/w500" + movie.getPosterPath())
                     .into(posterImageView);

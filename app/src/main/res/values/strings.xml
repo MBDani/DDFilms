@@ -1,11 +1,18 @@
 <resources>
     <string name="app_name">DDFilms</string>
-    <string name="title_activity_login">LoginActivity</string>
-    <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password</string>
-    <string name="action_sign_in">Sign in or register</string>
-    <string name="action_sign_in_short">Sign in</string>
-    <string name="welcome">"Welcome !"</string>
+
+    <string name="bt_login">Iniciar sesión</string>
+    <string name="bt_register">Registrarse</string>
+    <string name="bt_logout">Cerrar sesión</string>
+    <string name="bt_recovery"> Recuperar </string>
+
+    <string name="edt_user"> Usuario </string>
+    <string name="edt_email"> Email </string>
+    <string name="edt_pw"> Contraseña </string>
+    <string name="edt_without_account">¿No tienes cuenta? Registrate ahora.</string>
+    <string name="edt_forget_password"> Olvide mi contraseña </string>
+    <string name="edt_with_account">¿Ya tienes cuenta? Inicia sesión ahora.</string>
+
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>

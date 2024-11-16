@@ -2,6 +2,7 @@ package com.merino.ddfilms.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -15,7 +16,6 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private EditText emailEditText, passwordEditText;
-    private Button loginButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,9 +26,9 @@ public class LoginActivity extends AppCompatActivity {
 
         emailEditText = findViewById(R.id.email_edit_text);
         passwordEditText = findViewById(R.id.password_edit_text);
-        loginButton = findViewById(R.id.login_button);
+        Button buttonLogin = findViewById(R.id.button_login);
 
-        loginButton.setOnClickListener(v -> {
+        buttonLogin.setOnClickListener(v -> {
             String email = emailEditText.getText().toString();
             String password = passwordEditText.getText().toString();
             loginWithEmailAndPassword(email, password);
@@ -39,7 +39,6 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        // Login successful, navigate to the main activity
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);
                         finish();
@@ -49,5 +48,15 @@ public class LoginActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    public void navigateToRegisterActivity(View view){
+        Intent i = new Intent(getApplication(), RegisterActivity.class);
+        startActivity(i);
+    }
+
+    public void navigateToForgotPasswordActivity(View view){
+        Intent i = new Intent(getApplication(), ForgotPasswordActivity.class);
+        startActivity(i);
     }
 }

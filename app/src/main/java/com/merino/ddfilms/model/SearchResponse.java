@@ -4,7 +4,7 @@ import java.util.List;
 
 public class SearchResponse {
     private int page;
-    private List<MovieResponse> results;
+    private List<Movie> results;
     private int totalPages;
     private int totalResults;
 
@@ -16,11 +16,11 @@ public class SearchResponse {
         this.page = page;
     }
 
-    public List<MovieResponse> getResults() {
+    public List<Movie> getResults() {
         return results;
     }
 
-    public void setResults(List<MovieResponse> results) {
+    public void setResults(List<Movie> results) {
         this.results = results;
     }
 

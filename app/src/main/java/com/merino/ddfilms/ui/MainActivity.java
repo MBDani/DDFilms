@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void searchMovies(String query) {
-        String apiKey = "your_api_key_here";
+        String apiKey = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzZjQ0MjA3YmU5MzVhYmJiOWRiYzRjNzhmMjJjYWJmMCIsIm5iZiI6MTczMTM0ODY2NC45MzIyMzUyLCJzdWIiOiI1ZWRhNThkY2IzZjZmNTAwMjA5ODk1YjQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.2GVXLVK1vviDpW26p8x8WrJduG7S6oIYJfLKD25NoCw";
         tmdbService.searchMovies(query, apiKey)
                 .enqueue(new Callback<SearchResponse>() {
                     @Override
