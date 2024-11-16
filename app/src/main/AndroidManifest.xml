@@ -12,16 +12,17 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         tools:targetApi="31">
         <activity
-            android:name="com.merino.ddfilms.ui.LoginActivity"
+            android:name="com.merino.ddfilms.ui.LauncherActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.merino.ddfilms.ui.MainActivity" />
+        <activity android:name="com.merino.ddfilms.ui.LoginActivity" />
         <activity android:name="com.merino.ddfilms.ui.RegisterActivity" />
         <activity android:name="com.merino.ddfilms.ui.ForgotPasswordActivity" />
+        <activity android:name="com.merino.ddfilms.ui.MainActivity" />
     </application>
 
 </manifest>

@@ -1,6 +1,7 @@
 package com.merino.ddfilms.ui;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -15,6 +16,7 @@ import com.merino.ddfilms.R;
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
+    private SharedPreferences preferences;
     private EditText emailEditText, passwordEditText;
 
     @Override
@@ -23,6 +25,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
+        preferences = getSharedPreferences("Preferences", MODE_PRIVATE);
 
         emailEditText = findViewById(R.id.email_edit_text);
         passwordEditText = findViewById(R.id.password_edit_text);
@@ -39,6 +42,7 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
+                        setSharedPreferences();
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);
                         finish();
@@ -48,6 +52,13 @@ public class LoginActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void setSharedPreferences() {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("usuario_email", emailEditText.getText().toString());
+        editor.putString("usuario_contraseña", passwordEditText.getText().toString());
+        editor.apply();
     }
 
     public void navigateToRegisterActivity(View view){
