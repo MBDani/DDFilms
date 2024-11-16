@@ -5,7 +5,9 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.widget.EditText;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,7 +15,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
+import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -23,58 +28,110 @@ public class MainActivity extends AppCompatActivity {
     private TMDBService tmdbService;
     private MovieAdapter movieAdapter;
 
+    private EditText searchEditText;
+    private RecyclerView movieListRecyclerView;
+
+    private static final String API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzZjQ0MjA3YmU5MzVhYmJiOWRiYzRjNzhmMjJjYWJmMCIsIm5iZiI6MTczMTM0ODY2NC45MzIyMzUyLCJzdWIiOiI1ZWRhNThkY2IzZjZmNTAwMjA5ODk1YjQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.2GVXLVK1vviDpW26p8x8WrJduG7S6oIYJfLKD25NoCw";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         tmdbService = TMDBClient.getClient().create(TMDBService.class);
-        EditText searchEditText = findViewById(R.id.search_edit_text);
-        RecyclerView movieListRecyclerView = findViewById(R.id.movie_list_recycler_view);
 
+        searchEditText = findViewById(R.id.search_edit_text);
+        movieListRecyclerView = findViewById(R.id.movie_list_recycler_view);
+
+        // Configurar RecyclerView y Adapter
+        setupRecyclerView();
+
+        // Configurar el buscador
+        setupSearchListener();
+
+        // Cargar películas populares al inicio
+        loadPopularMovies();
+    }
+
+    private void setupRecyclerView() {
         movieAdapter = new MovieAdapter();
         movieListRecyclerView.setAdapter(movieAdapter);
         movieListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
 
+    private void setupSearchListener() {
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // No necesitamos implementar esto
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                searchMovies(s.toString());
+                // Realizamos la búsqueda solo si hay texto
+                String query = s.toString().trim();
+                if (!query.isEmpty()) {
+                    searchMovies(query);
+                } else {
+                    loadPopularMovies(); // Si el campo está vacío, mostramos películas populares
+                }
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-
+            public void afterTextChanged(Editable s) {
+                // No necesitamos implementar esto
             }
-
-            // Override other TextWatcher methods as needed
         });
     }
 
     private void searchMovies(String query) {
-        String apiKey = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzZjQ0MjA3YmU5MzVhYmJiOWRiYzRjNzhmMjJjYWJmMCIsIm5iZiI6MTczMTM0ODY2NC45MzIyMzUyLCJzdWIiOiI1ZWRhNThkY2IzZjZmNTAwMjA5ODk1YjQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.2GVXLVK1vviDpW26p8x8WrJduG7S6oIYJfLKD25NoCw";
-        tmdbService.searchMovies(query, apiKey)
-                .enqueue(new Callback<SearchResponse>() {
-                    @Override
-                    public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
-                        if (response.isSuccessful()) {
-                            SearchResponse searchResponse = response.body();
-                            movieAdapter.setMovies(searchResponse.getResults());
-                            movieAdapter.notifyDataSetChanged();
-                        } else {
-                            // Handle the error
-                        }
-                    }
+        tmdbService.searchMovies(query,  false, "en-US", 1).enqueue(new Callback<SearchResponse>() {
+            @Override
+            public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    updateMoviesList(response.body().getResults());
+                } else {
+                    showError("Error en la búsqueda");
+                }
+            }
 
-                    @Override
-                    public void onFailure(Call<SearchResponse> call, Throwable t) {
-                        // Handle the error
-                    }
-                });
+            @Override
+            public void onFailure(Call<SearchResponse> call, Throwable t) {
+                showError("Error de conexión: " + t.getMessage());
+            }
+        });
     }
+
+    private void loadPopularMovies() {
+        tmdbService.getPopularMovies(API_KEY).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    updateMoviesList(response.body().getResults());
+                } else {
+                    showError("Error al cargar películas populares");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SearchResponse> call, Throwable t) {
+                showError("Error de conexión: " + t.getMessage());
+            }
+        });
+    }
+
+    private void updateMoviesList(List<Movie> movies) {
+        runOnUiThread(() -> {
+            movieAdapter.setMovies(movies);
+            movieAdapter.notifyDataSetChanged();
+        });
+    }
+
+    private void showError(String message) {
+        runOnUiThread(() -> {
+            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+        });
+    }
+
+
 }
