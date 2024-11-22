@@ -1,4 +1,4 @@
-package com.merino.ddfilms.ui;
+package com.merino.ddfilms.ui.auth;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.merino.ddfilms.R;
+import com.merino.ddfilms.ui.MainActivity;
 
 public class LoginActivity extends AppCompatActivity {
 

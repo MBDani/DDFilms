@@ -1,137 +1,154 @@
 package com.merino.ddfilms.ui;
 
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
-import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
+import com.google.android.material.navigation.NavigationView;
 import com.merino.ddfilms.R;
-import com.merino.ddfilms.api.TMDBClient;
-import com.merino.ddfilms.api.TMDBService;
-import com.merino.ddfilms.model.Movie;
-import com.merino.ddfilms.model.SearchResponse;
+import com.merino.ddfilms.api.FirebaseManager;
+import com.merino.ddfilms.ui.fragment.ListsFragment;
+import com.merino.ddfilms.ui.fragment.PopularFragment;
+import com.merino.ddfilms.ui.fragment.ProfileFragment;
+import com.merino.ddfilms.ui.fragment.ReviewsFragment;
+import com.merino.ddfilms.ui.fragment.SearchFragment;
+import com.merino.ddfilms.ui.fragment.SettingsFragment;
+import com.merino.ddfilms.ui.fragment.WatchlistFragment;
 
-import java.util.List;
+import java.util.Objects;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    private TMDBService tmdbService;
-    private MovieAdapter movieAdapter;
 
-    private EditText searchEditText;
-    private RecyclerView movieListRecyclerView;
+    private DrawerLayout drawerLayout;
+    FirebaseManager firebaseManager = new FirebaseManager();
 
-    private static final String API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzZjQ0MjA3YmU5MzVhYmJiOWRiYzRjNzhmMjJjYWJmMCIsIm5iZiI6MTczMTM0ODY2NC45MzIyMzUyLCJzdWIiOiI1ZWRhNThkY2IzZjZmNTAwMjA5ODk1YjQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.2GVXLVK1vviDpW26p8x8WrJduG7S6oIYJfLKD25NoCw";
-
+    @SuppressLint("NonConstantResourceId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tmdbService = TMDBClient.getClient().create(TMDBService.class);
+        // Configurar Toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        Objects.requireNonNull(getSupportActionBar()).setTitle("DDFilms");
 
-        searchEditText = findViewById(R.id.search_edit_text);
-        movieListRecyclerView = findViewById(R.id.movie_list_recycler_view);
+        // Configurar el DrawerLayout con el NavigationView
+        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
 
-        // Configurar RecyclerView y Adapter
-        setupRecyclerView();
+        NavigationView navigationView = findViewById(R.id.navigation_view);
 
-        // Configurar el buscador
-        setupSearchListener();
+        personalizedNavHeader(navigationView);
 
-        // Cargar películas populares al inicio
-        loadPopularMovies();
-    }
 
-    private void setupRecyclerView() {
-        movieAdapter = new MovieAdapter();
-        movieListRecyclerView.setAdapter(movieAdapter);
-        movieListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-    }
-
-    private void setupSearchListener() {
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // No necesitamos implementar esto
+        navigationView.setNavigationItemSelectedListener(item -> {
+            // Manejar la navegación al seleccionar una opción
+            switch (item.getItemId()) {
+                case R.id.nav_popular:
+                    loadFragment(new PopularFragment());
+                    break;
+                case R.id.nav_search:
+                    loadFragment(new SearchFragment());
+                    break;
+                case R.id.nav_profile:
+                    loadFragment(new ProfileFragment());
+                    break;
+                case R.id.nav_watchlist:
+                    loadFragment(new WatchlistFragment());
+                    break;
+                case R.id.nav_lists:
+                    loadFragment(new ListsFragment());
+                    break;
+                case R.id.nav_reviews:
+                    loadFragment(new ReviewsFragment());
+                    break;
+                case R.id.nav_settings:
+                    loadFragment(new SettingsFragment());
+                    break;
+                case R.id.nav_sign_out:
+                    showLogoutConfirmationDialog();
+                    break;
+                default:
+                    return super.onOptionsItemSelected(item);
             }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Realizamos la búsqueda solo si hay texto
-                String query = s.toString().trim();
-                if (!query.isEmpty()) {
-                    searchMovies(query);
-                } else {
-                    loadPopularMovies(); // Si el campo está vacío, mostramos películas populares
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                // No necesitamos implementar esto
-            }
+            drawerLayout.closeDrawers();
+            return true;
         });
+
+        // Cargar fragment inicial
+        if (savedInstanceState == null) {
+            loadFragment(new SearchFragment());
+        }
     }
 
-    private void searchMovies(String query) {
-        tmdbService.searchMovies(query,  false, "en-US", 1).enqueue(new Callback<SearchResponse>() {
-            @Override
-            public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    updateMoviesList(response.body().getResults());
-                } else {
-                    showError("Error en la búsqueda");
-                }
+    private void personalizedNavHeader(NavigationView navigationView) {
+        // Obtén la vista del header
+        View headerView = navigationView.getHeaderView(0);
+
+        // Referencias a los elementos del header
+        ImageView profileImage = headerView.findViewById(R.id.profile_image);
+        TextView profileName = headerView.findViewById(R.id.profile_name);
+
+        // Recuperamos el nombre del usuario
+        firebaseManager.getUserName((userName, error) -> {
+            if (error != null) {
+                // Manejar el error
+                Log.e("FirebaseManager", "Error: " + error.getMessage());
+                return;
             }
-
-            @Override
-            public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showError("Error de conexión: " + t.getMessage());
-            }
+            profileName.setText(userName);
         });
+
+        // Todo recuperar imagen del usuario
+        String profileImageUrl = null; // URL de la imagen o null si no hay
+
+        // Carga la imagen con Glide o Picasso
+        if (profileImageUrl != null) {
+            Glide.with(this).load(profileImageUrl).placeholder(R.drawable.ic_default_profile) // Imagen genérica
+                    .into(profileImage);
+        } else {
+            profileImage.setImageResource(R.drawable.ic_default_profile); // Imagen genérica
+        }
     }
 
-    private void loadPopularMovies() {
-        tmdbService.getPopularMovies(API_KEY).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    updateMoviesList(response.body().getResults());
-                } else {
-                    showError("Error al cargar películas populares");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showError("Error de conexión: " + t.getMessage());
-            }
-        });
+    private void loadFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.nav_host_fragment, fragment).commit();
     }
 
-    private void updateMoviesList(List<Movie> movies) {
-        runOnUiThread(() -> {
-            movieAdapter.setMovies(movies);
-            movieAdapter.notifyDataSetChanged();
-        });
+    private void showLogoutConfirmationDialog() {
+        new AlertDialog.Builder(this).setTitle("Cerrar sesión").setMessage("¿Estás seguro de que quieres cerrar sesión?").setPositiveButton("Sí", (dialog, which) -> {
+            FirebaseManager.getInstance().logoutUser(this);
+        }).setNegativeButton("No", (dialog, which) -> {
+            // Simplemente cierra el diálogo
+            dialog.dismiss();
+        }).show();
     }
 
-    private void showError(String message) {
-        runOnUiThread(() -> {
-            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
-        });
+    @Override
+    public void onBackPressed() {
+        // Cerrar el menú lateral si está abierto
+        if (drawerLayout.isDrawerOpen(findViewById(R.id.navigation_view))) {
+            drawerLayout.closeDrawers();
+        } else {
+            super.onBackPressed();
+        }
     }
-
 
 }

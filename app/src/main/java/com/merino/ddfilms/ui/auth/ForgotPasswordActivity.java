@@ -1,4 +1,4 @@
-package com.merino.ddfilms.ui;
+package com.merino.ddfilms.ui.auth;
 
 import androidx.appcompat.app.AppCompatActivity;
 

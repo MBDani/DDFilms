@@ -1,4 +1,4 @@
-package com.merino.ddfilms.ui;
+package com.merino.ddfilms.ui.auth;
 
 
 import android.content.Intent;
@@ -17,12 +17,13 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.model.User;
+import com.merino.ddfilms.ui.MainActivity;
 
 
 public class RegisterActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private FirebaseFirestore firebaseFirestore;
     private SharedPreferences preferences;
     private EditText edt_email, edt_pw, edt_user;
 
@@ -32,7 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
+        firebaseFirestore = FirebaseFirestore.getInstance();
         preferences = getSharedPreferences("Preferences", MODE_PRIVATE);
 
         edt_user = findViewById(R.id.user_edt);
@@ -100,7 +101,7 @@ public class RegisterActivity extends AppCompatActivity {
         User userModel = new User(user, email);
 
         try {
-            db.collection("users").document(firebaseUser.getUid()).set(userModel).addOnSuccessListener(aVoid -> {
+            firebaseFirestore.collection("users").document(firebaseUser.getUid()).set(userModel).addOnSuccessListener(aVoid -> {
                 Toast.makeText(RegisterActivity.this, "Datos almacenados en la nube", Toast.LENGTH_SHORT).show();
 
                 SharedPreferences.Editor editor = preferences.edit();
