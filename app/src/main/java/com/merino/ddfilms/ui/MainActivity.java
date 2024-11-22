@@ -20,6 +20,7 @@ import com.bumptech.glide.Glide;
 import com.google.android.material.navigation.NavigationView;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.FirebaseManager;
+import com.merino.ddfilms.ui.fragment.DiaryFragment;
 import com.merino.ddfilms.ui.fragment.ListsFragment;
 import com.merino.ddfilms.ui.fragment.PopularFragment;
 import com.merino.ddfilms.ui.fragment.ProfileFragment;
@@ -75,6 +76,9 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case R.id.nav_lists:
                     loadFragment(new ListsFragment());
+                    break;
+                case R.id.nav_diary:
+                    loadFragment(new DiaryFragment());
                     break;
                 case R.id.nav_reviews:
                     loadFragment(new ReviewsFragment());

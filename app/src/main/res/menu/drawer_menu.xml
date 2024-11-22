@@ -21,6 +21,10 @@
         android:icon="@drawable/ic_list"
         android:title="Lists" />
     <item
+        android:id="@+id/nav_diary"
+        android:icon="@drawable/ic_diary"
+        android:title="Diary" />
+    <item
         android:id="@+id/nav_reviews"
         android:icon="@drawable/ic_review"
         android:title="Reviews" />

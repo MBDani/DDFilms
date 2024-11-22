@@ -25,7 +25,7 @@
 
     <fragment
         android:id="@+id/watchListFragment"
-        android:name="com.merino.ddfilms.ui.fragment.WatchListFragment"
+        android:name="com.merino.ddfilms.ui.fragment.WatchlistFragment"
         android:label="WatchList"
         tools:layout="@layout/fragment_search" />
 
@@ -34,6 +34,12 @@
         android:name="com.merino.ddfilms.ui.fragment.ListsFragment"
         android:label="Lists"
         tools:layout="@layout/fragment_lists" />
+
+    <fragment
+        android:id="@+id/nav_diary"
+        android:name="com.merino.ddfilms.ui.fragment.DiaryFragment"
+        android:label="Diary"
+        tools:layout="@layout/fragment_diary" />
 
     <fragment
         android:id="@+id/nav_reviews"
