@@ -22,7 +22,7 @@ import com.merino.ddfilms.configuration.AppConfig;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
 import com.merino.ddfilms.ui.MovieAdapter;
-import com.merino.ddfilms.utils.TaskCompletionCallback;
+import com.merino.ddfilms.utils.Utils;
 
 import java.util.List;
 
@@ -37,15 +37,12 @@ public class SearchFragment extends Fragment {
 
     private EditText searchEditText;
     private RecyclerView movieListRecyclerView;
-    private AppConfig appConfig;
 
-    private static String API_KEY = "";
+    private static final String API_KEY = Utils.getApiKey();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
-        getApiKey();
 
         // Infla el layout del fragmento
         View view = inflater.inflate(R.layout.fragment_search, container, false);
@@ -65,17 +62,6 @@ public class SearchFragment extends Fragment {
         loadPopularMovies();
 
         return view;
-    }
-
-    private void getApiKey() {
-        AppConfig appConfig = new AppConfig();
-        appConfig.getTmdbApiKey((result, error) -> {
-            if (error != null) {
-                // Manejar el error
-            } else {
-                API_KEY = result;
-            }
-        });
     }
 
     private void setupRecyclerView() {
