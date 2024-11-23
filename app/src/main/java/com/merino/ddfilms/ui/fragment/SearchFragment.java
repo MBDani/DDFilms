@@ -18,9 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
+import com.merino.ddfilms.configuration.AppConfig;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
 import com.merino.ddfilms.ui.MovieAdapter;
+import com.merino.ddfilms.utils.TaskCompletionCallback;
 
 import java.util.List;
 
@@ -35,12 +37,16 @@ public class SearchFragment extends Fragment {
 
     private EditText searchEditText;
     private RecyclerView movieListRecyclerView;
+    private AppConfig appConfig;
 
-    private static final String API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzZjQ0MjA3YmU5MzVhYmJiOWRiYzRjNzhmMjJjYWJmMCIsIm5iZiI6MTczMTM0ODY2NC45MzIyMzUyLCJzdWIiOiI1ZWRhNThkY2IzZjZmNTAwMjA5ODk1YjQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.2GVXLVK1vviDpW26p8x8WrJduG7S6oIYJfLKD25NoCw";
+    private static String API_KEY = "";
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        getApiKey();
+
         // Infla el layout del fragmento
         View view = inflater.inflate(R.layout.fragment_search, container, false);
 
@@ -59,6 +65,17 @@ public class SearchFragment extends Fragment {
         loadPopularMovies();
 
         return view;
+    }
+
+    private void getApiKey() {
+        AppConfig appConfig = new AppConfig();
+        appConfig.getTmdbApiKey((result, error) -> {
+            if (error != null) {
+                // Manejar el error
+            } else {
+                API_KEY = result;
+            }
+        });
     }
 
     private void setupRecyclerView() {
