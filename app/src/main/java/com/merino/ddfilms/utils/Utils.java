@@ -1,6 +1,8 @@
 package com.merino.ddfilms.utils;
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.merino.ddfilms.configuration.AppConfig;
 
@@ -21,5 +23,11 @@ public class Utils {
         });
 
         return apikey.get();
+    }
+
+    public static void showError(Context context, String message) {
+        if (context != null) {
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+        }
     }
 }

@@ -1,5 +1,8 @@
 package com.merino.ddfilms.ui.fragment;
 
+import static com.merino.ddfilms.utils.Utils.showError;
+
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -7,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,7 +20,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
-import com.merino.ddfilms.configuration.AppConfig;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
 import com.merino.ddfilms.ui.MovieAdapter;
@@ -102,13 +103,13 @@ public class SearchFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     updateMoviesList(response.body().getResults());
                 } else {
-                    showError("Error en la búsqueda");
+                    showError(getContext() ,"Error en la búsqueda");
                 }
             }
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showError("Error de conexión: " + t.getMessage());
+                showError(getContext() ,"Error de conexión: " + t.getMessage());
             }
         });
     }
@@ -120,30 +121,23 @@ public class SearchFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     updateMoviesList(response.body().getResults());
                 } else {
-                    showError("Error al cargar películas populares");
+                    showError(getContext(), "Error al cargar películas populares");
                 }
             }
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showError("Error de conexión: " + t.getMessage());
+                showError(getContext(), "Error de conexión: " + t.getMessage());
             }
         });
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void updateMoviesList(List<Movie> movies) {
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> {
                 movieAdapter.setMovies(movies);
                 movieAdapter.notifyDataSetChanged();
-            });
-        }
-    }
-
-    private void showError(String message) {
-        if (getActivity() != null) {
-            getActivity().runOnUiThread(() -> {
-                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
             });
         }
     }
