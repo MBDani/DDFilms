@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
+import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
 import com.merino.ddfilms.ui.MovieAdapter;
@@ -39,7 +40,7 @@ public class SearchFragment extends Fragment {
     private EditText searchEditText;
     private RecyclerView movieListRecyclerView;
 
-    private static final String API_KEY = Utils.getApiKey();
+    private static final String API_KEY = ApiKeyManager.getInstance().getApiKey();
 
     @Nullable
     @Override
@@ -49,7 +50,7 @@ public class SearchFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_search, container, false);
 
         // Inicializa TMDBService
-        tmdbService = TMDBClient.getClient().create(TMDBService.class);
+        tmdbService = TMDBClient.getClient(API_KEY).create(TMDBService.class);
 
         // Asigna vistas
         searchEditText = view.findViewById(R.id.search_edit_text);

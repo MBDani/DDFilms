@@ -1,6 +1,5 @@
 package com.merino.ddfilms.ui.fragment;
 
-import static com.merino.ddfilms.utils.Utils.getApiKey;
 import static com.merino.ddfilms.utils.Utils.showError;
 
 import android.annotation.SuppressLint;
@@ -18,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
+import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
 import com.merino.ddfilms.ui.MovieAdapter;
@@ -31,10 +31,11 @@ import retrofit2.Response;
 public class PopularFragment extends Fragment {
 
     private TMDBService tmdbService;
-    private static final String API_KEY = getApiKey();
-
     private MovieAdapter movieAdapter;
     private RecyclerView movieListRecyclerView;
+
+    private static final String API_KEY = ApiKeyManager.getInstance().getApiKey();
+
 
     @Nullable
     @Override
@@ -43,7 +44,7 @@ public class PopularFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_popular, container, false);
 
         // Inicializa TMDBService
-        tmdbService = TMDBClient.getClient().create(TMDBService.class);
+        tmdbService = TMDBClient.getClient(API_KEY).create(TMDBService.class);
 
         // Asigna vistas
         movieListRecyclerView = view.findViewById(R.id.movie_popular_recycler_view);

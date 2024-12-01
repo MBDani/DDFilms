@@ -63,7 +63,7 @@ public class FirebaseManager {
         firebaseRemoteConfig.fetchAndActivate()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        callback.onComplete(firebaseRemoteConfig.getString("TMDB_API_KEY_KEY"), null);
+                        callback.onComplete(firebaseRemoteConfig.getString("TMDB_API_KEY"), null);
                     } else {
                         callback.onComplete(null, new Exception("TMDB_API_KEY_KEY no encontrado"));
                     }
