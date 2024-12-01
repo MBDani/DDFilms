@@ -27,17 +27,20 @@ public class LauncherActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         preferences = getSharedPreferences("Preferences", MODE_PRIVATE);
 
+        getTMDBApiKey();
+
+        tryLogin();
+    }
+
+    private void getTMDBApiKey() {
         ApiKeyManager.getInstance().fetchApiKey((result, error) -> {
             if (error != null) {
-                Log.e("MainActivity", "Error al obtener la API key: " + error.getMessage());
+                Log.e("LauncherActivity", "Error al obtener la API key: " + error.getMessage());
             } else {
-                Log.d("MainActivity", "API Key obtenida: " + result);
-                // Aquí puedes inicializar TMDBService si lo necesitas
+                Log.d("LauncherActivity", "API Key obtenida: " + result);
                 tmdbService = TMDBClient.getClient(result).create(TMDBService.class);
             }
         });
-
-        tryLogin();
     }
 
     private void tryLogin() {
