@@ -1,9 +1,5 @@
 package com.merino.ddfilms.api;
 
-import android.util.Log;
-
-import com.merino.ddfilms.utils.Utils;
-
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import retrofit2.Retrofit;

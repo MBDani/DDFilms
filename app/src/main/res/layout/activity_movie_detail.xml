@@ -7,20 +7,38 @@
     tools:context=".ui.MovieDetailActivity">
 
     <!-- Imagen del backdrop en la parte superior -->
+
+    <TextView
+        android:id="@+id/movie_director"
+        android:layout_width="264dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="12dp"
+        android:text="Directed by: "
+        android:textAlignment="textStart"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/poster_image_view"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/movie_release_date"
+        app:layout_constraintVertical_bias="0.0" />
+
     <ImageView
         android:id="@+id/backdrop_image_view"
         android:layout_width="0dp"
         android:layout_height="250dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="0dp"
         android:scaleType="centerCrop"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/movie_title"
-        android:layout_width="282dp"
-        android:layout_height="79dp"
+        android:layout_width="289dp"
+        android:layout_height="87dp"
         android:layout_marginTop="4dp"
         android:padding="16dp"
         android:text="Movie Title"
@@ -35,9 +53,9 @@
     <TextView
         android:id="@+id/movie_release_date"
         android:layout_width="257dp"
-        android:layout_height="32dp"
+        android:layout_height="22dp"
         android:layout_marginTop="4dp"
-        android:text="Release date"
+        android:text="Release date: "
         android:textAlignment="textStart"
         android:textSize="16sp"
         app:layout_constraintEnd_toStartOf="@+id/poster_image_view"
@@ -46,34 +64,19 @@
         app:layout_constraintTop_toBottomOf="@+id/movie_title" />
 
     <TextView
-        android:id="@+id/movie_video"
-        android:layout_width="264dp"
-        android:layout_height="22dp"
-        android:layout_marginTop="12dp"
-        android:text="Trailer"
-        android:textAlignment="textStart"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/movie_overview"
-        app:layout_constraintEnd_toStartOf="@+id/poster_image_view"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/movie_release_date"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <TextView
         android:id="@+id/movie_overview"
         android:layout_width="376dp"
         android:layout_height="289dp"
+        android:maxLines="15"
         android:padding="16dp"
+        android:scrollbars="vertical"
         android:text="Overview text here"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.363"
+        app:layout_constraintHorizontal_bias="0.457"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.963" />
+        app:layout_constraintTop_toBottomOf="@+id/movie_director" />
 
     <ImageView
         android:id="@+id/poster_image_view"

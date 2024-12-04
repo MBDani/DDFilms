@@ -24,7 +24,6 @@ import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
 import com.merino.ddfilms.ui.MovieAdapter;
-import com.merino.ddfilms.utils.Utils;
 
 import java.util.List;
 
