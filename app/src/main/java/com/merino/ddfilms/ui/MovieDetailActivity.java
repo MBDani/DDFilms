@@ -1,9 +1,7 @@
 package com.merino.ddfilms.ui;
 
 import static com.merino.ddfilms.model.Credits.Crew.getDirector;
-import static com.merino.ddfilms.utils.Utils.showError;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -20,8 +18,8 @@ import com.merino.ddfilms.api.TMDBService;
 import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Credits;
 import com.merino.ddfilms.model.Movie;
-import com.merino.ddfilms.model.SearchResponse;
 import com.merino.ddfilms.transitions.DetailsTransition;
+import com.merino.ddfilms.ui.fragment.MovieListDialogFragment;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -88,7 +86,8 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         // Lógica para el botón "Añadir a la lista"
         addToListButton.setOnClickListener(v -> {
-            // Aquí iría la lógica para añadir la película a la lista
+            MovieListDialogFragment dialog = new MovieListDialogFragment(String.valueOf(movie.getId()));
+            dialog.show(getSupportFragmentManager(), "MovieListDialog");
         });
     }
 

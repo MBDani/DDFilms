@@ -1,4 +1,4 @@
-package com.merino.ddfilms.ui;
+package com.merino.ddfilms.adapters;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.model.Movie;
+import com.merino.ddfilms.ui.MovieDetailActivity;
 
 import java.util.ArrayList;
 import java.util.List;

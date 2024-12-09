@@ -5,12 +5,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.merino.ddfilms.ui.auth.LoginActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class FirebaseManager {
@@ -45,29 +51,43 @@ public class FirebaseManager {
         Toast.makeText(context, "Sesión cerrada con éxito", Toast.LENGTH_SHORT).show();
     }
 
+    public String getCurrentUser(){
+        return Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
+    }
+
     public void getUserName(TaskCompletionCallback<String> callback) {
         String uid = Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
 
-        firebaseFirestore.collection("users").document(uid).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        callback.onComplete(documentSnapshot.getString("user"), null);
-                    } else {
-                        callback.onComplete(null, new Exception("Documento no encontrado"));
-                    }
-                })
-                .addOnFailureListener(e -> callback.onComplete(null, e));
+        firebaseFirestore.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                callback.onComplete(documentSnapshot.getString("user"), null);
+            } else {
+                callback.onComplete(null, new Exception("Documento no encontrado"));
+            }
+        }).addOnFailureListener(e -> callback.onComplete(null, e));
     }
 
     public void getTmdbApiKey(TaskCompletionCallback<String> callback) {
-        firebaseRemoteConfig.fetchAndActivate()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        callback.onComplete(firebaseRemoteConfig.getString("TMDB_API_KEY"), null);
-                    } else {
-                        callback.onComplete(null, new Exception("TMDB_API_KEY_KEY no encontrado"));
-                    }
-                });
+        firebaseRemoteConfig.fetchAndActivate().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                callback.onComplete(firebaseRemoteConfig.getString("TMDB_API_KEY"), null);
+            } else {
+                callback.onComplete(null, new Exception("TMDB_API_KEY_KEY no encontrado"));
+            }
+        });
+    }
+
+    public Task<DocumentReference> createNewMovieList(String listName, String userID) {
+        Map<String, Object> newList = new HashMap<>();
+        newList.put("name", listName);
+        newList.put("userID", userID);
+        newList.put("movies", new ArrayList<>());
+
+        return firebaseFirestore.collection("movieLists").add(newList);
+    }
+
+    public Task<QuerySnapshot> getMovieLists(String userID) {
+        return firebaseFirestore.collection("movieLists").whereEqualTo("userID", userID).get();
     }
 
 }

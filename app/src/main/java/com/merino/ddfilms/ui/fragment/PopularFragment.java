@@ -1,6 +1,6 @@
 package com.merino.ddfilms.ui.fragment;
 
-import static com.merino.ddfilms.utils.Utils.showError;
+import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -20,7 +20,7 @@ import com.merino.ddfilms.api.TMDBService;
 import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.SearchResponse;
-import com.merino.ddfilms.ui.MovieAdapter;
+import com.merino.ddfilms.adapters.MovieAdapter;
 
 import java.util.List;
 
@@ -69,13 +69,13 @@ public class PopularFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     updateMoviesList(response.body().getResults());
                 } else {
-                    showError(getContext(), "Error al cargar películas populares");
+                    showMessage(getContext(), "Error al cargar películas populares");
                 }
             }
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showError(getContext(), "Error de conexión: " + t.getMessage());
+                showMessage(getContext(), "Error de conexión: " + t.getMessage());
             }
         });
     }
