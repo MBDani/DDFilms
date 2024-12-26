@@ -1,5 +1,7 @@
 package com.merino.ddfilms.ui;
 
+import static com.merino.ddfilms.utils.Utils.showMessage;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,6 +18,8 @@ public class LauncherActivity extends AppCompatActivity {
 
     private SharedPreferences preferences;
     private FirebaseAuth mAuth;
+
+    private int numReintentos = 0;
 
     private TMDBService tmdbService;
 
@@ -35,7 +39,9 @@ public class LauncherActivity extends AppCompatActivity {
     private void getTMDBApiKey() {
         ApiKeyManager.getInstance().fetchApiKey((result, error) -> {
             if (error != null) {
-                Log.e("LauncherActivity", "Error al obtener la API key: " + error.getMessage());
+                showMessage(this, "Error al obtener la API key: " + error.getMessage());
+                numReintentos++;
+                if (numReintentos < 3) getTMDBApiKey();
             } else {
                 Log.d("LauncherActivity", "API Key obtenida: " + result);
                 tmdbService = TMDBClient.getClient(result).create(TMDBService.class);

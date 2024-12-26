@@ -8,14 +8,18 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.ui.auth.LoginActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -51,7 +55,7 @@ public class FirebaseManager {
         Toast.makeText(context, "Sesión cerrada con éxito", Toast.LENGTH_SHORT).show();
     }
 
-    public String getCurrentUser(){
+    public String getCurrentUser() {
         return Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
     }
 
@@ -90,4 +94,38 @@ public class FirebaseManager {
         return firebaseFirestore.collection("movieLists").whereEqualTo("userID", userID).get();
     }
 
+    public void addMovieToList(String listName, Movie movie, String userID, TaskCompletionCallback<String> callback) {
+        firebaseFirestore.collection("movieLists").whereEqualTo("name", listName).whereEqualTo("userID", userID).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            boolean movieAlreadyExists = isMovieAlreadyExists(movie, queryDocumentSnapshots);
+            if (movieAlreadyExists) {
+                callback.onComplete(null, new Exception("La película ya se encuentra en la lista: " + listName));
+            } else {
+                for (DocumentSnapshot document : queryDocumentSnapshots) {
+                    document.getReference().update("movies", FieldValue.arrayUnion(movie))
+                            .addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null))
+                            .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
+                }
+            }
+        }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener la lista de películas")));
+    }
+
+    private boolean isMovieAlreadyExists(Movie movie, QuerySnapshot queryDocumentSnapshots) {
+        boolean movieAlreadyExists = false;
+        for (DocumentSnapshot document : queryDocumentSnapshots) {
+            List<Map<String, Object>> movieMaps = (List<Map<String, Object>>) document.get("movies");
+            if (movieMaps != null) {
+                List<Movie> movieList = new ArrayList<>();
+
+                // Parseamos los objetos Movie de la lista
+                for (Map<String, Object> movieMap : movieMaps) {
+                    Movie m = Movie.mapToMovie(movieMap);
+                    movieList.add(m);
+                }
+
+                movieAlreadyExists = movieList.stream()
+                        .anyMatch(movieMap -> movieMap.getOriginalTitle().equals(movie.getOriginalTitle()));
+            }
+        }
+        return movieAlreadyExists;
+    }
 }

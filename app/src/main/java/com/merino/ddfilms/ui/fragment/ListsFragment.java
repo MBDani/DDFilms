@@ -27,8 +27,8 @@ public class ListsFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.lists_recycler_view);
 
         viewModel = new ViewModelProvider(this).get(MovieListViewModel.class);
-        adapter = new MovieListAdapter(getContext(), new ArrayList<>(), () -> {
-            // Aquí defines la acción al seleccionar una lista
+        adapter = new MovieListAdapter(getContext(), new ArrayList<>(), listName -> {
+            // Manejar la selección de la lista
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -38,7 +38,7 @@ public class ListsFragment extends Fragment {
             adapter.updateData(movieLists);
         });
 
-        viewModel.loadMovieLists();
+        viewModel.loadMovieListNames();
 
         return view;
     }

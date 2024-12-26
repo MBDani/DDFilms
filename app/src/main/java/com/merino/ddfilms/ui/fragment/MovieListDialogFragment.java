@@ -1,6 +1,7 @@
 package com.merino.ddfilms.ui.fragment;
 
-import android.annotation.SuppressLint;
+import static com.merino.ddfilms.utils.Utils.showMessage;
+
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,27 +17,22 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.MovieListAdapter;
-import com.merino.ddfilms.api.FirebaseManager;
+import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.ui.viewModel.MovieListViewModel;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 public class MovieListDialogFragment extends DialogFragment {
 
     private MovieListViewModel viewModel;
     private MovieListAdapter adapter;
 
-    private String movieId;
+    private final Movie movie;
 
-    public MovieListDialogFragment(String movieId) {
-        this.movieId = movieId;
+    public MovieListDialogFragment(Movie movieId) {
+        this.movie = movieId;
     }
 
     @Nullable
@@ -47,7 +43,7 @@ public class MovieListDialogFragment extends DialogFragment {
         Button createListButton = view.findViewById(R.id.createListButton);
 
         viewModel = new ViewModelProvider(this).get(MovieListViewModel.class);
-        adapter = new MovieListAdapter(getContext(), new ArrayList<>(), this::dismiss);
+        adapter = new MovieListAdapter(getContext(), new ArrayList<>(), this::addMovieToSelectedList);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
 
@@ -57,13 +53,24 @@ public class MovieListDialogFragment extends DialogFragment {
 
         createListButton.setOnClickListener(v -> showCreateListDialog());
 
-        viewModel.loadMovieLists();
+        viewModel.loadMovieListNames();
 
         return view;
     }
 
+    private void addMovieToSelectedList(String listName) {
+        viewModel.addMovieToList(listName, movie, (result, error) -> {
+            if (error != null) {
+                showMessage(getContext(), error.getMessage());
+            } else if (result != null) {
+                showMessage(getContext(), result);
+                dismiss();
+            }
+        });
+    }
+
     private void showCreateListDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Crear nueva lista");
 
         final EditText input = new EditText(getContext());
@@ -73,7 +80,7 @@ public class MovieListDialogFragment extends DialogFragment {
             String listName = input.getText().toString().trim();
             if (!listName.isEmpty()) {
                 viewModel.createNewMovieList(listName).addOnSuccessListener(aVoid -> {
-                    viewModel.loadMovieLists();
+                    viewModel.loadMovieListNames();
                 });
             }
         });

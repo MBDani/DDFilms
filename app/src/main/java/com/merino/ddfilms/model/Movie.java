@@ -6,8 +6,10 @@ import android.os.Parcelable;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import lombok.Data;
+
 @Data
 public class Movie implements Parcelable {
     private boolean adult;
@@ -37,7 +39,7 @@ public class Movie implements Parcelable {
     protected Movie(Parcel in) {
         adult = in.readByte() != 0;
         backdropPath = in.readString();
-        genreIds =  in.readArrayList(Integer.class.getClassLoader());
+        genreIds = in.readArrayList(Integer.class.getClassLoader());
         id = in.readInt();
         originalLanguage = in.readString();
         originalTitle = in.readString();
@@ -49,6 +51,9 @@ public class Movie implements Parcelable {
         video = in.readByte() != 0;
         voteAverage = in.readDouble();
         voteCount = in.readInt();
+    }
+
+    protected Movie() {
     }
 
     // Necesario para escribir el objeto en un Parcel
@@ -87,4 +92,23 @@ public class Movie implements Parcelable {
             return new Movie[size];
         }
     };
+
+    public static Movie mapToMovie(Map<String, Object> movieMap) {
+        Movie movie = new Movie();
+        movie.setAdult((Boolean) movieMap.get("adult"));
+        movie.setBackdropPath((String) movieMap.get("backdropPath"));
+        movie.setGenreIds((ArrayList) movieMap.get("genreIds"));
+        movie.setId(((Long) movieMap.get("id")).intValue());
+        movie.setOriginalLanguage((String) movieMap.get("originalLanguage"));
+        movie.setOriginalTitle((String) movieMap.get("originalTitle"));
+        movie.setOverview((String) movieMap.get("overview"));
+        movie.setPopularity((Double) movieMap.get("popularity"));
+        movie.setPosterPath((String) movieMap.get("posterPath"));
+        movie.setReleaseDate((String) movieMap.get("releaseDate"));
+        movie.setTitle((String) movieMap.get("title"));
+        movie.setVideo((Boolean) movieMap.get("video"));
+        movie.setVoteAverage((Double) movieMap.get("voteAverage"));
+        movie.setVoteCount(((Long) movieMap.get("voteCount")).intValue());
+        return movie;
+    }
 }

@@ -1,7 +1,5 @@
 package com.merino.ddfilms.adapters;
 
-import static com.merino.ddfilms.utils.Utils.showMessage;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,20 +9,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.merino.ddfilms.R;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.ViewHolder> {
 
     private final Context context;
     private final List<String> movieLists;
-    private final Runnable onItemClick;
+    private final Consumer<String> onItemClick;
 
-    public MovieListAdapter(Context context, List<String> movieLists, Runnable onItemClick) {
+    public MovieListAdapter(Context context, List<String> movieLists, Consumer<String> onItemClick) {
         this.context = context;
         this.movieLists = movieLists;
         this.onItemClick = onItemClick;
@@ -43,7 +39,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
         holder.textView.setText(listName);
         holder.itemView.setOnClickListener(v -> {
             if (onItemClick != null) {
-                onItemClick.run();
+                onItemClick.accept(listName);
             }
         });
     }

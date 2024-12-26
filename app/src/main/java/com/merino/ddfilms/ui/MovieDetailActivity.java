@@ -1,6 +1,7 @@
 package com.merino.ddfilms.ui;
 
 import static com.merino.ddfilms.model.Credits.Crew.getDirector;
+import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
@@ -86,7 +87,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         // Lógica para el botón "Añadir a la lista"
         addToListButton.setOnClickListener(v -> {
-            MovieListDialogFragment dialog = new MovieListDialogFragment(String.valueOf(movie.getId()));
+            MovieListDialogFragment dialog = new MovieListDialogFragment(movie);
             dialog.show(getSupportFragmentManager(), "MovieListDialog");
         });
     }
@@ -110,6 +111,7 @@ public class MovieDetailActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<Credits> call, Throwable t) {
                 Log.e("MovieDetailActivity", "Error al obtener detalles de la película", t);
+                showMessage(getApplicationContext(), "Error al obtener detalles de la película");
             }
         });
     }
