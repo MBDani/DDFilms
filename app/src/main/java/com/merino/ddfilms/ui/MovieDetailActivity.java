@@ -42,6 +42,8 @@ public class MovieDetailActivity extends AppCompatActivity {
     private Button addToListButton;
     private TextView movieDirector;
 
+    private Button backButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +60,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         movieOverview.setMovementMethod(new ScrollingMovementMethod());
         addToListButton = findViewById(R.id.add_to_list_button);
         movieDirector = findViewById(R.id.movie_director);
+        backButton = findViewById(R.id.back_button);
 
         // Recuperamos el objeto Movie de los extras
         Movie movie = getIntent().getParcelableExtra("movie");
@@ -89,6 +92,10 @@ public class MovieDetailActivity extends AppCompatActivity {
         addToListButton.setOnClickListener(v -> {
             MovieListDialogFragment dialog = new MovieListDialogFragment(movie);
             dialog.show(getSupportFragmentManager(), "MovieListDialog");
+        });
+
+        backButton.setOnClickListener(v -> {
+            onBackPressed();
         });
     }
 
