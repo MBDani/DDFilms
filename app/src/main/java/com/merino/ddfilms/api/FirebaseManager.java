@@ -5,9 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -81,17 +82,35 @@ public class FirebaseManager {
         });
     }
 
-    public Task<DocumentReference> createNewMovieList(String listName, String userID) {
-        Map<String, Object> newList = new HashMap<>();
-        newList.put("name", listName);
-        newList.put("userID", userID);
-        newList.put("movies", new ArrayList<>());
+    public void createNewMovieList(String listName, String userID, TaskCompletionCallback<String> callback) {
+        // Verificar si ya existe una lista con el mismo nombre
+        firebaseFirestore.collection("movieLists").whereEqualTo("name", listName).whereEqualTo("userID", userID).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                // La lista ya existe
+                callback.onComplete(null, new Exception("La lista " + listName + " ya existe."));
+            } else if (task.isSuccessful()) {
+                // Crear una nueva lista
+                Map<String, Object> newList = new HashMap<>();
+                newList.put("name", listName);
+                newList.put("userID", userID);
+                newList.put("movies", new ArrayList<>());
 
-        return firebaseFirestore.collection("movieLists").add(newList);
+                firebaseFirestore.collection("movieLists").add(newList).addOnSuccessListener(documentReference -> callback.onComplete(null, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al crear la lista " + listName)));
+            } else {
+                callback.onComplete(null, new Exception("Error al verificar la existencia de la lista " + listName));
+            }
+        });
     }
 
-    public Task<QuerySnapshot> getMovieLists(String userID) {
-        return firebaseFirestore.collection("movieLists").whereEqualTo("userID", userID).get();
+
+    public void getMovieLists(String userID, TaskCompletionCallback<List<String>> callback) {
+        firebaseFirestore.collection("movieLists").whereEqualTo("userID", userID).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            List<String> lists = new ArrayList<>();
+            for (DocumentSnapshot document : queryDocumentSnapshots) {
+                lists.add(document.getString("name"));
+            }
+            callback.onComplete(lists, null);
+        }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener las listas de películas")));
     }
 
     public void addMovieToList(String listName, Movie movie, String userID, TaskCompletionCallback<String> callback) {
@@ -101,9 +120,7 @@ public class FirebaseManager {
                 callback.onComplete(null, new Exception("La película ya se encuentra en la lista: " + listName));
             } else {
                 for (DocumentSnapshot document : queryDocumentSnapshots) {
-                    document.getReference().update("movies", FieldValue.arrayUnion(movie))
-                            .addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null))
-                            .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
+                    document.getReference().update("movies", FieldValue.arrayUnion(movie)).addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
                 }
             }
         }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener la lista de películas")));
@@ -114,18 +131,38 @@ public class FirebaseManager {
         for (DocumentSnapshot document : queryDocumentSnapshots) {
             List<Map<String, Object>> movieMaps = (List<Map<String, Object>>) document.get("movies");
             if (movieMaps != null) {
-                List<Movie> movieList = new ArrayList<>();
-
-                // Parseamos los objetos Movie de la lista
-                for (Map<String, Object> movieMap : movieMaps) {
-                    Movie m = Movie.mapToMovie(movieMap);
-                    movieList.add(m);
-                }
-
-                movieAlreadyExists = movieList.stream()
-                        .anyMatch(movieMap -> movieMap.getOriginalTitle().equals(movie.getOriginalTitle()));
+                List<Movie> movieList = parseMovieList(document);
+                movieAlreadyExists = movieList.stream().anyMatch(movieMap -> movieMap.getOriginalTitle().equals(movie.getOriginalTitle()));
             }
         }
         return movieAlreadyExists;
     }
+
+    public void loadMovieFromListName(String listName, String userID, TaskCompletionCallback<List<Movie>> callback) {
+        firebaseFirestore.collection("movieLists").whereEqualTo("name", listName).whereEqualTo("userID", userID).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            if (!queryDocumentSnapshots.isEmpty()) {
+                DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
+
+                List<Movie> movieList = parseMovieList(document);
+                callback.onComplete(movieList, null);
+            } else {
+                callback.onComplete(null, new Exception("No se han encontrado películas en la lista"));
+            }
+        }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener la lista de películas")));
+    }
+
+    @NonNull
+    private static List<Movie> parseMovieList(DocumentSnapshot document) {
+        List<Map<String, Object>> movieMaps = (List<Map<String, Object>>) document.get("movies");
+        List<Movie> movieList = new ArrayList<>();
+
+        // Parseamos los objetos Movie de la lista
+        for (Map<String, Object> movieMap : movieMaps) {
+            Movie m = Movie.mapToMovie(movieMap);
+            movieList.add(m);
+        }
+        return movieList;
+    }
 }
+
+

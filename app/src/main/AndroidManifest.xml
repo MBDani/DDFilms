@@ -27,6 +27,7 @@
         <activity android:name="com.merino.ddfilms.ui.auth.ForgotPasswordActivity" />
         <activity android:name="com.merino.ddfilms.ui.MainActivity" />
         <activity android:name="com.merino.ddfilms.ui.MovieDetailActivity" />
+        <activity android:name="com.merino.ddfilms.ui.ListMoviesActivity" />
     </application>
 
 

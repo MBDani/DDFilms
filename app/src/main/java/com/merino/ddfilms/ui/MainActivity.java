@@ -154,4 +154,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void setToolbarTitle(String title) {
+        Objects.requireNonNull(getSupportActionBar()).setTitle(title);
+    }
 }

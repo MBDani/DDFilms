@@ -1,16 +1,17 @@
 package com.merino.ddfilms.ui.viewModel;
 
+import static com.merino.ddfilms.utils.Utils.showMessage;
+
+import static java.security.AccessController.getContext;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MovieListViewModel extends ViewModel {
@@ -25,18 +26,16 @@ public class MovieListViewModel extends ViewModel {
 
     public void loadMovieListNames() {
         String userID = firebaseManager.getCurrentUser();
-        firebaseManager.getMovieLists(userID).addOnSuccessListener(queryDocumentSnapshots -> {
-            List<String> lists = new ArrayList<>();
-            for (DocumentSnapshot document : queryDocumentSnapshots) {
-                lists.add(document.getString("name"));
+        firebaseManager.getMovieLists(userID, (listMovies, error) -> {
+            if (listMovies != null) {
+                movieLists.setValue(listMovies);
             }
-            movieLists.setValue(lists);
         });
     }
 
-    public Task<Void> createNewMovieList(String listName) {
+    public void createNewMovieList(String listName, TaskCompletionCallback<String> callback) {
         String userID = firebaseManager.getCurrentUser();
-        return firebaseManager.createNewMovieList(listName, userID).continueWith(task -> null);
+        firebaseManager.createNewMovieList(listName, userID, callback);
     }
 
     public void addMovieToList(String listName, Movie movie, TaskCompletionCallback<String> callback) {

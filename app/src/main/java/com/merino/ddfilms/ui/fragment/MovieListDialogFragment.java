@@ -78,14 +78,23 @@ public class MovieListDialogFragment extends DialogFragment {
 
         builder.setPositiveButton("Crear", (dialog, which) -> {
             String listName = input.getText().toString().trim();
-            if (!listName.isEmpty()) {
-                viewModel.createNewMovieList(listName).addOnSuccessListener(aVoid -> {
-                    viewModel.loadMovieListNames();
-                });
-            }
+            createNewList(listName);
         });
 
         builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss());
         builder.show();
+    }
+
+    private void createNewList(String listName) {
+        if (!listName.isEmpty()) {
+            viewModel.createNewMovieList(listName, (result, error) -> {
+                if (error != null) {
+                    showMessage(getContext(), error.getMessage());
+                } else if (result != null) {
+                    showMessage(getContext(), result);
+                    viewModel.loadMovieListNames();
+                }
+            });
+        }
     }
 }

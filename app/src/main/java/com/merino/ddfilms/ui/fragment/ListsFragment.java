@@ -1,5 +1,6 @@
 package com.merino.ddfilms.ui.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.MovieListAdapter;
+import com.merino.ddfilms.ui.ListMoviesActivity;
 import com.merino.ddfilms.ui.viewModel.MovieListViewModel;
 
 import java.util.ArrayList;
@@ -28,7 +30,9 @@ public class ListsFragment extends Fragment {
 
         viewModel = new ViewModelProvider(this).get(MovieListViewModel.class);
         adapter = new MovieListAdapter(getContext(), new ArrayList<>(), listName -> {
-            // Manejar la selección de la lista
+            Intent intent = new Intent(getContext(), ListMoviesActivity.class);
+            intent.putExtra("listName", listName);
+            startActivity(intent);
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
