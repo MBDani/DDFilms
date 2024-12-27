@@ -7,12 +7,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.ui.auth.LoginActivity;
@@ -95,61 +93,82 @@ public class FirebaseManager {
                 newList.put("userID", userID);
                 newList.put("movies", new ArrayList<>());
 
-                firebaseFirestore.collection("movieLists").add(newList).addOnSuccessListener(documentReference -> callback.onComplete(null, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al crear la lista " + listName)));
+                firebaseFirestore.collection("movieLists").add(newList).addOnSuccessListener(documentReference -> {
+                    // Actualizamos para el userID su lista de películas con el nuevo documento
+                    firebaseFirestore.collection("users").document(userID).update("movieLists", FieldValue.arrayUnion(documentReference.getId())).addOnSuccessListener(success -> callback.onComplete("Lista creada con éxito", null));
+                }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al crear la lista " + listName)));
             } else {
                 callback.onComplete(null, new Exception("Error al verificar la existencia de la lista " + listName));
             }
         });
     }
 
-
-    public void getMovieLists(String userID, TaskCompletionCallback<List<String>> callback) {
-        firebaseFirestore.collection("movieLists").whereEqualTo("userID", userID).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            List<String> lists = new ArrayList<>();
-            for (DocumentSnapshot document : queryDocumentSnapshots) {
-                lists.add(document.getString("name"));
+    public void getMovieLists(String userID, TaskCompletionCallback<HashMap<String, String>> callback) {
+        // Recuperamos la lista de películas que tiene el usuario
+        firebaseFirestore.collection("users").document(userID).get().addOnSuccessListener(documentSnapshot -> {
+            List<String> movieListIds = (List<String>) documentSnapshot.get("movieLists");
+            if (movieListIds != null) {
+                // Recuperamos los nombres de las listas de películas
+                movieListIds.forEach(id -> getMovieListByID(id, (document, error) -> {
+                    if (error != null) {
+                        callback.onComplete(null, error);
+                    } else {
+                        String listName = document.getString("name");
+                        if (listName != null) {
+                            HashMap<String, String> listNameMap = new HashMap<>();
+                            listNameMap.put(id, listName);
+                            callback.onComplete(listNameMap, null);
+                        }
+                    }
+                }));
             }
-            callback.onComplete(lists, null);
         }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener las listas de películas")));
     }
 
-    public void addMovieToList(String listName, Movie movie, String userID, TaskCompletionCallback<String> callback) {
-        firebaseFirestore.collection("movieLists").whereEqualTo("name", listName).whereEqualTo("userID", userID).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            boolean movieAlreadyExists = isMovieAlreadyExists(movie, queryDocumentSnapshots);
-            if (movieAlreadyExists) {
-                callback.onComplete(null, new Exception("La película ya se encuentra en la lista: " + listName));
+    public void addMovieToList(String listID, Movie movie, TaskCompletionCallback<String> callback) {
+        getMovieListByID(listID, (documentSnapshot, error) -> {
+            if (error != null) {
+                callback.onComplete(null, error);
             } else {
-                for (DocumentSnapshot document : queryDocumentSnapshots) {
-                    document.getReference().update("movies", FieldValue.arrayUnion(movie)).addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
+                String listName = documentSnapshot.getString("name");
+                boolean movieAlreadyExists = isMovieAlreadyExists(movie, documentSnapshot);
+                if (movieAlreadyExists) {
+                    callback.onComplete(null, new Exception("La película ya se encuentra en la lista: " + listName));
+                } else {
+                    documentSnapshot.getReference().update("movies", FieldValue.arrayUnion(movie)).addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
                 }
             }
-        }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener la lista de películas")));
+        });
     }
 
-    private boolean isMovieAlreadyExists(Movie movie, QuerySnapshot queryDocumentSnapshots) {
-        boolean movieAlreadyExists = false;
-        for (DocumentSnapshot document : queryDocumentSnapshots) {
-            List<Map<String, Object>> movieMaps = (List<Map<String, Object>>) document.get("movies");
-            if (movieMaps != null) {
-                List<Movie> movieList = parseMovieList(document);
-                movieAlreadyExists = movieList.stream().anyMatch(movieMap -> movieMap.getOriginalTitle().equals(movie.getOriginalTitle()));
-            }
-        }
-        return movieAlreadyExists;
-    }
-
-    public void loadMovieFromListName(String listName, String userID, TaskCompletionCallback<List<Movie>> callback) {
-        firebaseFirestore.collection("movieLists").whereEqualTo("name", listName).whereEqualTo("userID", userID).get().addOnSuccessListener(queryDocumentSnapshots -> {
-            if (!queryDocumentSnapshots.isEmpty()) {
-                DocumentSnapshot document = queryDocumentSnapshots.getDocuments().get(0);
-
-                List<Movie> movieList = parseMovieList(document);
+    public void loadMovieFromListName(String listID, TaskCompletionCallback<List<Movie>> callback) {
+        firebaseFirestore.collection("movieLists").document(listID).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot != null) {
+                List<Movie> movieList = parseMovieList(documentSnapshot);
                 callback.onComplete(movieList, null);
             } else {
                 callback.onComplete(null, new Exception("No se han encontrado películas en la lista"));
             }
         }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener la lista de películas")));
     }
+
+    private void getMovieListByID(String listID, TaskCompletionCallback<DocumentSnapshot> callback) {
+        firebaseFirestore.collection("movieLists").document(listID).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot != null) {
+                callback.onComplete(documentSnapshot, null);
+            } else {
+                callback.onComplete(null, new Exception("No se han encontrado películas en la lista"));
+            }
+        }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener la lista de películas")));
+    }
+
+    private boolean isMovieAlreadyExists(Movie movie, DocumentSnapshot documentSnapshot) {
+        List<Movie> movieList = parseMovieList(documentSnapshot);
+        return movieList.stream().anyMatch(movieMap -> movieMap.getOriginalTitle().equals(movie.getOriginalTitle()));
+    }
+
+
+
 
     @NonNull
     private static List<Movie> parseMovieList(DocumentSnapshot document) {

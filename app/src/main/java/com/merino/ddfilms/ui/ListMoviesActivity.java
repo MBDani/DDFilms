@@ -3,6 +3,7 @@ package com.merino.ddfilms.ui;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,10 +31,14 @@ public class ListMoviesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_list);
 
         movieListRecyclerView = findViewById(R.id.movie_list_recycler_view);
-        String listName = getIntent().getStringExtra("listName");
+
+        // Recogemos de los extra el listID y el listName
+        Intent intent = getIntent();
+        String listID = intent.getStringExtra("listID");
+        String listName = intent.getStringExtra("listName");
 
         setupRecyclerView();
-        loadMoviesFromList(listName);
+        loadMoviesFromList(listID);
     }
 
     private void setupRecyclerView() {
@@ -42,11 +47,11 @@ public class ListMoviesActivity extends AppCompatActivity {
         movieListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
     }
 
-    private void loadMoviesFromList(String listName) {
-        firebaseManager.loadMovieFromListName(listName, firebaseManager.getCurrentUser(), (movies, error) -> {
+    private void loadMoviesFromList(String listID) {
+        firebaseManager.loadMovieFromListName(listID, (movies, error) -> {
             if (error != null) {
                 showMessage(getApplicationContext(), error.getMessage());
-            } else {
+            } else if (movies != null) {
                 updateMoviesList(movies);
             }
         });

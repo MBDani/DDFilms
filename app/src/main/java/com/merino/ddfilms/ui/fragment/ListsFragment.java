@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -17,11 +18,15 @@ import com.merino.ddfilms.ui.ListMoviesActivity;
 import com.merino.ddfilms.ui.viewModel.MovieListViewModel;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 
 public class ListsFragment extends Fragment {
 
     private MovieListViewModel viewModel;
     private MovieListAdapter adapter;
+    private HashMap<String, String> mapMovieLists;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -29,11 +34,7 @@ public class ListsFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.lists_recycler_view);
 
         viewModel = new ViewModelProvider(this).get(MovieListViewModel.class);
-        adapter = new MovieListAdapter(getContext(), new ArrayList<>(), listName -> {
-            Intent intent = new Intent(getContext(), ListMoviesActivity.class);
-            intent.putExtra("listName", listName);
-            startActivity(intent);
-        });
+        adapter = new MovieListAdapter(getContext(), new ArrayList<>(), this::navigateToListMoviesActivity);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
@@ -42,8 +43,38 @@ public class ListsFragment extends Fragment {
             adapter.updateData(movieLists);
         });
 
-        viewModel.loadMovieListNames();
+        loadMovieListNames();
 
         return view;
+    }
+
+    private void navigateToListMoviesActivity(String listName) {
+        String listID = getListIDByName(listName);
+        Intent intent = new Intent(getContext(), ListMoviesActivity.class);
+        intent.putExtra("listID", listID);
+        intent.putExtra("listName", listName);
+        startActivity(intent);
+    }
+
+    private void loadMovieListNames() {
+        viewModel.loadMovieListNames((listMapMovies, error) -> {
+            if (listMapMovies != null) {
+                mapMovieLists = listMapMovies;
+                List<String> listMovies = new ArrayList<>(listMapMovies.values());
+                viewModel.setMovieLists(listMovies);
+            }
+        });
+    }
+
+    @Nullable
+    private String getListIDByName(String listName) {
+        String listID = null;
+        for (String key : mapMovieLists.keySet()) {
+            if (Objects.equals(mapMovieLists.get(key), listName)) {
+                listID = key;
+                break;
+            }
+        }
+        return listID;
     }
 }
