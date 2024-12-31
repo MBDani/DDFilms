@@ -268,6 +268,20 @@ public class FirebaseManager {
 
         });
     }
+
+    public void addListToUser(String listID, TaskCompletionCallback<Boolean> callback) {
+        // Añadimos la lista al usuario campo movieLists
+        firebaseFirestore.collection("users").document(getCurrentUser())
+                .update("movieLists", FieldValue.arrayUnion(listID))
+                .addOnSuccessListener(success -> {
+                    // Añadimos en la colección movieLists por el id el usuario
+                    firebaseFirestore.collection("movieLists").document(listID)
+                            .update("userID", FieldValue.arrayUnion(getCurrentUser()))
+                            .addOnSuccessListener(success2 -> callback.onComplete(true, null))
+                            .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
+                })
+                .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
+    }
 }
 
 

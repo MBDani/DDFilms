@@ -27,7 +27,7 @@ import com.merino.ddfilms.model.Movie;
 import java.util.Collections;
 import java.util.List;
 
-public class ListMoviesActivity extends AppCompatActivity {
+public class MovieListActivity extends AppCompatActivity {
 
     private MovieAdapter movieAdapter;
     private RecyclerView movieListRecyclerView;
@@ -43,7 +43,7 @@ public class ListMoviesActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list);
+        setContentView(R.layout.activity_movie_list);
 
         setupViews();
         setupToolbar();
@@ -226,15 +226,15 @@ public class ListMoviesActivity extends AppCompatActivity {
         });
     }
 
-    private void shareListLink(String listId) {
+    private void shareListLink(String listID) {
         // Crear el deep link
-        String shareLink = "myapp://lists/" + listId;
+        String webLink = "https://shimmering-puffpuff-0e63fa.netlify.app/?listID=" + listID + "&listName=" + listName;
 
         // Crear el intent para compartir
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Lista de películas compartida");
-        shareIntent.putExtra(Intent.EXTRA_TEXT, "¡Echa un vistazo a esta lista de películas! " + shareLink);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, "¡Echa un vistazo a esta lista de películas! " + webLink);
 
         // Crear el chooser con las apps disponibles
         Intent chooser = Intent.createChooser(shareIntent, "Compartir lista mediante...");

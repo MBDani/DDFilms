@@ -27,8 +27,18 @@
         <activity android:name="com.merino.ddfilms.ui.auth.ForgotPasswordActivity" />
         <activity android:name="com.merino.ddfilms.ui.MainActivity" />
         <activity android:name="com.merino.ddfilms.ui.MovieDetailActivity" />
-        <activity android:name="com.merino.ddfilms.ui.ListMoviesActivity" />
+        <activity android:name="com.merino.ddfilms.ui.MovieListActivity" />
         <activity android:name="com.merino.ddfilms.ui.EditListActivity" />
+        <activity android:name="com.merino.ddfilms.intentFilter.IntentFilterActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Esquema HTTPS con tu dominio -->
+                <data android:scheme="myapp" android:host="lists" />
+            </intent-filter>
+        </activity>
     </application>
 
 

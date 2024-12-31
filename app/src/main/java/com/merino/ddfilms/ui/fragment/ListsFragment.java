@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.MovieListAdapter;
-import com.merino.ddfilms.ui.ListMoviesActivity;
+import com.merino.ddfilms.ui.MovieListActivity;
 import com.merino.ddfilms.ui.viewModel.MovieListViewModel;
 
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class ListsFragment extends Fragment {
 
     private void navigateToListMoviesActivity(String listName) {
         String listID = getListIDByName(listName);
-        Intent intent = new Intent(getContext(), ListMoviesActivity.class);
+        Intent intent = new Intent(getContext(), MovieListActivity.class);
         intent.putExtra("listID", listID);
         intent.putExtra("listName", listName);
         startActivity(intent);
