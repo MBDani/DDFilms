@@ -1,11 +1,14 @@
 package com.merino.ddfilms.adapters;
 
+import static com.merino.ddfilms.utils.Utils.showMessage;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -21,11 +24,40 @@ import com.merino.ddfilms.ui.MovieDetailActivity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
-    private static List<Movie> movies = new ArrayList<>();
+import lombok.Getter;
+import lombok.Setter;
 
-    public void setMovies(List<Movie> movies) {
-        this.movies = movies;
+public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
+    @Setter
+    @Getter
+    private List<Movie> movies = new ArrayList<>();
+    private boolean isEditMode = false;
+    private OnItemLongClickListener longClickListener;
+
+    private OnDeleteClickListener deleteClickListener;
+
+    @Setter
+    private String listID;
+
+    public interface OnItemLongClickListener {
+        boolean onItemLongClick(int position);
+    }
+
+    public interface OnDeleteClickListener {
+        void onDeleteClick(int position, Movie movie);
+    }
+
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        this.longClickListener = listener;
+    }
+
+    public void setOnDeleteClickListener(OnDeleteClickListener listener) {
+        this.deleteClickListener = listener;
+    }
+
+    public void setEditMode(boolean editMode) {
+        isEditMode = editMode;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -47,12 +79,19 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         return movies.size();
     }
 
-    static class MovieViewHolder extends RecyclerView.ViewHolder {
+    public void removeMovie(int position) {
+        movies.remove(position);
+        notifyItemRemoved(position);
+    }
+
+    class MovieViewHolder extends RecyclerView.ViewHolder {
         private final ImageView posterImageView;
         private final TextView titleTextView;
         private final TextView overviewTextView;
         private final TextView yearTextView;
         private final TextView voteAverageTextView;
+        private final ImageView dragHandle;
+        private final ImageButton deleteButton;
 
         public MovieViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -61,28 +100,41 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView = itemView.findViewById(R.id.overview_text_view);
             yearTextView = itemView.findViewById(R.id.year_text_view);
             voteAverageTextView = itemView.findViewById(R.id.vote_average_text_view);
+            dragHandle = itemView.findViewById(R.id.drag_handle);
+            deleteButton = itemView.findViewById(R.id.delete_button);
 
-            handleClick(itemView);
+            setupClickListeners();
         }
 
-        private void handleClick(View itemView) {
+        private void setupClickListeners() {
             itemView.setOnClickListener(v -> {
-                // Obtener la película seleccionada
-                Movie movie = getMovieAtPosition(getAdapterPosition());
+                if (!isEditMode) {
+                    Movie movie = getMovieAtPosition(getAdapterPosition());
+                    if (movie != null) {
+                        Intent intent = new Intent(itemView.getContext(), MovieDetailActivity.class);
+                        intent.putExtra("movie", movie);
 
-                // Asegurarnos de que no sea null
-                if (movie != null) {
-                    Intent intent = new Intent(itemView.getContext(), MovieDetailActivity.class);
-                    intent.putExtra("movie", movie); // Pasar el objeto de la película
+                        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                (Activity) itemView.getContext(),
+                                posterImageView, "moviePosterTransition"
+                        );
 
-                    // Realizar la animación de transición compartida
-                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                            (Activity) itemView.getContext(),
-                            posterImageView, "moviePosterTransition"
-                    );
+                        itemView.getContext().startActivity(intent, options.toBundle());
+                    }
+                }
+            });
 
-                    // Iniciar la nueva actividad con la animación
-                    itemView.getContext().startActivity(intent, options.toBundle());
+            itemView.setOnLongClickListener(v -> {
+                if (longClickListener != null) {
+                    return longClickListener.onItemLongClick(getBindingAdapterPosition());
+                }
+                return false;
+            });
+
+            deleteButton.setOnClickListener(v -> {
+                int position = getBindingAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    deleteClickListener.onDeleteClick(position, movies.get(position));
                 }
             });
         }
@@ -96,15 +148,16 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             yearTextView.setText("(" + movie.getReleaseDate() + ")");
             overviewTextView.setText(movie.getOverview());
             voteAverageTextView.setText(String.format("%.1f", movie.getVoteAverage()));
+
+            dragHandle.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
+            deleteButton.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
         }
     }
 
-    // Obtenemos la posición específica
-    public static Movie getMovieAtPosition(int position) {
+    public Movie getMovieAtPosition(int position) {
         if (position >= 0 && position < movies.size()) {
             return movies.get(position);
-        } else {
-            return null;  // Si la posición es inválida, retornamos null
         }
+        return null;
     }
 }

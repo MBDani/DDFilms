@@ -13,6 +13,7 @@ import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
 import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.ui.auth.LoginActivity;
+import com.merino.ddfilms.utils.TaskCompletionCallback;
 
 public class LauncherActivity extends AppCompatActivity {
 
@@ -31,20 +32,22 @@ public class LauncherActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         preferences = getSharedPreferences("Preferences", MODE_PRIVATE);
 
-        getTMDBApiKey();
-
-        tryLogin();
+        getTMDBApiKey((result, error) -> {
+            if (result)
+                tryLogin();
+        });
     }
 
-    private void getTMDBApiKey() {
+    private void getTMDBApiKey(TaskCompletionCallback<Boolean> callback) {
         ApiKeyManager.getInstance().fetchApiKey((result, error) -> {
             if (error != null) {
                 showMessage(this, "Error al obtener la API key: " + error.getMessage());
                 numReintentos++;
-                if (numReintentos < 3) getTMDBApiKey();
+                if (numReintentos < 3) getTMDBApiKey(callback);
             } else {
                 Log.d("LauncherActivity", "API Key obtenida: " + result);
                 tmdbService = TMDBClient.getClient(result).create(TMDBService.class);
+                callback.onComplete(true, null);
             }
         });
     }

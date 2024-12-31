@@ -27,7 +27,7 @@ public class MovieListViewModel extends ViewModel {
 
     public void loadMovieListNames(TaskCompletionCallback<HashMap<String, String>> callback) {
         String userID = firebaseManager.getCurrentUser();
-        firebaseManager.getMovieLists(userID, callback);
+        firebaseManager.getMovieListsNameAndID(userID, callback);
     }
 
     public void createNewMovieList(String listName, TaskCompletionCallback<String> callback) {

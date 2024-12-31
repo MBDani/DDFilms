@@ -1,5 +1,7 @@
 package com.merino.ddfilms.ui.fragment;
 
+import static com.merino.ddfilms.utils.Utils.showMessage;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -43,7 +45,7 @@ public class ListsFragment extends Fragment {
             adapter.updateData(movieLists);
         });
 
-        loadMovieListNames();
+//        loadMovieListNames();
 
         return view;
     }
@@ -58,9 +60,12 @@ public class ListsFragment extends Fragment {
 
     private void loadMovieListNames() {
         viewModel.loadMovieListNames((listMapMovies, error) -> {
-            if (listMapMovies != null) {
-                mapMovieLists = listMapMovies;
+            if (error != null) {
+                viewModel.setMovieLists(new ArrayList<>());
+                showMessage(getContext(), error.getMessage());
+            } else {
                 List<String> listMovies = new ArrayList<>(listMapMovies.values());
+                mapMovieLists = listMapMovies;
                 viewModel.setMovieLists(listMovies);
             }
         });
@@ -76,5 +81,11 @@ public class ListsFragment extends Fragment {
             }
         }
         return listID;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadMovieListNames();
     }
 }

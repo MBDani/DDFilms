@@ -17,6 +17,7 @@ import com.merino.ddfilms.ui.auth.LoginActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +59,7 @@ public class FirebaseManager {
         return Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
     }
 
-    public void getUserName(TaskCompletionCallback<String> callback) {
-        String uid = Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
-
+    public void getUserName(String uid, TaskCompletionCallback<String> callback) {
         firebaseFirestore.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
                 callback.onComplete(documentSnapshot.getString("user"), null);
@@ -90,7 +89,7 @@ public class FirebaseManager {
                 // Crear una nueva lista
                 Map<String, Object> newList = new HashMap<>();
                 newList.put("name", listName);
-                newList.put("userID", userID);
+                newList.put("userID", new ArrayList<>(Collections.singletonList(userID)));
                 newList.put("movies", new ArrayList<>());
 
                 firebaseFirestore.collection("movieLists").add(newList).addOnSuccessListener(documentReference -> {
@@ -103,26 +102,30 @@ public class FirebaseManager {
         });
     }
 
-    public void getMovieLists(String userID, TaskCompletionCallback<HashMap<String, String>> callback) {
+    public void getMovieListsNameAndID(String userID, TaskCompletionCallback<HashMap<String, String>> callback) {
         // Recuperamos la lista de películas que tiene el usuario
         firebaseFirestore.collection("users").document(userID).get().addOnSuccessListener(documentSnapshot -> {
             List<String> movieListIds = (List<String>) documentSnapshot.get("movieLists");
-            if (movieListIds != null) {
-                // Recuperamos los nombres de las listas de películas
-                movieListIds.forEach(id -> getMovieListByID(id, (document, error) -> {
-                    if (error != null) {
-                        callback.onComplete(null, error);
-                    } else {
-                        String listName = document.getString("name");
-                        if (listName != null) {
-                            HashMap<String, String> listNameMap = new HashMap<>();
-                            listNameMap.put(id, listName);
+
+            if (movieListIds == null || movieListIds.isEmpty())
+                callback.onComplete(null, new Exception("No tienes ninguna lista"));
+
+            // Recuperamos los nombres de las listas de películas
+            HashMap<String, String> listNameMap = new HashMap<>();
+            movieListIds.forEach(id -> getMovieListByID(id, (document, error) -> {
+                if (error != null) {
+                    callback.onComplete(null, error);
+                } else {
+                    String listName = document.getString("name");
+                    if (listName != null) {
+                        listNameMap.put(id, listName);
+
+                        if (listNameMap.size() == movieListIds.size())
                             callback.onComplete(listNameMap, null);
-                        }
                     }
-                }));
-            }
-        }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener las listas de películas")));
+                }
+            }));
+        }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener las películas del usuario")));
     }
 
     public void addMovieToList(String listID, Movie movie, TaskCompletionCallback<String> callback) {
@@ -167,9 +170,6 @@ public class FirebaseManager {
         return movieList.stream().anyMatch(movieMap -> movieMap.getOriginalTitle().equals(movie.getOriginalTitle()));
     }
 
-
-
-
     @NonNull
     private static List<Movie> parseMovieList(DocumentSnapshot document) {
         List<Map<String, Object>> movieMaps = (List<Map<String, Object>>) document.get("movies");
@@ -181,6 +181,92 @@ public class FirebaseManager {
             movieList.add(m);
         }
         return movieList;
+    }
+
+    public void getListUsersIDsAndNames(String listID, TaskCompletionCallback<HashMap<String, String>> callback) {
+        getMovieListByID(listID, (document, error) -> {
+            if (error != null) {
+                callback.onComplete(null, error);
+            } else {
+                // Obtenemos el array de string de usuarios
+                List<String> users = (List<String>) document.get("userID");
+
+                // Por cada userID tenemos que buscar la base de datos su nombre de usuario
+                HashMap<String, String> usersMap = new HashMap<>();
+                for (String userID : users) {
+                    getUserName(userID, (userName, errorGetUser) -> {
+                        if (errorGetUser != null) {
+                            callback.onComplete(null, errorGetUser);
+                        } else {
+                            usersMap.put(userID, userName);
+                            if (usersMap.size() == users.size()) {
+                                callback.onComplete(usersMap, null);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    public void updateListName(String listID, String
+            newListname, TaskCompletionCallback<Boolean> callback) {
+        getMovieListByID(listID, (document, error) -> {
+            if (error != null) {
+                callback.onComplete(null, error);
+            } else {
+                document.getReference().update("name", newListname)
+                        .addOnSuccessListener(success -> callback.onComplete(true, null))
+                        .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al actualizar el nombre de la lista")));
+            }
+        });
+    }
+
+    public void deleteList(String listID, TaskCompletionCallback<Boolean> callback) {
+        getMovieListByID(listID, (document, error) -> {
+            if (error != null) {
+                callback.onComplete(null, error);
+            }
+
+            // Antes de borrar tenemos que obtener toda la lista de usuarios que están en la lista para borrarla de su perfil
+            deleteMovieListsIDFromUser(listID, (result, errorDeleteListsInUserCollection) -> {
+                if (errorDeleteListsInUserCollection != null) {
+                    callback.onComplete(null, errorDeleteListsInUserCollection);
+                } else if (result != null) {
+                    // Borramos la lista
+                    document.getReference().delete()
+                            .addOnSuccessListener(success -> callback.onComplete(true, null))
+                            .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al eliminar la lista")));
+                }
+            });
+        });
+    }
+
+    private void deleteMovieListsIDFromUser(String listID, TaskCompletionCallback<Boolean> callback) {
+        getListUsersIDsAndNames(listID, (usersMap, errorGetUsers) -> {
+            if (errorGetUsers != null) {
+                callback.onComplete(null, errorGetUsers);
+            } else if (usersMap != null) {
+                // Recorremos y borramos del campo movieLists de cada usuario el id de la lista
+                for (String userID : usersMap.keySet()) {
+                    firebaseFirestore.collection("users").document(userID).update("movieLists", FieldValue.arrayRemove(listID));
+                }
+                callback.onComplete(true, null);
+            }
+        });
+    }
+
+    public void deleteMovieFromList(String listID, Movie
+            movie, TaskCompletionCallback<Boolean> callback) {
+        getMovieListByID(listID, (document, error) -> {
+            if (error != null) {
+                callback.onComplete(null, error);
+            }
+            document.getReference().update("movies", FieldValue.arrayRemove(movie))
+                    .addOnSuccessListener(success -> callback.onComplete(true, null))
+                    .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al eliminar la película de la lista")));
+
+        });
     }
 }
 

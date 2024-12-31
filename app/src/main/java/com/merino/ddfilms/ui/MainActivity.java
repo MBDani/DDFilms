@@ -110,7 +110,8 @@ public class MainActivity extends AppCompatActivity {
         TextView profileName = headerView.findViewById(R.id.profile_name);
 
         // Recuperamos el nombre del usuario
-        firebaseManager.getUserName((userName, error) -> {
+        String uid = firebaseManager.getCurrentUser();
+        firebaseManager.getUserName(uid, (userName, error) -> {
             if (error != null) {
                 // Manejar el error
                 Log.e("FirebaseManager", "Error: " + error.getMessage());
