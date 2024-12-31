@@ -45,8 +45,6 @@ public class ListsFragment extends Fragment {
             adapter.updateData(movieLists);
         });
 
-//        loadMovieListNames();
-
         return view;
     }
 

@@ -1,7 +1,5 @@
 package com.merino.ddfilms.adapters;
 
-import static com.merino.ddfilms.utils.Utils.showMessage;
-
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
