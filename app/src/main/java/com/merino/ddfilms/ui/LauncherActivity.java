@@ -59,8 +59,9 @@ public class LauncherActivity extends AppCompatActivity {
         if (email == null && pw == null) {
             Log.d("LauncherActivity", "No hay credenciales guardadas");
             navigateToLoginActivity();
+        } else {
+            login(email, pw);
         }
-        login(email, pw);
     }
 
     private void login(String email, String pw) {
