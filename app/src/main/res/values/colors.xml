@@ -1,11 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="colorPrimary">#FF000000</color>
+    <!-- Colores principales -->
+    <color name="primary_dark">#1F1B24</color>    <!-- Negro azulado oscuro -->
+    <color name="primary_light">#F5F5F5</color>   <!-- Blanco grisáceo -->
+
+    <!-- Acentos dorados -->
+    <color name="gold_dark">#FFD700</color>       <!-- Dorado oscuro -->
+    <color name="gold_light">#FFF4CC</color>      <!-- Dorado claro -->
+
+    <!-- Secundarios -->
+    <color name="secondary_dark">#2D2D2D</color>  <!-- Gris muy oscuro -->
+    <color name="secondary_light">#E0E0E0</color> <!-- Gris claro -->
+
+    <!-- Acentos -->
+    <color name="accent_red">#FF4444</color>      <!-- Rojo para elementos destacados -->
+    <color name="accent_blue">#44B3FF</color>     <!-- Azul para elementos interactivos -->
+
+    <!-- Básicos -->
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Transparencias -->
+    <color name="black_60">#99000000</color>      <!-- Negro con 60% de opacidad -->
+    <color name="white_60">#99FFFFFF</color>      <!-- Blanco con 60% de opacidad -->
 </resources>

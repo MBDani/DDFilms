@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Estilos existentes -->
+    <style name="CircularImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ToolbarTitleStyle" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="NavigationDrawerText" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="HintTextStyle" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/gold_light</item>
+        <item name="android:translationY">120dp</item>
+    </style>
+
+    <!-- Estilo para el EditText de búsqueda -->
+    <style name="SearchEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:background">@drawable/search_edit_text_background</item>
+        <item name="android:textColorHint">@color/white_60</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:elevation">4dp</item>
+    </style>
+
+    <!-- Estilo para el LinearLayout principal -->
+    <style name="MainContainerStyle">
+        <item name="android:background">@drawable/main_background_gradient</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+    </style>
+
+    <!-- Estilo para el RecyclerView -->
+    <style name="MovieListStyle">
+        <item name="android:scrollbars">vertical</item>
+        <item name="android:scrollbarThumbVertical">@color/gold_dark</item>
+        <item name="android:scrollbarSize">4dp</item>
+        <item name="android:fadeScrollbars">true</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <!-- Nuevos estilos para los items del RecyclerView -->
+    <style name="MovieItemTitle" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="MovieItemYear" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/gold_dark</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/montserrat</item>
+    </style>
+
+    <style name="MovieItemOverview" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/white_60</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:maxLines">3</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lineSpacingExtra">2dp</item>
+    </style>
+
+    <style name="MovieItemRating" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/gold_light</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="android:drawablePadding">4dp</item>
+    </style>
+
+    <style name="MovieItemImageButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:tint">@color/white_60</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="MovieDetailTitle" parent="TextAppearance.MaterialComponents.Headline5">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="MovieDetailInfo" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/gold_light</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/montserrat</item>
+    </style>
+
+    <style name="MovieDetailOverview" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:textColor">@color/white_60</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <style name="MovieDetailSectionTitle" parent="TextAppearance.MaterialComponents.Subtitle1">
+        <item name="android:textColor">@color/gold_dark</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <style name="MovieDetailPersonName" parent="TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/montserrat_bold</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+
+    <style name="MovieDetailPersonRole" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textColor">@color/white_60</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">@font/montserrat</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+</resources>

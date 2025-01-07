@@ -20,4 +20,13 @@
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="recovery_instructions">Introduce tu email para recibir instrucciones de recuperación de contraseña</string>
+    <string name="search_movies_hint">Search</string>
+    <string name="back_button">back</string>
+    <string name="movie_backdrop">poster_background</string>
+    <string name="movie_poster">movie_poster</string>
+    <string name="cast_title">Cast</string>
+    <string name="crew_title">Crew</string>
+    <string name="add_to_list">add_to_list</string>
 </resources>

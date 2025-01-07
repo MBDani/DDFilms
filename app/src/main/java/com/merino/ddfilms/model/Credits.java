@@ -3,6 +3,8 @@ package com.merino.ddfilms.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.SerializedName;
+
 import lombok.Data;
 
 import java.util.List;
@@ -47,20 +49,36 @@ public class Credits implements Parcelable {
     @Data
     public static class Cast implements Parcelable {
         private boolean adult = true;
-        private int gender = 0;
-        private int id = 0;
-        private String knownForDepartment;
-        private String name;
-        private String originalName;
-        private double popularity = 0;
-        private String profilePath;
         private int castId = 0;
         private String character;
+
+        @SerializedName("credit_id")
         private String creditId;
+
+        private int gender = 0;
+
+        private int id = 0;
+
+        @SerializedName("known_for_department")
+        private String knownForDepartment;
+
+        private String name;
+
+        @SerializedName("original_name")
+        private String originalName;
+
+        private double popularity = 0;
+
+        @SerializedName("profile_path")
+        private String profilePath;
+
         private int order = 0;
 
         protected Cast(Parcel in) {
             adult = in.readByte() != 0;
+            castId = in.readInt();
+            character = in.readString();
+            creditId = in.readString();
             gender = in.readInt();
             id = in.readInt();
             knownForDepartment = in.readString();
@@ -68,9 +86,6 @@ public class Credits implements Parcelable {
             originalName = in.readString();
             popularity = in.readDouble();
             profilePath = in.readString();
-            castId = in.readInt();
-            character = in.readString();
-            creditId = in.readString();
             order = in.readInt();
         }
 
@@ -111,15 +126,29 @@ public class Credits implements Parcelable {
     @Data
     public static class Crew implements Parcelable {
         private boolean adult = true;
+
         private int gender = 0;
+
         private int id = 0;
+
+        @SerializedName("known_for_department")
         private String knownForDepartment;
+
         private String name;
+
+        @SerializedName("original_name")
         private String originalName;
+
         private double popularity = 0;
+
+        @SerializedName("profile_path")
         private String profilePath;
+
+        @SerializedName("credit_id")
         private String creditId;
+
         private String department;
+
         private String job;
 
         protected Crew(Parcel in) {
