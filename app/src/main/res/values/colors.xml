@@ -23,4 +23,20 @@
     <!-- Transparencias -->
     <color name="black_60">#99000000</color>      <!-- Negro con 60% de opacidad -->
     <color name="white_60">#99FFFFFF</color>      <!-- Blanco con 60% de opacidad -->
+
+    <!-- Tonos verdes -->
+    <color name="accent_green_dark">#388E3C</color>
+    <color name="accent_green_light">#A5D6A7</color>
+
+    <!-- Acentos adicionales -->
+    <color name="accent_yellow">#FFEB3B</color>
+    <color name="accent_orange">#FF9800</color>
+
+    <!-- Grises -->
+    <color name="gray_medium">#9E9E9E</color>
+    <color name="gray_light">#F5F5F5</color>
+    <color name="gray_dark">#121212</color>
+    <color name="blue_dark">#1A237E</color>
+    <color name="gray_divider">#444444</color> <!-- Gris intermedio oscuro -->
+
 </resources>

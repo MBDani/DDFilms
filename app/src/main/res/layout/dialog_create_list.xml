@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/main_background_gradient"
+    android:clipToOutline="true"
+    android:orientation="vertical"
+    android:padding="36dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:text="Crear nueva lista"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+        <ImageView
+            android:id="@+id/close_button"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="end"
+            android:layout_marginStart="15dp"
+            android:layout_marginBottom="15dp"
+            android:contentDescription="Cerrar"
+            android:src="@drawable/ic_close"
+            app:tint="@color/white" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/list_name_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/edit_text_background"
+        android:hint="Nombre de la lista"
+        android:padding="8dp"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white_60" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/create_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background"
+        android:fontFamily="sans-serif-medium"
+        android:text="Crear"
+        android:textColor="@color/black"
+        app:backgroundTint="@null" />
+
+</LinearLayout>

@@ -133,4 +133,10 @@
         <item name="android:maxLines">2</item>
         <item name="android:ellipsize">end</item>
     </style>
+
+    <style name="DialogCompleteScreenAnimation">
+        <item name="android:windowEnterAnimation">@anim/dialog_slide_up</item>
+        <item name="android:windowExitAnimation">@anim/fade_out</item>
+    </style>
+
 </resources>

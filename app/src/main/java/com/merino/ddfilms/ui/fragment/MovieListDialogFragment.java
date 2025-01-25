@@ -6,12 +6,11 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -34,20 +33,29 @@ public class MovieListDialogFragment extends DialogFragment {
 
     private final Movie movie;
 
-    private HashMap<String, String> mapMovieLists;
+    private HashMap<String, String> mapMovieLists = new HashMap<>();
 
     public MovieListDialogFragment(Movie movieId) {
         this.movie = movieId;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setStyle(DialogFragment.STYLE_NORMAL, R.style.Theme_DDFilms);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_movie_list, container, false);
+
         RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
-        Button createListButton = view.findViewById(R.id.createListButton);
+        LinearLayout createListButton = view.findViewById(R.id.create_list_button);
+        ImageView closeButton = view.findViewById(R.id.close_button);
 
         viewModel = new ViewModelProvider(this).get(MovieListViewModel.class);
+
         adapter = new MovieListAdapter(getContext(), new ArrayList<>(), this::addMovieToSelectedList);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
@@ -57,8 +65,14 @@ public class MovieListDialogFragment extends DialogFragment {
         });
 
         createListButton.setOnClickListener(v -> showCreateListDialog());
+        closeButton.setOnClickListener(v -> dismiss());
 
         loadMovieListNames();
+
+        // Redondear esquinas
+        if (getDialog() != null && getDialog().getWindow() != null) {
+            getDialog().getWindow().setBackgroundDrawableResource(R.drawable.main_background_gradient);
+        }
 
         return view;
     }
@@ -66,9 +80,12 @@ public class MovieListDialogFragment extends DialogFragment {
     private void loadMovieListNames() {
         viewModel.loadMovieListNames((listMapMovies, error) -> {
             if (listMapMovies != null) {
-                mapMovieLists = listMapMovies;
+                mapMovieLists.clear();
+                mapMovieLists.putAll(listMapMovies);
                 List<String> listMovies = new ArrayList<>(listMapMovies.values());
                 viewModel.setMovieLists(listMovies);
+            } else if (error != null) {
+                showMessage(getContext(), error.getMessage());
             }
         });
     }
@@ -98,31 +115,27 @@ public class MovieListDialogFragment extends DialogFragment {
     }
 
     private void showCreateListDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Crear nueva lista");
-
-        final EditText input = new EditText(getContext());
-        builder.setView(input);
-
-        builder.setPositiveButton("Crear", (dialog, which) -> {
-            String listName = input.getText().toString().trim();
-            createNewList(listName);
-        });
-
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss());
-        builder.show();
+        CreateListDialogFragment createListDialog = new CreateListDialogFragment();
+        createListDialog.setOnListCreatedListener(this::createNewList);
+        createListDialog.show(getChildFragmentManager(), "CreateListDialog");
     }
 
     private void createNewList(String listName) {
-        if (!listName.isEmpty()) {
-            viewModel.createNewMovieList(listName, (result, error) -> {
-                if (error != null) {
-                    showMessage(getContext(), error.getMessage());
-                } else if (result != null) {
-                    showMessage(getContext(), result);
-                    loadMovieListNames();
-                }
-            });
-        }
+        viewModel.createNewMovieList(listName, (result, error) -> {
+            if (error != null) {
+                showMessage(getContext(), error.getMessage());
+            } else if (result != null) {
+                showMessage(getContext(), result);
+                loadMovieListNames();
+            }
+        });
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // Aplicar la animación para la entrada
+        getDialog().getWindow().setWindowAnimations(R.style.DialogFadeAnimation);
     }
 }
