@@ -97,7 +97,7 @@ public class SearchFragment extends Fragment {
     }
 
     private void searchMovies(String query) {
-        tmdbService.searchMovies(query, false, "en-US", 1).enqueue(new Callback<SearchResponse>() {
+        tmdbService.searchMovies(query, false, "es-ES", 1).enqueue(new Callback<SearchResponse>() {
             @Override
             public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -115,7 +115,7 @@ public class SearchFragment extends Fragment {
     }
 
     private void loadPopularMovies() {
-        tmdbService.getPopularMovies(API_KEY).enqueue(new Callback<>() {
+        tmdbService.getPopularMovies(API_KEY, "es-ES").enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {

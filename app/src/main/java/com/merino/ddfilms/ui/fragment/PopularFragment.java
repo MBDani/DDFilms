@@ -63,7 +63,7 @@ public class PopularFragment extends Fragment {
 
 
     private void loadPopularMovies() {
-        tmdbService.getPopularMovies(API_KEY).enqueue(new Callback<>() {
+        tmdbService.getPopularMovies(API_KEY, "es-ES").enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {

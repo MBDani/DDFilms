@@ -128,7 +128,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void getDetailMovie(int id) {
-        tmdbService.getMovieDetails(id, API_KEY, "en-US").enqueue(new Callback<Credits>() {
+        tmdbService.getMovieDetails(id, API_KEY, "es-ES").enqueue(new Callback<Credits>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onResponse(Call<Credits> call, Response<Credits> response) {

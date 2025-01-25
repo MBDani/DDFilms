@@ -17,5 +17,5 @@ public interface TMDBService {
     Call<SearchResponse> searchMovies(@Query("query") String query, @Query("include_adult") boolean includeAdult, @Query("language") String language, @Query("page") int page);
 
     @GET("movie/popular")
-    Call<SearchResponse> getPopularMovies(@Query("api_key") String apiKey);
+    Call<SearchResponse> getPopularMovies(@Query("api_key") String apiKey, @Query("language") String language);
 }
