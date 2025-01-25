@@ -134,8 +134,7 @@ public class MovieListDialogFragment extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-
         // Aplicar la animación para la entrada
-        getDialog().getWindow().setWindowAnimations(R.style.DialogFadeAnimation);
+        Objects.requireNonNull(Objects.requireNonNull(getDialog()).getWindow()).setWindowAnimations(R.style.DialogCompleteScreenAnimation);
     }
 }
