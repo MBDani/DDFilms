@@ -88,7 +88,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         private final TextView overviewTextView;
         private final TextView yearTextView;
         private final TextView voteAverageTextView;
-        private final ImageView dragHandle;
+        private final TextView createdAtTextView;
         private final ImageButton deleteButton;
 
         public MovieViewHolder(@NonNull View itemView) {
@@ -98,7 +98,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView = itemView.findViewById(R.id.overview_text_view);
             yearTextView = itemView.findViewById(R.id.year_text_view);
             voteAverageTextView = itemView.findViewById(R.id.vote_average_text_view);
-            dragHandle = itemView.findViewById(R.id.drag_handle);
+            createdAtTextView = itemView.findViewById(R.id.created_at_text_view);
             deleteButton = itemView.findViewById(R.id.delete_button);
 
             setupClickListeners();
@@ -147,7 +147,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView.setText(movie.getOverview());
             voteAverageTextView.setText(String.format("%.1f", movie.getVoteAverage()));
 
-            dragHandle.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
+            // Manejo de la fecha de creación
+            if (movie.getCreatedAt() != null) {
+                createdAtTextView.setVisibility(View.VISIBLE);
+                createdAtTextView.setText("Añadido el " + movie.getCreatedAt());
+            } else {
+                createdAtTextView.setVisibility(View.GONE);
+            }
+
             deleteButton.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
         }
     }

@@ -81,6 +81,7 @@ public class MovieListActivity extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -119,36 +120,6 @@ public class MovieListActivity extends AppCompatActivity {
                 }
             });
         });
-
-
-        ItemTouchHelper.Callback callback = new ItemTouchHelper.SimpleCallback(
-                ItemTouchHelper.UP | ItemTouchHelper.DOWN,
-                0) {
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView,
-                                  @NonNull RecyclerView.ViewHolder viewHolder,
-                                  @NonNull RecyclerView.ViewHolder target) {
-                int fromPosition = viewHolder.getAdapterPosition();
-                int toPosition = target.getAdapterPosition();
-                Collections.swap(movieAdapter.getMovies(), fromPosition, toPosition);
-                movieAdapter.notifyItemMoved(fromPosition, toPosition);
-                return true;
-            }
-
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                // No implementamos swipe
-            }
-
-            @Override
-            public boolean isLongPressDragEnabled() {
-                return isEditMode;
-            }
-        };
-
-        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
-        touchHelper.attachToRecyclerView(movieListRecyclerView);
-
         movieListRecyclerView.setAdapter(movieAdapter);
         movieListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
     }

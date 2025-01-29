@@ -6,7 +6,10 @@ import android.os.Parcelable;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import lombok.Data;
 
@@ -34,6 +37,8 @@ public class Movie implements Parcelable {
     private double voteAverage;
     @SerializedName("vote_count")
     private int voteCount;
+    @Nullable
+    private String createdAt; // Campo para almacenar la fecha de creación en una lista
 
     // Constructor que lee desde un Parcel
     protected Movie(Parcel in) {
@@ -51,6 +56,7 @@ public class Movie implements Parcelable {
         video = in.readByte() != 0;
         voteAverage = in.readDouble();
         voteCount = in.readInt();
+        createdAt = in.readString();
     }
 
     protected Movie() {
@@ -73,6 +79,7 @@ public class Movie implements Parcelable {
         dest.writeByte((byte) (video ? 1 : 0));
         dest.writeDouble(voteAverage);
         dest.writeInt(voteCount);
+        dest.writeString(createdAt);
     }
 
     @Override
@@ -109,6 +116,7 @@ public class Movie implements Parcelable {
         movie.setVideo((Boolean) movieMap.get("video"));
         movie.setVoteAverage((Double) movieMap.get("voteAverage"));
         movie.setVoteCount(((Long) movieMap.get("voteCount")).intValue());
+        movie.setCreatedAt((String) movieMap.get("createdAt"));
         return movie;
     }
 }

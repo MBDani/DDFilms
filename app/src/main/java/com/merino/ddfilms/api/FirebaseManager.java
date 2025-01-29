@@ -15,9 +15,11 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.ui.auth.LoginActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
+import com.merino.ddfilms.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,6 +150,11 @@ public class FirebaseManager {
                 if (movieAlreadyExists) {
                     callback.onComplete(null, new Exception("La película ya se encuentra en la lista: " + listName));
                 } else {
+                    // Setteamos la fecha de creación
+                    Date date = new Date();
+                    String formattedDate = Utils.formatDate(date);
+                    movie.setCreatedAt(formattedDate);
+                    // Añadimos a la lista
                     documentSnapshot.getReference().update("movies", FieldValue.arrayUnion(movie)).addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
                 }
             }
