@@ -69,6 +69,16 @@ public class FirebaseManager {
         }).addOnFailureListener(e -> callback.onComplete(null, e));
     }
 
+    public void getUserMail(String uid, TaskCompletionCallback<String> callback) {
+        firebaseFirestore.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                callback.onComplete(documentSnapshot.getString("email"), null);
+            } else {
+                callback.onComplete(null, new Exception("Documento no encontrado"));
+            }
+        }).addOnFailureListener(e -> callback.onComplete(null, e));
+    }
+
     public void getTmdbApiKey(TaskCompletionCallback<String> callback) {
         firebaseRemoteConfig.fetchAndActivate().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {

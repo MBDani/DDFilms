@@ -108,16 +108,23 @@ public class MainActivity extends AppCompatActivity {
         // Referencias a los elementos del header
         ImageView profileImage = headerView.findViewById(R.id.profile_image);
         TextView profileName = headerView.findViewById(R.id.profile_name);
+        TextView profileMail = headerView.findViewById(R.id.profile_email);
 
-        // Recuperamos el nombre del usuario
+        // Recuperamos el nombre del usuario y el email
         String uid = firebaseManager.getCurrentUser();
         firebaseManager.getUserName(uid, (userName, error) -> {
             if (error != null) {
-                // Manejar el error
                 Log.e("FirebaseManager", "Error: " + error.getMessage());
                 return;
             }
             profileName.setText(userName);
+        });
+        firebaseManager.getUserMail(uid, (userEmail, error) -> {
+            if (error != null) {
+                Log.e("FirebaseManager", "Error: " + error.getMessage());
+                return;
+            }
+            profileMail.setText(userEmail);
         });
 
         // Todo recuperar imagen del usuario
