@@ -29,6 +29,7 @@
         <activity android:name="com.merino.ddfilms.ui.MovieDetailActivity" />
         <activity android:name="com.merino.ddfilms.ui.MovieListActivity" />
         <activity android:name="com.merino.ddfilms.ui.EditListActivity" />
+        <activity android:name="com.merino.ddfilms.ui.SearchActivity" />
         <activity
             android:name="com.merino.ddfilms.intentFilter.IntentFilterActivity"
             android:exported="true">

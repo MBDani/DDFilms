@@ -1,6 +1,5 @@
 package com.merino.ddfilms.api;
 
-
 import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
@@ -8,6 +7,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class FirebaseManager {
 
@@ -192,6 +193,8 @@ public class FirebaseManager {
         List<Map<String, Object>> movieMaps = (List<Map<String, Object>>) document.get("movies");
         List<Movie> movieList = new ArrayList<>();
 
+        if (movieMaps == null || movieMaps.isEmpty()) return movieList;
+
         // Parseamos los objetos Movie de la lista
         for (Map<String, Object> movieMap : movieMaps) {
             Movie m = Movie.mapToMovie(movieMap);
@@ -273,16 +276,29 @@ public class FirebaseManager {
         });
     }
 
-    public void deleteMovieFromList(String listID, Movie
-            movie, TaskCompletionCallback<Boolean> callback) {
-        getMovieListByID(listID, (document, error) -> {
-            if (error != null) {
-                callback.onComplete(null, error);
-            }
-            document.getReference().update("movies", FieldValue.arrayRemove(movie))
-                    .addOnSuccessListener(success -> callback.onComplete(true, null))
-                    .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al eliminar la película de la lista")));
+    public void deleteMovieFromList(String listID, Movie movie, TaskCompletionCallback<Boolean> callback) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.runTransaction(transaction -> {
+            DocumentReference docRef = db.collection("movieLists").document(listID);
+            DocumentSnapshot snapshot = transaction.get(docRef);
 
+            List<Map<String, Object>> movies = (List<Map<String, Object>>) snapshot.get("movies");
+            if (movies == null) {
+                callback.onComplete(null, new Exception("No se encontró la lista de películas"));
+            }
+            List<Map<String, Object>> updatedMovies = movies.stream()
+                    .filter(m -> {
+                        String movieId = String.valueOf(m.get("id"));
+                        return !movieId.equals(String.valueOf(movie.getId()));
+                    })
+                    .collect(Collectors.toList());
+
+            transaction.update(docRef, "movies", updatedMovies);
+            return null;
+        }).addOnSuccessListener(result -> {
+            callback.onComplete(true, null);
+        }).addOnFailureListener(e -> {
+            callback.onComplete(null, new Exception("Error al eliminar la película de la lista: " + e.getMessage()));
         });
     }
 

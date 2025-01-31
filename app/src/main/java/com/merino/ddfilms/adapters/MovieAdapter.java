@@ -32,10 +32,16 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     @Setter
     @Getter
     private List<Movie> movies = new ArrayList<>();
+    @Setter
+    @Getter
+    private List<Integer> moviesIdList = new ArrayList<>();
     private boolean isEditMode = false;
+    private boolean isAddMode = false;
     private OnItemLongClickListener longClickListener;
 
     private OnDeleteClickListener deleteClickListener;
+    private OnAddClickListener addClickListener;
+    private OnCheckClickListener checkClickListener;
 
     @Setter
     private String listID;
@@ -48,6 +54,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         void onDeleteClick(int position, Movie movie);
     }
 
+    public interface OnAddClickListener {
+        void onAddClick(int position, Movie movie);
+    }
+
+    public interface OnCheckClickListener {
+        void onCheckClick(int position, Movie movie);
+    }
+
     public void setOnItemLongClickListener(OnItemLongClickListener listener) {
         this.longClickListener = listener;
     }
@@ -56,8 +70,21 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         this.deleteClickListener = listener;
     }
 
+    public void setOnAddClickListener(OnAddClickListener listener) {
+        this.addClickListener = listener;
+    }
+
+    public void setOnCheckClickListener(OnCheckClickListener listener) {
+        this.checkClickListener = listener;
+    }
+
     public void setEditMode(boolean editMode) {
         isEditMode = editMode;
+        notifyDataSetChanged();
+    }
+
+    public void setAddMode(boolean addMode) {
+        isAddMode = addMode;
         notifyDataSetChanged();
     }
 
@@ -96,7 +123,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         holder.bind(movie);
 
         // Determine if we should show the createdAt TextView
-        if (movie.getCreatedAt() != null && (position == 0 || !Objects.equals(movies.get(position - 1).getCreatedAt(), movie.getCreatedAt()))) {
+        if (movie.getCreatedAt() != null && !isAddMode && (position == 0 || !Objects.equals(movies.get(position - 1).getCreatedAt(), movie.getCreatedAt()))) {
             holder.createdAtTextView.setText("Añadido el " + movie.getCreatedAt());
             holder.createdAtTextView.setVisibility(View.VISIBLE);
         } else {
@@ -122,6 +149,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         private final TextView voteAverageTextView;
         private final TextView createdAtTextView;
         private final ImageButton deleteButton;
+        private final ImageButton addButton;
+        private final ImageButton checkButton;
 
         public MovieViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -132,6 +161,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             voteAverageTextView = itemView.findViewById(R.id.vote_average_text_view);
             createdAtTextView = itemView.findViewById(R.id.created_at_text_view);
             deleteButton = itemView.findViewById(R.id.delete_button);
+            addButton = itemView.findViewById(R.id.add_button);
+            checkButton = itemView.findViewById(R.id.check_button);
 
             setupClickListeners();
         }
@@ -164,6 +195,20 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
                     deleteClickListener.onDeleteClick(position, movies.get(position));
                 }
             });
+
+            addButton.setOnClickListener(v -> {
+                int position = getBindingAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    addClickListener.onAddClick(position, movies.get(position));
+                }
+            });
+
+            checkButton.setOnClickListener(v -> {
+                int position = getBindingAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    checkClickListener.onCheckClick(position, movies.get(position));
+                }
+            });
         }
 
         @SuppressLint("DefaultLocale")
@@ -174,15 +219,16 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView.setText(movie.getOverview());
             voteAverageTextView.setText(String.format("%.1f", movie.getVoteAverage()));
 
-            // Manejo de la fecha de creación
-            if (movie.getCreatedAt() != null) {
-                createdAtTextView.setVisibility(View.VISIBLE);
-                createdAtTextView.setText("Añadido el " + movie.getCreatedAt());
-            } else {
-                createdAtTextView.setVisibility(View.GONE);
-            }
-
             deleteButton.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
+
+            if (isAddMode) {
+                boolean isAlreadyAdded = isMovieAlreadyAdded(movie, moviesIdList);
+                addButton.setVisibility(isAlreadyAdded ? View.GONE : View.VISIBLE);
+                checkButton.setVisibility(isAlreadyAdded ? View.VISIBLE : View.GONE);
+            } else {
+                addButton.setVisibility(View.GONE);
+                checkButton.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -191,5 +237,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             return movies.get(position);
         }
         return null;
+    }
+
+    private boolean isMovieAlreadyAdded(Movie movie, List<Integer> moviesIdList) {
+        for (Integer id : moviesIdList) {
+            if (Objects.equals(id, movie.getId())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

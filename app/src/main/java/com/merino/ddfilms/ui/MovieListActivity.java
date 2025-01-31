@@ -9,11 +9,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +22,7 @@ import com.merino.ddfilms.adapters.MovieAdapter;
 import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.model.Movie;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,6 +38,7 @@ public class MovieListActivity extends AppCompatActivity {
     private MenuItem doneMenuItem;
     private MenuItem moreActionsMenuItem;
     private final FirebaseManager firebaseManager = new FirebaseManager();
+    private List<Movie> movieList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +49,7 @@ public class MovieListActivity extends AppCompatActivity {
         setupToolbar();
         setupRecyclerView();
         loadMoviesFromList(listID);
+        fabAdd.setOnClickListener(v -> setupAddMovieFragment());
     }
 
     private void setupViews() {
@@ -59,6 +60,18 @@ public class MovieListActivity extends AppCompatActivity {
         Intent intent = getIntent();
         listID = intent.getStringExtra("listID");
         listName = intent.getStringExtra("listName");
+    }
+
+    private void setupAddMovieFragment() {
+        Intent intent = new Intent(this, SearchActivity.class);
+        intent.putExtra("listID", listID);
+        intent.putExtra("listName", listName);
+
+        int[] moviesID = movieList.stream()
+                .mapToInt(Movie::getId)
+                .toArray();
+        intent.putExtra("moviesID", moviesID);
+        startActivity(intent);
     }
 
     private void setupToolbar() {
@@ -117,17 +130,12 @@ public class MovieListActivity extends AppCompatActivity {
                     showMessage(getApplicationContext(), error.getMessage());
                 } else if (result != null) {
                     movieAdapter.removeMovie(position);
+                    movieList.remove(movie);
                 }
             });
         });
         movieListRecyclerView.setAdapter(movieAdapter);
         movieListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-    }
-
-    private void setupFAB() {
-        fabAdd.setOnClickListener(v -> {
-            // TODO Implementar añadir película
-        });
     }
 
     private void showBottomSheet() {
@@ -185,6 +193,7 @@ public class MovieListActivity extends AppCompatActivity {
         Collections.reverse(movies);
         movieAdapter.setMovies(movies);
         movieAdapter.notifyDataSetChanged();
+        movieList = movies;
     }
 
     private void loadMoviesFromList(String listID) {
@@ -236,7 +245,11 @@ public class MovieListActivity extends AppCompatActivity {
         movieAdapter.setEditMode(false);
     }
 
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadMoviesFromList(listID);
+    }
 }
 
 

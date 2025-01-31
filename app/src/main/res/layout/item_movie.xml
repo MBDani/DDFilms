@@ -72,5 +72,23 @@
             android:src="@drawable/ic_remove"
             android:visibility="gone" />
 
+        <ImageButton
+            android:id="@+id/add_button"
+            style="@style/MovieItemImageButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_add"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/check_button"
+            style="@style/MovieItemImageButton"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_done"
+            android:visibility="gone"/>
+
     </LinearLayout>
 </LinearLayout>
