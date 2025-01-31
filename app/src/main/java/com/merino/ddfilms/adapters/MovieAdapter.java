@@ -20,7 +20,10 @@ import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.ui.MovieDetailActivity;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -61,15 +64,44 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     @NonNull
     @Override
     public MovieViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_movie, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_movie, parent, false);
         return new MovieViewHolder(view);
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void setMovies(List<Movie> movies) {
+        Map<String, List<Movie>> moviesByDate = new LinkedHashMap<>();
+
+        for (Movie movie : movies) {
+            if (movie.getCreatedAt() != null) {
+                moviesByDate.computeIfAbsent(movie.getCreatedAt(), k -> new ArrayList<>()).add(movie);
+            }
+        }
+
+        if (!moviesByDate.isEmpty()) {
+            List<Movie> sortedMovies = new ArrayList<>();
+            for (Map.Entry<String, List<Movie>> entry : moviesByDate.entrySet()) {
+                sortedMovies.addAll(entry.getValue());
+            }
+            this.movies = sortedMovies;
+        } else {
+            this.movies = movies;
+        }
+        notifyDataSetChanged();
     }
 
     @Override
     public void onBindViewHolder(@NonNull MovieViewHolder holder, int position) {
         Movie movie = movies.get(position);
         holder.bind(movie);
+
+        // Determine if we should show the createdAt TextView
+        if (movie.getCreatedAt() != null && (position == 0 || !Objects.equals(movies.get(position - 1).getCreatedAt(), movie.getCreatedAt()))) {
+            holder.createdAtTextView.setText("Añadido el " + movie.getCreatedAt());
+            holder.createdAtTextView.setVisibility(View.VISIBLE);
+        } else {
+            holder.createdAtTextView.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -112,10 +144,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
                         Intent intent = new Intent(itemView.getContext(), MovieDetailActivity.class);
                         intent.putExtra("movie", movie);
 
-                        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                                (Activity) itemView.getContext(),
-                                posterImageView, "moviePosterTransition"
-                        );
+                        ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation((Activity) itemView.getContext(), posterImageView, "moviePosterTransition");
 
                         itemView.getContext().startActivity(intent, options.toBundle());
                     }
@@ -139,9 +168,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
         @SuppressLint("DefaultLocale")
         public void bind(Movie movie) {
-            Glide.with(itemView.getContext())
-                    .load("https://image.tmdb.org/t/p/w500" + movie.getPosterPath())
-                    .into(posterImageView);
+            Glide.with(itemView.getContext()).load("https://image.tmdb.org/t/p/w500" + movie.getPosterPath()).into(posterImageView);
             titleTextView.setText(movie.getTitle());
             yearTextView.setText("(" + movie.getReleaseDate() + ")");
             overviewTextView.setText(movie.getOverview());
