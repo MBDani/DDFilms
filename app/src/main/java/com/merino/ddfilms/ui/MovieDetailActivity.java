@@ -25,6 +25,7 @@ import com.merino.ddfilms.api.TMDBService;
 import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Credits;
 import com.merino.ddfilms.model.Movie;
+import com.merino.ddfilms.model.MovieDetails;
 import com.merino.ddfilms.transitions.DetailsTransition;
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment;
 
@@ -41,6 +42,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     private static final String API_KEY = ApiKeyManager.getInstance().getApiKey();
 
     private static Credits credits;
+    private static MovieDetails movieDetails;
 
     private ImageView backdropImageView;
     private ImageView posterImageView;
@@ -49,11 +51,9 @@ public class MovieDetailActivity extends AppCompatActivity {
     private TextView movieOverview;
     private FloatingActionButton addToListButton;
     private TextView movieDirector;
-
+    private TextView duration;
     private ImageButton backButton;
-
     private RecyclerView castRecyclerView, crewRecyclerView;
-
     private CastAdapter castAdapter;
     private CrewAdapter crewAdapter;
 
@@ -73,6 +73,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         movieOverview.setMovementMethod(new ScrollingMovementMethod());
         addToListButton = findViewById(R.id.add_to_list_button);
         movieDirector = findViewById(R.id.movie_director);
+        duration = findViewById(R.id.duration);
         backButton = findViewById(R.id.back_button);
 
         castRecyclerView = findViewById(R.id.cast_recycler_view);
@@ -93,7 +94,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         // Recuperamos el objeto Movie de los extras
         Movie movie = getIntent().getParcelableExtra("movie");
 
-        getDetailMovie(movie.getId());
+        getMovieCredits(movie.getId());
+        getMovieDetails(movie.getId());
 
         // Rellenamos los datos en las vistas
         if (movie != null) {
@@ -127,8 +129,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         });
     }
 
-    private void getDetailMovie(int id) {
-        tmdbService.getMovieDetails(id, API_KEY, "es-ES").enqueue(new Callback<Credits>() {
+    private void getMovieCredits(int id) {
+        tmdbService.getMovieCredits(id, API_KEY, "es-ES").enqueue(new Callback<Credits>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onResponse(Call<Credits> call, Response<Credits> response) {
@@ -152,6 +154,27 @@ public class MovieDetailActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<Credits> call, Throwable t) {
+                Log.e("MovieDetailActivity", "Error al obtener créditos de la película", t);
+                showMessage(getApplicationContext(), "Error al obtener créditos de la película");
+            }
+        });
+    }
+
+    private void getMovieDetails(int id) {
+        tmdbService.getMovieDetails(id, API_KEY, "es-ES").enqueue(new Callback<MovieDetails>() {
+            @SuppressLint("NotifyDataSetChanged")
+            @Override
+            public void onResponse(Call<MovieDetails> call, Response<MovieDetails> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    movieDetails = response.body();
+                    duration.setText(movieDetails.getDuration());
+                } else {
+                    Log.e("MovieDetailActivity", "Error en la respuesta: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MovieDetails> call, Throwable t) {
                 Log.e("MovieDetailActivity", "Error al obtener detalles de la película", t);
                 showMessage(getApplicationContext(), "Error al obtener detalles de la película");
             }

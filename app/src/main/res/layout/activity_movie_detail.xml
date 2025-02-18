@@ -123,6 +123,17 @@
                 tools:text="Director" />
 
             <TextView
+                android:id="@+id/duration"
+                style="@style/MovieDetailInfo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:layout_constraintEnd_toStartOf="@+id/poster_card"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/movie_director"
+                tools:text="Duration" />
+
+            <TextView
                 android:id="@+id/movie_overview"
                 style="@style/MovieDetailOverview"
                 android:layout_width="match_parent"
