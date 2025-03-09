@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.merino.ddfilms.R;
@@ -30,7 +31,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_movie_list, parent, false);
-        return new ViewHolder(view);
+        return new ViewHolder(view, context);
     }
 
     @Override
@@ -52,9 +53,12 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textView;
 
-        public ViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView, Context context) {
             super(itemView);
             textView = itemView.findViewById(R.id.textView);
+
+            int color = ContextCompat.getColor(context, R.color.primary_light);
+            textView.setTextColor(color);
         }
     }
 
