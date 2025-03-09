@@ -58,10 +58,9 @@ public class FirebaseManager {
         Toast.makeText(context, "Sesión cerrada con éxito", Toast.LENGTH_SHORT).show();
     }
 
-    public String getCurrentUser() {
+    public String getCurrentUserUID() {
         return Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
     }
-
     public void getUserName(String uid, TaskCompletionCallback<String> callback) {
         firebaseFirestore.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
@@ -155,8 +154,16 @@ public class FirebaseManager {
                     Date date = new Date();
                     String formattedDate = Utils.formatDate(date);
                     movie.setCreatedAt(formattedDate);
-                    // Añadimos a la lista
-                    documentSnapshot.getReference().update("movies", FieldValue.arrayUnion(movie)).addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
+
+                    // Obtenemos el nombre del usuario y guardamos en la base de datos
+                    getUserName(getCurrentUserUID(), (userName, errorGetUser) -> {
+                        if (errorGetUser != null) {
+                            callback.onComplete(null, errorGetUser);
+                        } else {
+                            movie.setAddedBy(userName);
+                            documentSnapshot.getReference().update("movies", FieldValue.arrayUnion(movie)).addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
+                        }
+                    });
                 }
             }
         });
@@ -304,12 +311,12 @@ public class FirebaseManager {
 
     public void addListToUser(String listID, TaskCompletionCallback<Boolean> callback) {
         // Añadimos la lista al usuario campo movieLists
-        firebaseFirestore.collection("users").document(getCurrentUser())
+        firebaseFirestore.collection("users").document(getCurrentUserUID())
                 .update("movieLists", FieldValue.arrayUnion(listID))
                 .addOnSuccessListener(success -> {
                     // Añadimos en la colección movieLists por el id el usuario
                     firebaseFirestore.collection("movieLists").document(listID)
-                            .update("userID", FieldValue.arrayUnion(getCurrentUser()))
+                            .update("userID", FieldValue.arrayUnion(getCurrentUserUID()))
                             .addOnSuccessListener(success2 -> callback.onComplete(true, null))
                             .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
                 })

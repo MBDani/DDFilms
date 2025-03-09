@@ -147,6 +147,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         private final TextView overviewTextView;
         private final TextView yearTextView;
         private final TextView voteAverageTextView;
+        private final TextView addedBy;
         private final TextView createdAtTextView;
         private final ImageButton deleteButton;
         private final ImageButton addButton;
@@ -159,6 +160,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView = itemView.findViewById(R.id.overview_text_view);
             yearTextView = itemView.findViewById(R.id.year_text_view);
             voteAverageTextView = itemView.findViewById(R.id.vote_average_text_view);
+            addedBy = itemView.findViewById(R.id.added_by_text_view);
             createdAtTextView = itemView.findViewById(R.id.created_at_text_view);
             deleteButton = itemView.findViewById(R.id.delete_button);
             addButton = itemView.findViewById(R.id.add_button);
@@ -218,6 +220,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             yearTextView.setText("(" + movie.getReleaseDate() + ")");
             overviewTextView.setText(movie.getOverview());
             voteAverageTextView.setText(String.format("%.1f", movie.getVoteAverage()));
+
+            if (movie.getAddedBy() != null && !movie.getAddedBy().isEmpty()) {
+                addedBy.setText(movie.getAddedBy());
+                posterImageView.setMaxHeight(500);
+                posterImageView.setMinimumHeight(500);
+            }
 
             deleteButton.setVisibility(isEditMode ? View.VISIBLE : View.GONE);
 

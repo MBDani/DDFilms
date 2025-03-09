@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         TextView profileMail = headerView.findViewById(R.id.profile_email);
 
         // Recuperamos el nombre del usuario y el email
-        String uid = firebaseManager.getCurrentUser();
+        String uid = firebaseManager.getCurrentUserUID();
         firebaseManager.getUserName(uid, (userName, error) -> {
             if (error != null) {
                 Log.e("FirebaseManager", "Error: " + error.getMessage());

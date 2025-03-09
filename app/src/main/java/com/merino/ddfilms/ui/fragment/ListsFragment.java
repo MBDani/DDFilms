@@ -15,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.MovieListAdapter;
 import com.merino.ddfilms.ui.MovieListActivity;

@@ -24,7 +24,9 @@
         <ImageView
             android:id="@+id/poster_image_view"
             android:layout_width="100dp"
-            android:layout_height="150dp"
+            android:layout_height="wrap_content"
+            android:minHeight="150dp"
+            android:maxHeight="150dp"
             android:scaleType="centerCrop"
             android:background="@color/secondary_dark" />
 
@@ -57,6 +59,13 @@
             <TextView
                 android:id="@+id/vote_average_text_view"
                 style="@style/MovieItemRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/added_by_text_view"
+                android:textColor="@color/gray_medium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp" />

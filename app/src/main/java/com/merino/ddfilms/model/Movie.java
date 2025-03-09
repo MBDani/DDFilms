@@ -39,6 +39,8 @@ public class Movie implements Parcelable {
     private int voteCount;
     @Nullable
     private String createdAt; // Campo para almacenar la fecha de creación en una lista
+    @Nullable
+    private String addedBy;
 
     // Constructor que lee desde un Parcel
     protected Movie(Parcel in) {
@@ -57,6 +59,7 @@ public class Movie implements Parcelable {
         voteAverage = in.readDouble();
         voteCount = in.readInt();
         createdAt = in.readString();
+        addedBy = in.readString();
     }
 
     protected Movie() {
@@ -80,6 +83,7 @@ public class Movie implements Parcelable {
         dest.writeDouble(voteAverage);
         dest.writeInt(voteCount);
         dest.writeString(createdAt);
+        dest.writeString(addedBy);
     }
 
     @Override
@@ -117,6 +121,7 @@ public class Movie implements Parcelable {
         movie.setVoteAverage((Double) movieMap.get("voteAverage"));
         movie.setVoteCount(((Long) movieMap.get("voteCount")).intValue());
         movie.setCreatedAt((String) movieMap.get("createdAt"));
+        movie.setAddedBy((String) movieMap.get("addedBy"));
         return movie;
     }
 }
