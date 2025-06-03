@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="24dp"
+    android:background="@drawable/background_login">
+
+    <!-- Título del diálogo -->
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/write_review_title"
+        android:textAlignment="center"
+        android:textColor="@color/gold_dark"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Subtítulo con el nombre de la película -->
+    <TextView
+        android:id="@+id/movie_title_review"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/gold_light"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_title"
+        tools:text="Título de la película" />
+
+    <!-- Layout para las estrellas interactivas -->
+    <LinearLayout
+        android:id="@+id/stars_rating_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/movie_title_review">
+
+        <ImageView
+            android:id="@+id/rating_star_1"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_star"
+            android:contentDescription="@string/star_rating"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <ImageView
+            android:id="@+id/rating_star_2"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_star"
+            android:contentDescription="@string/star_rating"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <ImageView
+            android:id="@+id/rating_star_3"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_star"
+            android:contentDescription="@string/star_rating"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <ImageView
+            android:id="@+id/rating_star_4"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_star"
+            android:contentDescription="@string/star_rating"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <ImageView
+            android:id="@+id/rating_star_5"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="4dp"
+            android:src="@drawable/ic_star"
+            android:contentDescription="@string/star_rating"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true" />
+
+    </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/review_input_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:hint="@string/review_hint"
+        app:boxBackgroundMode="outline"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp"
+        app:hintTextColor="@color/primary_light"
+        app:layout_constraintTop_toBottomOf="@+id/stars_rating_layout">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/review_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minLines="3"
+            android:maxLines="6"
+            android:textColor="@color/gold_light"
+            android:gravity="top|start"
+            android:inputType="textMultiLine|textCapSentences"
+            android:scrollbars="vertical" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Botones de acción -->
+    <LinearLayout
+        android:id="@+id/buttons_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/review_input_layout">
+
+        <!-- Botón Cancelar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="@string/cancel"
+            app:backgroundTint="@null" />
+
+        <!-- Botón Publicar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/publish_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/publish_review"
+            android:textColor="@color/black"
+            app:backgroundTint="@color/gold_dark" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

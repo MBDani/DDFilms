@@ -29,4 +29,20 @@
     <string name="cast_title">Cast</string>
     <string name="crew_title">Crew</string>
     <string name="add_to_list">add_to_list</string>
+
+
+    <string name="reviews_title">Reviews</string>
+    <string name="add_review">Añadir review</string>
+    <string name="star_rating">star_rating</string>
+    <string name="like_review">like_review</string>
+    <string name="dislike_review">dislike_review</string>
+    <string name="write_review_title">Escribir reseña</string>
+    <string name="no_rating">Sin valoración</string>
+    <string name="your_review">Tu review</string>
+    <string name="review_hint">Escribe aquí tu reseña</string>
+    <string name="cancel">Cancelar</string>
+    <string name="publish_review">Publicar review</string>
+    <string name="rating_required">rating_required</string>
+    <string name="reviewing_movie">reviewing_movie %s</string>
+    <string name="current_rating">current_rating %s</string>
 </resources>

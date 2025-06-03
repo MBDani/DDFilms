@@ -20,42 +20,55 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.CastAdapter;
 import com.merino.ddfilms.adapters.CrewAdapter;
+import com.merino.ddfilms.adapters.ReviewAdapter;
+import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
 import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Credits;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.MovieDetails;
+import com.merino.ddfilms.model.Review;
 import com.merino.ddfilms.transitions.DetailsTransition;
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment;
+import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MovieDetailActivity extends AppCompatActivity {
+public class MovieDetailActivity extends AppCompatActivity implements
+        WriteReviewDialogFragment.OnReviewSubmittedListener,
+        ReviewAdapter.OnReviewInteractionListener {
 
     private TMDBService tmdbService;
-
     private static final String API_KEY = ApiKeyManager.getInstance().getApiKey();
-
     private static Credits credits;
     private static MovieDetails movieDetails;
-
     private ImageView backdropImageView;
     private ImageView posterImageView;
     private TextView movieTitle;
     private TextView movieYearDuration;
     private TextView movieOverview;
     private FloatingActionButton addToListButton;
+    private FloatingActionButton writeReviewButton;
     private TextView movieDirector;
     private TextView duration;
     private ImageButton backButton;
-    private RecyclerView castRecyclerView, crewRecyclerView;
+    private RecyclerView castRecyclerView, crewRecyclerView, reviewsRecyclerView;;
     private CastAdapter castAdapter;
     private CrewAdapter crewAdapter;
+    private ReviewAdapter reviewAdapter;
+    private Movie currentMovie;
+    private List<Review> reviewsList = new ArrayList<>();
+    private FirebaseManager firebaseManager = new FirebaseManager();
+    private String userId;
+    private String userName;
+    private Review userReview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +78,34 @@ public class MovieDetailActivity extends AppCompatActivity {
         tmdbService = TMDBClient.getClient(API_KEY).create(TMDBService.class);
 
         // Inicializamos las vistas
+        initViews();
+        setupRecyclerViews();
+
+        // Recuperamos el objeto Movie de los extras
+        Movie movie = getIntent().getParcelableExtra("movie");
+
+        getMovieCredits(movie.getId());
+        getMovieDetails(movie.getId());
+
+        // Recuperamos el objeto Movie de los extras
+        currentMovie = getIntent().getParcelableExtra("movie");
+
+        if (currentMovie != null) {
+            getMovieCredits(currentMovie.getId());
+            getMovieDetails(currentMovie.getId());
+            loadMovieReviews(currentMovie.getId());
+            setupMovieData(currentMovie);
+        }
+        getUserData();
+        setupClickListeners();
+    }
+
+    private void getUserData() {
+        userId = firebaseManager.getCurrentUserUID();
+        firebaseManager.getUserName(userId, (userName, error) -> this.userName = userName);
+    }
+
+    private void initViews() {
         backdropImageView = findViewById(R.id.backdrop_image_view);
         posterImageView = findViewById(R.id.poster_image_view);
         movieTitle = findViewById(R.id.movie_title);
@@ -72,16 +113,21 @@ public class MovieDetailActivity extends AppCompatActivity {
         movieOverview = findViewById(R.id.movie_overview);
         movieOverview.setMovementMethod(new ScrollingMovementMethod());
         addToListButton = findViewById(R.id.add_to_list_button);
+        writeReviewButton = findViewById(R.id.write_review_button);
         movieDirector = findViewById(R.id.movie_director);
         duration = findViewById(R.id.duration);
         backButton = findViewById(R.id.back_button);
 
         castRecyclerView = findViewById(R.id.cast_recycler_view);
         crewRecyclerView = findViewById(R.id.crew_recycler_view);
+        reviewsRecyclerView = findViewById(R.id.reviews_recycler_view);
+    }
 
+    private void setupRecyclerViews() {
         // Inicializar adaptadores con listas vacías
         castAdapter = new CastAdapter(new ArrayList<>());
         crewAdapter = new CrewAdapter(new ArrayList<>());
+        reviewAdapter = new ReviewAdapter(reviewsList, this);
 
         // Configurar RecyclerView para cast
         castRecyclerView.setAdapter(castAdapter);
@@ -91,42 +137,46 @@ public class MovieDetailActivity extends AppCompatActivity {
         crewRecyclerView.setAdapter(crewAdapter);
         crewRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
-        // Recuperamos el objeto Movie de los extras
-        Movie movie = getIntent().getParcelableExtra("movie");
+        // Configurar RecyclerView para reviews
+        reviewsRecyclerView.setAdapter(reviewAdapter);
+        reviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        reviewsRecyclerView.setNestedScrollingEnabled(false);
+    }
 
-        getMovieCredits(movie.getId());
-        getMovieDetails(movie.getId());
+    private void setupMovieData(Movie movie) {
+        // Asignar el nombre de la transición
+        posterImageView.setTransitionName("moviePosterTransition");
+        getWindow().setSharedElementEnterTransition(new DetailsTransition());
 
-        // Rellenamos los datos en las vistas
-        if (movie != null) {
+        movieTitle.setText(movie.getTitle());
+        String movieYearDurationText = movieYearDuration.getText() + movie.getReleaseDate();
+        movieYearDuration.setText(movieYearDurationText);
+        movieOverview.setText(movie.getOverview());
 
-            // Asignar el nombre de la transición
-            posterImageView.setTransitionName("moviePosterTransition");
-            getWindow().setSharedElementEnterTransition(new DetailsTransition());
+        // Usamos Glide para cargar las imágenes
+        Glide.with(this)
+                .load("https://image.tmdb.org/t/p/w500/" + movie.getBackdropPath())
+                .into(backdropImageView);
+        Glide.with(this)
+                .load("https://image.tmdb.org/t/p/w500/" + movie.getPosterPath())
+                .into(posterImageView);
+    }
 
-            movieTitle.setText(movie.getTitle());
-            String movieYearDurationText = movieYearDuration.getText() + movie.getReleaseDate();
-            movieYearDuration.setText(movieYearDurationText);
-            movieOverview.setText(movie.getOverview());
-
-            // Usamos Glide para cargar las imágenes
-            Glide.with(this)
-                    .load("https://image.tmdb.org/t/p/w500/" + movie.getBackdropPath())
-                    .into(backdropImageView);
-            Glide.with(this)
-                    .load("https://image.tmdb.org/t/p/w500/" + movie.getPosterPath())
-                    .into(posterImageView);
-        }
-
+    private void setupClickListeners() {
         // Lógica para el botón "Añadir a la lista"
         addToListButton.setOnClickListener(v -> {
-            MovieListDialogFragment dialog = new MovieListDialogFragment(movie);
+            MovieListDialogFragment dialog = new MovieListDialogFragment(currentMovie);
             dialog.show(getSupportFragmentManager(), "MovieListDialog");
         });
 
-        backButton.setOnClickListener(v -> {
-            onBackPressed();
+        // Lógica para el botón "Escribir reseña"
+        writeReviewButton.setOnClickListener(v -> {
+            WriteReviewDialogFragment dialog = new WriteReviewDialogFragment(currentMovie, userReview);
+            dialog.setOnReviewSubmittedListener(this);
+            dialog.show(getSupportFragmentManager(), "WriteReviewDialog");
         });
+
+        backButton.setOnClickListener(v -> onBackPressed());
     }
 
     private void getMovieCredits(int id) {
@@ -179,5 +229,132 @@ public class MovieDetailActivity extends AppCompatActivity {
                 showMessage(getApplicationContext(), "Error al obtener detalles de la película");
             }
         });
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void loadMovieReviews(Integer movieId) {
+        firebaseManager.getReviews(movieId, (reviews, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), "Error al enviar la reseña");
+            } else if (reviews != null) {
+                getCurrenUserReview(reviews);
+                reviewsList.addAll(reviews);
+                reviewAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    private void getCurrenUserReview(List<Review> reviews) {
+        for (Review review : reviews) {
+            if (review.getUserId().equals(userId)) {
+                userReview = review;
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void onReviewSubmitted(Review review) {
+        if (review.getId() != null) {
+            updateReview(review);
+        } else {
+            postReview(review);
+        }
+    }
+
+    private void postReview(Review review) {
+        review.setUserId(userId);
+        review.setUserName(userName);
+        review.setMovieId(currentMovie.getId());
+        review.setReviewDate(new Date().toString());
+        review.setLikeCount(new ArrayList<>());
+        review.setDislikeCount(new ArrayList<>());
+
+        firebaseManager.postReview(review, (reviewResponse, error) -> {
+             if (error != null) {
+                 showMessage(getApplicationContext(), "Error al publicar la reseña");
+                 return;
+             }
+             addReviewToRecycler(reviewResponse);
+         });
+    }
+
+    private void updateReview(Review review) {
+        review.setReviewDate(new Date().toString());
+        review.setLikeCount(new ArrayList<>());
+        review.setDislikeCount(new ArrayList<>());
+
+        firebaseManager.updateReview(review, (reviewResponse, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), "Error al actualizar la reseña");
+                return;
+            }
+            addReviewToRecycler(reviewResponse);
+        });
+    }
+
+    public void addReviewToRecycler(Review review) {
+        reviewsList.add(0, review);
+        reviewAdapter.notifyItemInserted(0);
+        // Hacer scroll al principio para mostrar la nueva reseña
+        reviewsRecyclerView.scrollToPosition(0);
+        userReview = review;
+    }
+
+    @Override
+    public void onLikeClicked(Review review, int position) {
+        showMessage(getApplicationContext(), "Botón de like pulsado");
+        // Lógica para el botón de "Me gusta"
+        if (review.isLikedByCurrentUser()) {
+            // Si ya le gustaba, quitar el like
+            review.setLikedByCurrentUser(false);
+            // Eliminamos de la lista el userId
+            review.getLikeCount().remove(userId);
+        } else {
+            // Si no le gustaba, añadir like
+            review.setLikedByCurrentUser(true);
+            review.getLikeCount().add(userId);
+
+            // Si tenía dislike, quitarlo
+            if (review.isDislikedByCurrentUser()) {
+                review.setDislikedByCurrentUser(false);
+                review.getLikeCount().remove(userId);
+            }
+        }
+
+        reviewAdapter.notifyItemChanged(position);
+        // Aquí deberías hacer la llamada a la API para actualizar el estado en el servidor
+    }
+
+    @Override
+    public void onDislikeClicked(Review review, int position) {
+        showMessage(getApplicationContext(), "Botón de dislike pulsado");
+        // Lógica para el botón de "No me gusta"
+        if (review.isDislikedByCurrentUser()) {
+            // Si ya no le gustaba, quitar el dislike
+            review.setDislikedByCurrentUser(false);
+            review.getDislikeCount().remove(userId);
+        } else {
+            // Si no tenía dislike, añadirlo
+            review.setDislikedByCurrentUser(true);
+            review.getDislikeCount().add(userId);
+
+            // Si tenía like, quitarlo
+            if (review.isLikedByCurrentUser()) {
+                review.setLikedByCurrentUser(false);
+                review.getDislikeCount().remove(userId);
+            }
+        }
+
+        reviewAdapter.notifyItemChanged(position);
+        // Aquí deberías hacer la llamada a la API para actualizar el estado en el servidor
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (reviewsList != null) {
+            reviewsList.clear();
+        }
     }
 }

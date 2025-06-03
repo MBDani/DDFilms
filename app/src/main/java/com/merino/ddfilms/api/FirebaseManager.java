@@ -13,6 +13,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.merino.ddfilms.model.Movie;
+import com.merino.ddfilms.model.Review;
 import com.merino.ddfilms.ui.auth.LoginActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
 import com.merino.ddfilms.utils.Utils;
@@ -321,6 +322,42 @@ public class FirebaseManager {
                             .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
                 })
                 .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
+    }
+
+    public void postReview(Review review, TaskCompletionCallback<Review> callback){
+        // Genera un nuevo DocumentReference; Firebase genera un id único para este documento.
+        DocumentReference docRef = firebaseFirestore.collection("reviews").document();
+
+        // Asigna el id generado al objeto Review.
+        review.setId(docRef.getId());
+
+        docRef.set(review)
+                .addOnSuccessListener(aVoid -> callback.onComplete(review, null))
+                .addOnFailureListener(e ->
+                        callback.onComplete(null, new Exception("Error al añadir la reseña", e))
+                );
+    }
+
+    public void updateReview(Review review, TaskCompletionCallback<Review> callback){
+        firebaseFirestore.collection("reviews").document(review.getId()).set(review)
+                .addOnSuccessListener(aVoid -> callback.onComplete(review, null))
+                .addOnFailureListener(e ->callback.onComplete(null, new Exception("Error al actualizar reseña", e)));
+    }
+
+    public void getReviews(Integer movieId, TaskCompletionCallback<List<Review>> callback) {
+        firebaseFirestore.collection("reviews")
+                .whereEqualTo("movieId", movieId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Review> reviews = new ArrayList<>();
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        reviews.add(document.toObject(Review.class));
+                    }
+                    callback.onComplete(reviews, null);
+                })
+                .addOnFailureListener(e ->
+                        callback.onComplete(null, new Exception("Error al obtener reseñas", e))
+                );
     }
 }
 
