@@ -36,6 +36,7 @@ import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -240,7 +241,9 @@ public class MovieDetailActivity extends AppCompatActivity implements
             } else if (reviews != null) {
                 getCurrenUserReview(reviews);
                 setUpLikeAndDislikeReviews(reviews);
-                reviewsList.addAll(reviews);
+                reviewsList.addAll(reviews.stream()
+                        .sorted((r1, r2) -> r2.getReviewDate().compareTo(r1.getReviewDate()))
+                        .collect(Collectors.toList()));
                 reviewAdapter.notifyDataSetChanged();
             }
         });
@@ -303,8 +306,11 @@ public class MovieDetailActivity extends AppCompatActivity implements
     }
 
     public void addReviewToRecycler(Review review) {
+        if (userReview != null)
+            reviewsList.remove(userReview);
+
         reviewsList.add(0, review);
-        reviewAdapter.notifyItemInserted(0);
+        reviewAdapter.setReviewList(reviewsList);
         // Hacer scroll al principio para mostrar la nueva reseña
         reviewsRecyclerView.scrollToPosition(0);
         userReview = review;
