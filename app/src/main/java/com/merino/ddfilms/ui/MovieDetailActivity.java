@@ -7,6 +7,7 @@ import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -16,7 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.CastAdapter;
 import com.merino.ddfilms.adapters.CrewAdapter;
@@ -32,6 +32,7 @@ import com.merino.ddfilms.model.Review;
 import com.merino.ddfilms.transitions.DetailsTransition;
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment;
 import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment;
+import com.merino.ddfilms.ui.utils.CustomFabMenu;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -55,13 +56,10 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private TextView movieTitle;
     private TextView movieYearDuration;
     private TextView movieOverview;
-    private FloatingActionButton addToListButton;
-    private FloatingActionButton writeReviewButton;
     private TextView movieDirector;
     private TextView duration;
     private ImageButton backButton;
     private RecyclerView castRecyclerView, crewRecyclerView, reviewsRecyclerView;
-    ;
     private CastAdapter castAdapter;
     private CrewAdapter crewAdapter;
     private ReviewAdapter reviewAdapter;
@@ -71,6 +69,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private String userId;
     private String userName;
     private Review userReview;
+    private CustomFabMenu fabMenu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +80,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
         // Inicializamos las vistas
         initViews();
+//        initializeFabMenu();
         setupRecyclerViews();
 
         // Recuperamos el objeto Movie de los extras
@@ -99,7 +99,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
             setupMovieData(currentMovie);
         }
         getUserData();
-        setupClickListeners();
+        setupCustomFabMenu();
     }
 
     private void getUserData() {
@@ -114,8 +114,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
         movieYearDuration = findViewById(R.id.movie_release_date);
         movieOverview = findViewById(R.id.movie_overview);
         movieOverview.setMovementMethod(new ScrollingMovementMethod());
-        addToListButton = findViewById(R.id.add_to_list_button);
-        writeReviewButton = findViewById(R.id.write_review_button);
         movieDirector = findViewById(R.id.movie_director);
         duration = findViewById(R.id.duration);
         backButton = findViewById(R.id.back_button);
@@ -164,21 +162,67 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 .into(posterImageView);
     }
 
-    private void setupClickListeners() {
-        // Lógica para el botón "Añadir a la lista"
-        addToListButton.setOnClickListener(v -> {
-            MovieListDialogFragment dialog = new MovieListDialogFragment(currentMovie);
-            dialog.show(getSupportFragmentManager(), "MovieListDialog");
-        });
+    private void setupCustomFabMenu() {
+        ViewGroup container = findViewById(R.id.coordinator_layout_main_container);
 
-        // Lógica para el botón "Escribir reseña"
-        writeReviewButton.setOnClickListener(v -> {
-            WriteReviewDialogFragment dialog = new WriteReviewDialogFragment(currentMovie, userReview);
-            dialog.setOnReviewSubmittedListener(this);
-            dialog.show(getSupportFragmentManager(), "WriteReviewDialog");
-        });
+        fabMenu = new CustomFabMenu(this, container)
+                .setMainFabIcon(R.drawable.ic_menu)
+                .setMainFabColor(R.color.primary_dark)
+                .setOverlayColor(R.color.black_50)
+                .setLabelBackground(R.drawable.fab_label_background)
+                .setBaseMarginBottom(40f)
+                .setItemSpacing(64f)
 
-        backButton.setOnClickListener(v -> onBackPressed());
+                // Agregar items del menú
+                .addMenuItem(
+                        R.drawable.ic_review,
+                        getString(R.string.write_review),
+                        R.color.accent_orange,
+                        getString(R.string.add_review),
+                        this::openWriteReviewActivity
+                )
+                .addMenuItem(
+                        R.drawable.ic_add,
+                        getString(R.string.add_to_list),
+                        R.color.accent_red,
+                        getString(R.string.add_to_list),
+                        this::showAddToListDialog
+                )
+                .addMenuItem(
+                        R.drawable.ic_bookmark,
+                        getString(R.string.pending_to_watch),
+                        R.color.blue_500,
+                        getString(R.string.add_to_watchlist),
+                        this::addToWatchlist
+                )
+                .addMenuItem(
+                        R.drawable.ic_visibility,
+                        getString(R.string.watched),
+                        R.color.green_500,
+                        getString(R.string.mark_as_watched),
+                        this::markAsWatched
+                );
+
+        fabMenu.build();
+    }
+
+    private void openWriteReviewActivity() {
+        WriteReviewDialogFragment dialog = new WriteReviewDialogFragment(currentMovie, userReview);
+        dialog.setOnReviewSubmittedListener(this);
+        dialog.show(getSupportFragmentManager(), "WriteReviewDialog");
+    }
+
+    private void showAddToListDialog() {
+        MovieListDialogFragment dialog = new MovieListDialogFragment(currentMovie);
+        dialog.show(getSupportFragmentManager(), "MovieListDialog");
+    }
+
+    private void addToWatchlist() {
+        showMessage(getApplicationContext(),"Esta en proceso... \nDame tiempo Daniela 😭");
+    }
+
+    private void markAsWatched() {
+        showMessage(getApplicationContext(),"Esta en proceso... \nDame tiempo Daniela 😭");
     }
 
     private void getMovieCredits(int id) {

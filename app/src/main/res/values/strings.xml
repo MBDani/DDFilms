@@ -28,7 +28,6 @@
     <string name="movie_poster">movie_poster</string>
     <string name="cast_title">Cast</string>
     <string name="crew_title">Crew</string>
-    <string name="add_to_list">add_to_list</string>
 
 
     <string name="reviews_title">Reviews</string>
@@ -45,4 +44,12 @@
     <string name="rating_required">rating_required</string>
     <string name="reviewing_movie">reviewing_movie %s</string>
     <string name="current_rating">current_rating %s</string>
+
+    <string name="menu_options">Opciones del menú</string>
+    <string name="write_review">Escribir reseña</string>
+    <string name="add_to_list">Añadir a lista</string>
+    <string name="pending_to_watch">Pendiente de ver</string>
+    <string name="watched">Vista</string>
+    <string name="mark_as_watched">Marcar como vista</string>
+    <string name="add_to_watchlist">Añadir a pendientes</string>
 </resources>
