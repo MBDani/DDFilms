@@ -2,6 +2,7 @@
 <resources>
     <!-- Colores principales -->
     <color name="primary_dark">#1F1B24</color>    <!-- Negro azulado oscuro -->
+    <color name="primary_dark_light">#332940</color>    <!-- Negro azulado oscuro -->
     <color name="primary_light">#F5F5F5</color>   <!-- Blanco grisáceo -->
 
     <!-- Acentos dorados -->

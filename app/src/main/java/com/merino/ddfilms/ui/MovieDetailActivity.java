@@ -3,20 +3,28 @@ package com.merino.ddfilms.ui;
 import static com.merino.ddfilms.model.Credits.Crew.getDirector;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.appbar.AppBarLayout;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.CastAdapter;
 import com.merino.ddfilms.adapters.CrewAdapter;
@@ -37,6 +45,7 @@ import com.merino.ddfilms.ui.utils.CustomFabMenu;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import retrofit2.Call;
@@ -70,6 +79,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private String userName;
     private Review userReview;
     private CustomFabMenu fabMenu;
+    private NestedScrollView nestedScrollView;
+    private AppBarLayout appBarLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,6 +128,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
         movieDirector = findViewById(R.id.movie_director);
         duration = findViewById(R.id.duration);
         backButton = findViewById(R.id.back_button);
+        nestedScrollView = findViewById(R.id.nested_scroll_view);
+        appBarLayout = findViewById(R.id.appbar_layout);
 
         castRecyclerView = findViewById(R.id.cast_recycler_view);
         crewRecyclerView = findViewById(R.id.crew_recycler_view);
@@ -167,7 +180,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
         fabMenu = new CustomFabMenu(this, container)
                 .setMainFabIcon(R.drawable.ic_menu)
-                .setMainFabColor(R.color.primary_dark)
+                .setMainFabColor(R.color.primary_dark_light)
                 .setOverlayColor(R.color.black_50)
                 .setLabelBackground(R.drawable.fab_label_background)
                 .setBaseMarginBottom(40f)
@@ -218,11 +231,11 @@ public class MovieDetailActivity extends AppCompatActivity implements
     }
 
     private void addToWatchlist() {
-        showMessage(getApplicationContext(),"Esta en proceso... \nDame tiempo Daniela 😭");
+        showMessage(getApplicationContext(), "Esta en proceso... \nDame tiempo Daniela 😭");
     }
 
     private void markAsWatched() {
-        showMessage(getApplicationContext(),"Esta en proceso... \nDame tiempo Daniela 😭");
+        showMessage(getApplicationContext(), "Esta en proceso... \nDame tiempo Daniela 😭");
     }
 
     private void getMovieCredits(int id) {
@@ -355,9 +368,57 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
         reviewsList.add(0, review);
         reviewAdapter.setReviewList(reviewsList);
-        // Hacer scroll al principio para mostrar la nueva reseña
-        reviewsRecyclerView.scrollToPosition(0);
+        reviewAdapter.notifyItemInserted(0);
+
+        scrollToNewReview(appBarLayout, nestedScrollView, reviewsRecyclerView);
+
         userReview = review;
+    }
+
+    private void scrollToNewReview(AppBarLayout appBarLayout,
+                                   NestedScrollView nestedScrollView,
+                                   RecyclerView recyclerView) {
+        // 1) Colapsar AppBar
+        appBarLayout.setExpanded(false, true);
+
+        // 2) Escuchar cuando el RecyclerView termine de hacer layout
+        recyclerView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v,
+                                       int left, int top, int right, int bottom,
+                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                recyclerView.removeOnLayoutChangeListener(this);
+
+                // 3) Calculamos destino de scroll
+                nestedScrollView.post(() -> {
+                    int startY = nestedScrollView.getScrollY();
+                    int targetY = recyclerView.getTop();
+
+                    // 4) Animador de scroll personalizado
+                    ValueAnimator scrollAnim = ValueAnimator.ofInt(startY, targetY);
+                    scrollAnim.setDuration(500);  // un poquito más largo
+                    scrollAnim.setInterpolator(new DecelerateInterpolator());
+                    scrollAnim.addUpdateListener(anim -> {
+                        int y = (int) anim.getAnimatedValue();
+                        nestedScrollView.scrollTo(0, y);
+                    });
+                    scrollAnim.start();
+
+                    // 5) Animamos la nueva review: slide + fade-in
+                    View newItem = recyclerView.getLayoutManager().findViewByPosition(0);
+                    if (newItem != null) {
+                        newItem.setAlpha(0f);
+                        newItem.setTranslationY(50f);  // empieza 50px abajo
+                        newItem.animate()
+                                .alpha(1f)
+                                .translationY(0f)
+                                .setDuration(700)
+                                .setInterpolator(new DecelerateInterpolator())
+                                .start();
+                    }
+                });
+            }
+        });
     }
 
     @Override
