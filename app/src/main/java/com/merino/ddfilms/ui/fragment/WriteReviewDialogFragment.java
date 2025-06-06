@@ -132,7 +132,7 @@ public class WriteReviewDialogFragment extends DialogFragment {
 
             if (i < fullStars) {
                 // Estrella completa
-                star.setImageResource(R.drawable.ic_star);
+                star.setImageResource(R.drawable.ic_star_filled);
                 star.setColorFilter(ContextCompat.getColor(requireContext(), R.color.gold_dark));
             } else if (i == fullStars && hasHalfStar) {
                 // Media estrella
@@ -140,7 +140,7 @@ public class WriteReviewDialogFragment extends DialogFragment {
                 star.setColorFilter(ContextCompat.getColor(requireContext(), R.color.gold_dark));
             } else {
                 // Estrella vacía
-                star.setImageResource(R.drawable.ic_star);
+                star.setImageResource(R.drawable.ic_star_empty);
                 star.setColorFilter(ContextCompat.getColor(requireContext(), R.color.gray_medium));
             }
         }

@@ -62,6 +62,7 @@ public class FirebaseManager {
     public String getCurrentUserUID() {
         return Objects.requireNonNull(firebaseAuth.getCurrentUser()).getUid();
     }
+
     public void getUserName(String uid, TaskCompletionCallback<String> callback) {
         firebaseFirestore.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot.exists()) {
@@ -324,7 +325,7 @@ public class FirebaseManager {
                 .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
     }
 
-    public void postReview(Review review, TaskCompletionCallback<Review> callback){
+    public void postReview(Review review, TaskCompletionCallback<Review> callback) {
         // Genera un nuevo DocumentReference; Firebase genera un id único para este documento.
         DocumentReference docRef = firebaseFirestore.collection("reviews").document();
 
@@ -338,10 +339,10 @@ public class FirebaseManager {
                 );
     }
 
-    public void updateReview(Review review, TaskCompletionCallback<Review> callback){
+    public void updateReview(Review review, TaskCompletionCallback<Review> callback) {
         firebaseFirestore.collection("reviews").document(review.getId()).set(review)
                 .addOnSuccessListener(aVoid -> callback.onComplete(review, null))
-                .addOnFailureListener(e ->callback.onComplete(null, new Exception("Error al actualizar reseña", e)));
+                .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al actualizar reseña", e)));
     }
 
     public void getReviews(Integer movieId, TaskCompletionCallback<List<Review>> callback) {
@@ -358,6 +359,34 @@ public class FirebaseManager {
                 .addOnFailureListener(e ->
                         callback.onComplete(null, new Exception("Error al obtener reseñas", e))
                 );
+    }
+
+    public void reviewAddLike(String reviewId, String userId, TaskCompletionCallback<Boolean> callback) {
+        DocumentReference reviewRef = firebaseFirestore.collection("reviews").document(reviewId);
+        reviewRef.update("likeCount", FieldValue.arrayUnion(userId))
+                .addOnSuccessListener(success -> callback.onComplete(true, null))
+                .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir like a la lista")));
+    }
+
+    public void reviewRemoveLike(String reviewId, String userId, TaskCompletionCallback<Boolean> callback) {
+        DocumentReference reviewRef = firebaseFirestore.collection("reviews").document(reviewId);
+        reviewRef.update("likeCount", FieldValue.arrayRemove(userId))
+                .addOnSuccessListener(success -> callback.onComplete(true, null))
+                .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir like a la lista")));
+    }
+
+    public void reviewAddDislike(String reviewId, String userId, TaskCompletionCallback<Boolean> callback) {
+        DocumentReference reviewRef = firebaseFirestore.collection("reviews").document(reviewId);
+        reviewRef.update("dislikeCount", FieldValue.arrayUnion(userId))
+                .addOnSuccessListener(success -> callback.onComplete(true, null))
+                .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir dislike a la lista")));
+    }
+
+    public void reviewRemoveDislike(String reviewId, String userId, TaskCompletionCallback<Boolean> callback) {
+        DocumentReference reviewRef = firebaseFirestore.collection("reviews").document(reviewId);
+        reviewRef.update("dislikeCount", FieldValue.arrayRemove(userId))
+                .addOnSuccessListener(success -> callback.onComplete(true, null))
+                .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir dislike a la lista")));
     }
 }
 

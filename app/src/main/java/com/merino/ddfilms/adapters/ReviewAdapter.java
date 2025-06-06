@@ -7,14 +7,17 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.model.Review;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+
 import java.util.List;
 
 public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder> {
@@ -25,6 +28,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
 
     public interface OnReviewInteractionListener {
         void onLikeClicked(Review review, int position);
+
         void onDislikeClicked(Review review, int position);
     }
 
@@ -44,6 +48,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
     @Override
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
         Review review = reviewList.get(position);
+        holder.setupLikeDislikeButtons(review, position);
         holder.bind(review, position);
     }
 
@@ -141,7 +146,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
             for (int i = 0; i < 5; i++) {
                 if (i < fullStars) {
                     // Estrella completa
-                    stars[i].setImageResource(R.drawable.ic_star);
+                    stars[i].setImageResource(R.drawable.ic_star_filled);
                     stars[i].setColorFilter(ContextCompat.getColor(context, R.color.gold_dark));
                 } else if (i == fullStars && hasHalfStar) {
                     // Media estrella
@@ -149,7 +154,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
                     stars[i].setColorFilter(ContextCompat.getColor(context, R.color.gold_dark));
                 } else {
                     // Estrella vacía
-                    stars[i].setImageResource(R.drawable.ic_star);
+                    stars[i].setImageResource(R.drawable.ic_star_empty);
                     stars[i].setColorFilter(ContextCompat.getColor(context, R.color.gray_medium));
                 }
             }

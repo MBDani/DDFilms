@@ -59,7 +59,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private TextView movieDirector;
     private TextView duration;
     private ImageButton backButton;
-    private RecyclerView castRecyclerView, crewRecyclerView, reviewsRecyclerView;;
+    private RecyclerView castRecyclerView, crewRecyclerView, reviewsRecyclerView;
+    ;
     private CastAdapter castAdapter;
     private CrewAdapter crewAdapter;
     private ReviewAdapter reviewAdapter;
@@ -235,9 +236,10 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private void loadMovieReviews(Integer movieId) {
         firebaseManager.getReviews(movieId, (reviews, error) -> {
             if (error != null) {
-                showMessage(getApplicationContext(), "Error al enviar la reseña");
+                showMessage(getApplicationContext(), error.getMessage());
             } else if (reviews != null) {
                 getCurrenUserReview(reviews);
+                setUpLikeAndDislikeReviews(reviews);
                 reviewsList.addAll(reviews);
                 reviewAdapter.notifyDataSetChanged();
             }
@@ -250,6 +252,13 @@ public class MovieDetailActivity extends AppCompatActivity implements
                 userReview = review;
                 break;
             }
+        }
+    }
+
+    private void setUpLikeAndDislikeReviews(List<Review> reviews) {
+        for (Review review : reviews) {
+            review.setLikedByCurrentUser(review.getLikeCount().contains(userId));
+            review.setDislikedByCurrentUser(review.getDislikeCount().contains(userId));
         }
     }
 
@@ -271,12 +280,12 @@ public class MovieDetailActivity extends AppCompatActivity implements
         review.setDislikeCount(new ArrayList<>());
 
         firebaseManager.postReview(review, (reviewResponse, error) -> {
-             if (error != null) {
-                 showMessage(getApplicationContext(), "Error al publicar la reseña");
-                 return;
-             }
-             addReviewToRecycler(reviewResponse);
-         });
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+                return;
+            }
+            addReviewToRecycler(reviewResponse);
+        });
     }
 
     private void updateReview(Review review) {
@@ -286,7 +295,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
         firebaseManager.updateReview(review, (reviewResponse, error) -> {
             if (error != null) {
-                showMessage(getApplicationContext(), "Error al actualizar la reseña");
+                showMessage(getApplicationContext(), error.getMessage());
                 return;
             }
             addReviewToRecycler(reviewResponse);
@@ -303,51 +312,88 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
     @Override
     public void onLikeClicked(Review review, int position) {
-        showMessage(getApplicationContext(), "Botón de like pulsado");
         // Lógica para el botón de "Me gusta"
-        if (review.isLikedByCurrentUser()) {
+        if (review.getLikeCount().contains(userId)) {
             // Si ya le gustaba, quitar el like
-            review.setLikedByCurrentUser(false);
-            // Eliminamos de la lista el userId
-            review.getLikeCount().remove(userId);
+            removeLike(review, position);
         } else {
             // Si no le gustaba, añadir like
-            review.setLikedByCurrentUser(true);
-            review.getLikeCount().add(userId);
-
-            // Si tenía dislike, quitarlo
-            if (review.isDislikedByCurrentUser()) {
-                review.setDislikedByCurrentUser(false);
-                review.getLikeCount().remove(userId);
-            }
+            addLike(review, position);
         }
-
-        reviewAdapter.notifyItemChanged(position);
-        // Aquí deberías hacer la llamada a la API para actualizar el estado en el servidor
     }
 
     @Override
     public void onDislikeClicked(Review review, int position) {
-        showMessage(getApplicationContext(), "Botón de dislike pulsado");
         // Lógica para el botón de "No me gusta"
-        if (review.isDislikedByCurrentUser()) {
-            // Si ya no le gustaba, quitar el dislike
-            review.setDislikedByCurrentUser(false);
-            review.getDislikeCount().remove(userId);
+        if (review.getDislikeCount().contains(userId)) {
+            removeDislike(review, position);
         } else {
             // Si no tenía dislike, añadirlo
+            addDislike(review, position);
+        }
+    }
+
+    private void addDislike(Review review, int position) {
+        firebaseManager.reviewAddDislike(review.getId(), userId, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+                return;
+            }
+            review.getDislikeCount().add(this.userId);
             review.setDislikedByCurrentUser(true);
-            review.getDislikeCount().add(userId);
 
             // Si tenía like, quitarlo
-            if (review.isLikedByCurrentUser()) {
-                review.setLikedByCurrentUser(false);
-                review.getDislikeCount().remove(userId);
+            if (review.getLikeCount().contains(userId)) {
+                removeLike(review, position);
+            } else {
+                reviewAdapter.updateReview(position, review);
+                reviewAdapter.notifyItemChanged(position);
             }
-        }
+        });
+    }
 
-        reviewAdapter.notifyItemChanged(position);
-        // Aquí deberías hacer la llamada a la API para actualizar el estado en el servidor
+    private void addLike(Review review, int position) {
+        firebaseManager.reviewAddLike(review.getId(), userId, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+                return;
+            }
+            review.getLikeCount().add(this.userId);
+            review.setLikedByCurrentUser(true);
+
+            // Si tenía dislike, quitarlo
+            if (review.getDislikeCount().contains(userId)) {
+                removeDislike(review, position);
+            } else {
+                reviewAdapter.updateReview(position, review);
+                reviewAdapter.notifyItemChanged(position);
+            }
+        });
+    }
+
+    private void removeDislike(Review review, int position) {
+        firebaseManager.reviewRemoveDislike(review.getId(), userId, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+                return;
+            }
+            review.getDislikeCount().remove(this.userId);
+            review.setDislikedByCurrentUser(false);
+            reviewAdapter.updateReview(position, review);
+            reviewAdapter.notifyItemChanged(position);
+        });
+    }
+
+    private void removeLike(Review review, int position) {
+        firebaseManager.reviewRemoveLike(review.getId(), userId, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+                return;
+            }
+            review.getLikeCount().remove(this.userId);
+            review.setLikedByCurrentUser(false);
+            reviewAdapter.notifyItemChanged(position);
+        });
     }
 
     @Override
