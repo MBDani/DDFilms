@@ -3,7 +3,6 @@ package com.merino.ddfilms.ui;
 import static com.merino.ddfilms.model.Credits.Crew.getDirector;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
@@ -11,8 +10,6 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -45,7 +42,6 @@ import com.merino.ddfilms.ui.utils.CustomFabMenu;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import retrofit2.Call;
@@ -91,7 +87,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
 
         // Inicializamos las vistas
         initViews();
-//        initializeFabMenu();
+        setUpButtons();
         setupRecyclerViews();
 
         // Recuperamos el objeto Movie de los extras
@@ -134,6 +130,12 @@ public class MovieDetailActivity extends AppCompatActivity implements
         castRecyclerView = findViewById(R.id.cast_recycler_view);
         crewRecyclerView = findViewById(R.id.crew_recycler_view);
         reviewsRecyclerView = findViewById(R.id.reviews_recycler_view);
+    }
+
+    private void setUpButtons() {
+        backButton.setOnClickListener(v -> {
+            onBackPressed();
+        });
     }
 
     private void setupRecyclerViews() {
