@@ -121,8 +121,10 @@ public class FirebaseManager {
         firebaseFirestore.collection("users").document(userID).get().addOnSuccessListener(documentSnapshot -> {
             List<String> movieListIds = (List<String>) documentSnapshot.get("movieLists");
 
-            if (movieListIds == null || movieListIds.isEmpty())
+            if (movieListIds == null || movieListIds.isEmpty()) {
                 callback.onComplete(null, new Exception("No tienes ninguna lista"));
+                return;
+            }
 
             // Recuperamos los nombres de las listas de películas
             HashMap<String, String> listNameMap = new HashMap<>();
