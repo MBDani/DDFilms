@@ -363,6 +363,21 @@ public class FirebaseManager {
                 );
     }
 
+    public void getAllReviews(TaskCompletionCallback<List<Review>> callback) {
+        firebaseFirestore.collection("reviews")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Review> reviews = new ArrayList<>();
+                    for (DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        reviews.add(document.toObject(Review.class));
+                    }
+                    callback.onComplete(reviews, null);
+                })
+                .addOnFailureListener(e ->
+                        callback.onComplete(null, new Exception("Error al obtener reseñas", e))
+                );
+    }
+
     public void reviewAddLike(String reviewId, String userId, TaskCompletionCallback<Boolean> callback) {
         DocumentReference reviewRef = firebaseFirestore.collection("reviews").document(reviewId);
         reviewRef.update("likeCount", FieldValue.arrayUnion(userId))

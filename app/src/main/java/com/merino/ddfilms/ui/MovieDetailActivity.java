@@ -3,14 +3,11 @@ package com.merino.ddfilms.ui;
 import static com.merino.ddfilms.model.Credits.Crew.getDirector;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
-import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,7 +22,6 @@ import com.google.android.material.appbar.AppBarLayout;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.CastAdapter;
 import com.merino.ddfilms.adapters.CrewAdapter;
-import com.merino.ddfilms.adapters.ReviewAdapter;
 import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.api.TMDBClient;
 import com.merino.ddfilms.api.TMDBService;
@@ -33,24 +29,19 @@ import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.model.Credits;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.MovieDetails;
-import com.merino.ddfilms.model.Review;
 import com.merino.ddfilms.transitions.DetailsTransition;
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment;
 import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment;
 import com.merino.ddfilms.ui.utils.CustomFabMenu;
+import com.merino.ddfilms.utils.ReviewUtil;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MovieDetailActivity extends AppCompatActivity implements
-        WriteReviewDialogFragment.OnReviewSubmittedListener,
-        ReviewAdapter.OnReviewInteractionListener {
+public class MovieDetailActivity extends AppCompatActivity {
 
     private TMDBService tmdbService;
     private static final String API_KEY = ApiKeyManager.getInstance().getApiKey();
@@ -67,16 +58,14 @@ public class MovieDetailActivity extends AppCompatActivity implements
     private RecyclerView castRecyclerView, crewRecyclerView, reviewsRecyclerView;
     private CastAdapter castAdapter;
     private CrewAdapter crewAdapter;
-    private ReviewAdapter reviewAdapter;
     private Movie currentMovie;
-    private List<Review> reviewsList = new ArrayList<>();
     private FirebaseManager firebaseManager = new FirebaseManager();
     private String userId;
     private String userName;
-    private Review userReview;
     private CustomFabMenu fabMenu;
     private NestedScrollView nestedScrollView;
     private AppBarLayout appBarLayout;
+    private ReviewUtil reviewUtil;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +73,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_movie_detail);
 
         tmdbService = TMDBClient.getClient(API_KEY).create(TMDBService.class);
+        reviewUtil = new ReviewUtil(getApplicationContext());
 
         // Inicializamos las vistas
         initViews();
@@ -102,16 +92,23 @@ public class MovieDetailActivity extends AppCompatActivity implements
         if (currentMovie != null) {
             getMovieCredits(currentMovie.getId());
             getMovieDetails(currentMovie.getId());
-            loadMovieReviews(currentMovie.getId());
+            initReviews();
             setupMovieData(currentMovie);
         }
         getUserData();
         setupCustomFabMenu();
     }
 
+    private void initReviews() {
+        reviewUtil.setScrollTargets(appBarLayout, nestedScrollView, reviewsRecyclerView);
+        reviewUtil.setCurrentMovie(currentMovie);
+        reviewUtil.loadMovieReviews(currentMovie.getId());
+    }
+
     private void getUserData() {
         userId = firebaseManager.getCurrentUserUID();
         firebaseManager.getUserName(userId, (userName, error) -> this.userName = userName);
+        if (reviewUtil != null) reviewUtil.setUserName(userName);
     }
 
     private void initViews() {
@@ -142,7 +139,6 @@ public class MovieDetailActivity extends AppCompatActivity implements
         // Inicializar adaptadores con listas vacías
         castAdapter = new CastAdapter(new ArrayList<>());
         crewAdapter = new CrewAdapter(new ArrayList<>());
-        reviewAdapter = new ReviewAdapter(reviewsList, this);
 
         // Configurar RecyclerView para cast
         castRecyclerView.setAdapter(castAdapter);
@@ -153,7 +149,7 @@ public class MovieDetailActivity extends AppCompatActivity implements
         crewRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 
         // Configurar RecyclerView para reviews
-        reviewsRecyclerView.setAdapter(reviewAdapter);
+        reviewsRecyclerView.setAdapter(reviewUtil.getReviewAdapter());
         reviewsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         reviewsRecyclerView.setNestedScrollingEnabled(false);
     }
@@ -222,8 +218,8 @@ public class MovieDetailActivity extends AppCompatActivity implements
     }
 
     private void openWriteReviewActivity() {
-        WriteReviewDialogFragment dialog = new WriteReviewDialogFragment(currentMovie, userReview);
-        dialog.setOnReviewSubmittedListener(this);
+        WriteReviewDialogFragment dialog = new WriteReviewDialogFragment(currentMovie, reviewUtil.getUserReview());
+        dialog.setOnReviewSubmittedListener(reviewUtil);
         dialog.show(getSupportFragmentManager(), "WriteReviewDialog");
     }
 
@@ -292,228 +288,4 @@ public class MovieDetailActivity extends AppCompatActivity implements
         });
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    private void loadMovieReviews(Integer movieId) {
-        firebaseManager.getReviews(movieId, (reviews, error) -> {
-            if (error != null) {
-                showMessage(getApplicationContext(), error.getMessage());
-            } else if (reviews != null) {
-                getCurrenUserReview(reviews);
-                setUpLikeAndDislikeReviews(reviews);
-                reviewsList.addAll(reviews.stream()
-                        .sorted((r1, r2) -> r2.getReviewDate().compareTo(r1.getReviewDate()))
-                        .collect(Collectors.toList()));
-                reviewAdapter.notifyDataSetChanged();
-            }
-        });
-    }
-
-    private void getCurrenUserReview(List<Review> reviews) {
-        for (Review review : reviews) {
-            if (review.getUserId().equals(userId)) {
-                userReview = review;
-                break;
-            }
-        }
-    }
-
-    private void setUpLikeAndDislikeReviews(List<Review> reviews) {
-        for (Review review : reviews) {
-            review.setLikedByCurrentUser(review.getLikeCount().contains(userId));
-            review.setDislikedByCurrentUser(review.getDislikeCount().contains(userId));
-        }
-    }
-
-    @Override
-    public void onReviewSubmitted(Review review) {
-        if (review.getId() != null) {
-            updateReview(review);
-        } else {
-            postReview(review);
-        }
-    }
-
-    private void postReview(Review review) {
-        review.setUserId(userId);
-        review.setUserName(userName);
-        review.setMovieId(currentMovie.getId());
-        review.setReviewDate(new Date().toString());
-        review.setLikeCount(new ArrayList<>());
-        review.setDislikeCount(new ArrayList<>());
-
-        firebaseManager.postReview(review, (reviewResponse, error) -> {
-            if (error != null) {
-                showMessage(getApplicationContext(), error.getMessage());
-                return;
-            }
-            addReviewToRecycler(reviewResponse);
-        });
-    }
-
-    private void updateReview(Review review) {
-        review.setReviewDate(new Date().toString());
-        review.setLikeCount(new ArrayList<>());
-        review.setDislikeCount(new ArrayList<>());
-
-        firebaseManager.updateReview(review, (reviewResponse, error) -> {
-            if (error != null) {
-                showMessage(getApplicationContext(), error.getMessage());
-                return;
-            }
-            addReviewToRecycler(reviewResponse);
-        });
-    }
-
-    public void addReviewToRecycler(Review review) {
-        if (userReview != null)
-            reviewsList.remove(userReview);
-
-        reviewsList.add(0, review);
-        reviewAdapter.setReviewList(reviewsList);
-        reviewAdapter.notifyItemInserted(0);
-
-        scrollToNewReview(appBarLayout, nestedScrollView, reviewsRecyclerView);
-
-        userReview = review;
-    }
-
-    private void scrollToNewReview(AppBarLayout appBarLayout,
-                                   NestedScrollView nestedScrollView,
-                                   RecyclerView recyclerView) {
-        // 1) Colapsar AppBar
-        appBarLayout.setExpanded(false, true);
-
-        // 2) Escuchar cuando el RecyclerView termine de hacer layout
-        recyclerView.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override
-            public void onLayoutChange(View v,
-                                       int left, int top, int right, int bottom,
-                                       int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                recyclerView.removeOnLayoutChangeListener(this);
-
-                // 3) Calculamos destino de scroll
-                nestedScrollView.post(() -> {
-                    int startY = nestedScrollView.getScrollY();
-                    int targetY = recyclerView.getTop();
-
-                    // 4) Animador de scroll personalizado
-                    ValueAnimator scrollAnim = ValueAnimator.ofInt(startY, targetY);
-                    scrollAnim.setDuration(500);  // un poquito más largo
-                    scrollAnim.setInterpolator(new DecelerateInterpolator());
-                    scrollAnim.addUpdateListener(anim -> {
-                        int y = (int) anim.getAnimatedValue();
-                        nestedScrollView.scrollTo(0, y);
-                    });
-                    scrollAnim.start();
-
-                    // 5) Animamos la nueva review: slide + fade-in
-                    View newItem = recyclerView.getLayoutManager().findViewByPosition(0);
-                    if (newItem != null) {
-                        newItem.setAlpha(0f);
-                        newItem.setTranslationY(50f);  // empieza 50px abajo
-                        newItem.animate()
-                                .alpha(1f)
-                                .translationY(0f)
-                                .setDuration(700)
-                                .setInterpolator(new DecelerateInterpolator())
-                                .start();
-                    }
-                });
-            }
-        });
-    }
-
-    @Override
-    public void onLikeClicked(Review review, int position) {
-        // Lógica para el botón de "Me gusta"
-        if (review.getLikeCount().contains(userId)) {
-            // Si ya le gustaba, quitar el like
-            removeLike(review, position);
-        } else {
-            // Si no le gustaba, añadir like
-            addLike(review, position);
-        }
-    }
-
-    @Override
-    public void onDislikeClicked(Review review, int position) {
-        // Lógica para el botón de "No me gusta"
-        if (review.getDislikeCount().contains(userId)) {
-            removeDislike(review, position);
-        } else {
-            // Si no tenía dislike, añadirlo
-            addDislike(review, position);
-        }
-    }
-
-    private void addDislike(Review review, int position) {
-        firebaseManager.reviewAddDislike(review.getId(), userId, (result, error) -> {
-            if (error != null) {
-                showMessage(getApplicationContext(), error.getMessage());
-                return;
-            }
-            review.getDislikeCount().add(this.userId);
-            review.setDislikedByCurrentUser(true);
-
-            // Si tenía like, quitarlo
-            if (review.getLikeCount().contains(userId)) {
-                removeLike(review, position);
-            } else {
-                reviewAdapter.updateReview(position, review);
-                reviewAdapter.notifyItemChanged(position);
-            }
-        });
-    }
-
-    private void addLike(Review review, int position) {
-        firebaseManager.reviewAddLike(review.getId(), userId, (result, error) -> {
-            if (error != null) {
-                showMessage(getApplicationContext(), error.getMessage());
-                return;
-            }
-            review.getLikeCount().add(this.userId);
-            review.setLikedByCurrentUser(true);
-
-            // Si tenía dislike, quitarlo
-            if (review.getDislikeCount().contains(userId)) {
-                removeDislike(review, position);
-            } else {
-                reviewAdapter.updateReview(position, review);
-                reviewAdapter.notifyItemChanged(position);
-            }
-        });
-    }
-
-    private void removeDislike(Review review, int position) {
-        firebaseManager.reviewRemoveDislike(review.getId(), userId, (result, error) -> {
-            if (error != null) {
-                showMessage(getApplicationContext(), error.getMessage());
-                return;
-            }
-            review.getDislikeCount().remove(this.userId);
-            review.setDislikedByCurrentUser(false);
-            reviewAdapter.updateReview(position, review);
-            reviewAdapter.notifyItemChanged(position);
-        });
-    }
-
-    private void removeLike(Review review, int position) {
-        firebaseManager.reviewRemoveLike(review.getId(), userId, (result, error) -> {
-            if (error != null) {
-                showMessage(getApplicationContext(), error.getMessage());
-                return;
-            }
-            review.getLikeCount().remove(this.userId);
-            review.setLikedByCurrentUser(false);
-            reviewAdapter.notifyItemChanged(position);
-        });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (reviewsList != null) {
-            reviewsList.clear();
-        }
-    }
 }

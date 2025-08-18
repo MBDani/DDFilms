@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView_fragment_reviews"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:nestedScrollingEnabled="false"
+        tools:listitem="@layout/item_review" />
 
-        <TextView
-            android:id="@+id/review_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Review Title"
-            android:textSize="24sp"
-            android:paddingBottom="8dp" />
-
-        <TextView
-            android:id="@+id/review_content"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Review content goes here..."
-            android:textSize="16sp" />
-    </LinearLayout>
-</ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
