@@ -30,8 +30,8 @@ public class Review {
     private transient boolean isDislikedByCurrentUser;
     @Exclude
     public String getFormattedDate() {
-        DateFormatter formatter = new DateFormatter(this.reviewDate);
-        return formatter.getFormattedDate();
+        DateFormatter formatter = new DateFormatter();
+        return formatter.getFormattedDate(this.reviewDate);
     }
 
 }

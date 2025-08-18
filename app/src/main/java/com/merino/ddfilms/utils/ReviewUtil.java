@@ -38,6 +38,7 @@ public class ReviewUtil implements
     @Getter
     private Review userReview;
     private final FirebaseManager firebaseManager = new FirebaseManager();
+    DateFormatter dateFormatter = new DateFormatter();
     private String userId;
     private Context context;
     @Setter
@@ -75,7 +76,7 @@ public class ReviewUtil implements
                 setUpLikeAndDislikeReviews(reviews);
                 reviewsList.clear();
                 reviewsList.addAll(reviews.stream()
-                        .sorted((r1, r2) -> r2.getReviewDate().compareTo(r1.getReviewDate()))
+                        .sorted(dateFormatter.reviewDateDescComparator())
                         .collect(Collectors.toList()));
                 runOnMain(() -> reviewAdapter.notifyDataSetChanged());
             }
@@ -91,7 +92,7 @@ public class ReviewUtil implements
                 getCurrenUserReview(reviews);
                 setUpLikeAndDislikeReviews(reviews);
                 reviewsList.addAll(reviews.stream()
-                        .sorted((r1, r2) -> r2.getReviewDate().compareTo(r1.getReviewDate()))
+                        .sorted(dateFormatter.reviewDateDescComparator())
                         .collect(Collectors.toList()));
                 runOnMain(() -> reviewAdapter.notifyDataSetChanged());
             }
