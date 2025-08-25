@@ -321,10 +321,10 @@ public class FirebaseManager {
         });
     }
 
-    public void deleteMovieFromList(String listID, Movie movie, TaskCompletionCallback<Boolean> callback) {
+    public void deleteMovieFromList(String collection, String documentID, Movie movie, TaskCompletionCallback<Boolean> callback) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.runTransaction(transaction -> {
-            DocumentReference docRef = db.collection("movieLists").document(listID);
+            DocumentReference docRef = db.collection(collection).document(documentID);
             DocumentSnapshot snapshot = transaction.get(docRef);
 
             List<Map<String, Object>> movies = (List<Map<String, Object>>) snapshot.get("movies");

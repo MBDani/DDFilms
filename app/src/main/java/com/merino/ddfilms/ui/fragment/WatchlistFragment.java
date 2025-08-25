@@ -68,7 +68,7 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
         });
 
         movieAdapter.setOnDeleteClickListener((position, movie) -> {
-            firebaseManager.deleteMovieFromList(userID, movie, (result, error) -> {
+            firebaseManager.deleteMovieFromList(WATCH_LIST, userID, movie, (result, error) -> {
                 if (error != null) {
                     showMessage(getContext(), error.getMessage());
                 } else if (result != null) {

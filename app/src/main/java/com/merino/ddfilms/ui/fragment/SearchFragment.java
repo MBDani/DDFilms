@@ -104,7 +104,7 @@ public class SearchFragment extends Fragment {
         });
 
         movieAdapter.setOnCheckClickListener((position, movie) -> {
-            firebaseManager.deleteMovieFromList(collection, movie, (result, error) -> {
+            firebaseManager.deleteMovieFromList(collection, documentID, movie, (result, error) -> {
                 if (error != null) {
                     showMessage(getContext(), error.getMessage());
                 } else if (result != null) {

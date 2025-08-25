@@ -127,7 +127,7 @@ public class MovieListActivity extends AppCompatActivity {
         });
 
         movieAdapter.setOnDeleteClickListener((position, movie) -> {
-            firebaseManager.deleteMovieFromList(listID, movie, (result, error) -> {
+            firebaseManager.deleteMovieFromList(MOVIE_LIST, listID, movie, (result, error) -> {
                 if (error != null) {
                     showMessage(getApplicationContext(), error.getMessage());
                 } else if (result != null) {
