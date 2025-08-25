@@ -1,5 +1,6 @@
 package com.merino.ddfilms.ui;
 
+import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.annotation.SuppressLint;
@@ -64,7 +65,8 @@ public class MovieListActivity extends AppCompatActivity {
 
     private void setupAddMovieFragment() {
         Intent intent = new Intent(this, SearchActivity.class);
-        intent.putExtra("listID", listID);
+        intent.putExtra("collection", MOVIE_LIST);
+        intent.putExtra("documentID", listID);
         intent.putExtra("listName", listName);
 
         int[] moviesID = movieList.stream()
@@ -197,7 +199,7 @@ public class MovieListActivity extends AppCompatActivity {
     }
 
     private void loadMoviesFromList(String listID) {
-        firebaseManager.loadMovieFromListName(listID, (movies, error) -> {
+        firebaseManager.loadMovieFromList(listID, MOVIE_LIST, (movies, error) -> {
             if (error != null) {
                 showMessage(getApplicationContext(), error.getMessage());
             } else if (movies != null) {

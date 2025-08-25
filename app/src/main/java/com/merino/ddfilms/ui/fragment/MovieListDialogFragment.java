@@ -1,5 +1,6 @@
 package com.merino.ddfilms.ui.fragment;
 
+import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.os.Bundle;
@@ -91,8 +92,8 @@ public class MovieListDialogFragment extends DialogFragment {
     }
 
     private void addMovieToSelectedList(String listName) {
-        String listID = getListIDByName(listName);
-        viewModel.addMovieToList(listID, movie, (result, error) -> {
+        String documentID = getListIDByName(listName);
+        viewModel.addMovieToList(MOVIE_LIST,documentID, movie, (result, error) -> {
             if (error != null) {
                 showMessage(getContext(), error.getMessage());
             } else if (result != null) {

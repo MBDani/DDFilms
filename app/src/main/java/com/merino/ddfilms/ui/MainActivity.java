@@ -8,18 +8,23 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.FirebaseManager;
+import com.merino.ddfilms.ui.components.Fab.ActivityFabController;
+import com.merino.ddfilms.ui.components.Fab.FabHost;
+import com.merino.ddfilms.ui.components.Fab.ShowsFab;
 import com.merino.ddfilms.ui.fragment.DiaryFragment;
 import com.merino.ddfilms.ui.fragment.ListsFragment;
 import com.merino.ddfilms.ui.fragment.PopularFragment;
@@ -32,10 +37,11 @@ import com.merino.ddfilms.ui.fragment.WatchlistFragment;
 import java.util.Objects;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ActivityFabController {
 
     private DrawerLayout drawerLayout;
-    FirebaseManager firebaseManager = new FirebaseManager();
+    private FirebaseManager firebaseManager = new FirebaseManager();
+    private FloatingActionButton activityFab;
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -97,6 +103,26 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
+        // FAB en Activity (overlay)
+        activityFab = findViewById(R.id.activity_fab_add);
+        activityFab.setOnClickListener(v -> {
+            Fragment current = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+            if (current instanceof FabHost) {
+                ((FabHost) current).onFabClicked();
+            }
+        });
+
+        // Registrar callback para actualizaciones automáticas cuando cambian fragments
+        getSupportFragmentManager().registerFragmentLifecycleCallbacks(
+                new FragmentManager.FragmentLifecycleCallbacks() {
+                    @Override
+                    public void onFragmentResumed(@NonNull FragmentManager fm, @NonNull Fragment f) {
+                        super.onFragmentResumed(fm, f);
+                        updateFabVisibility(f);
+                    }
+                }, false
+        );
+
         // Cargar fragment inicial
         if (savedInstanceState == null) {
             loadFragment(new SearchFragment());
@@ -141,8 +167,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.nav_host_fragment, fragment).commit();
+    public void loadFragment(Fragment fragment) {
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.nav_host_fragment, fragment)
+                .commit();
+
+        // Ejecutamos transacciones pendientes para asegurarnos del fragment actual
+        getSupportFragmentManager().executePendingTransactions();
+
+        // Actualizamos visibilidad inmediatamente
+        Fragment current = getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        if (current != null) updateFabVisibility(current);
+    }
+
+    private void updateFabVisibility(Fragment fragment) {
+        if (fragment instanceof ShowsFab) {
+            showFab();
+        } else {
+            hideFab();
+        }
+    }
+
+    @Override
+    public void showFab() {
+        if (activityFab != null && activityFab.getVisibility() != View.VISIBLE) {
+            activityFab.show();
+            activityFab.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void hideFab() {
+        if (activityFab != null && activityFab.getVisibility() == View.VISIBLE) {
+            activityFab.hide();
+            activityFab.setVisibility(View.GONE);
+        }
+    }
+
+    public void setFabVisibility(boolean visible) {
+        if (visible) showFab(); else hideFab();
     }
 
     private void showLogoutConfirmationDialog() {

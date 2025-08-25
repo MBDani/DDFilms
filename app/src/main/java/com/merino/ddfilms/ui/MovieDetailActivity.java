@@ -229,7 +229,13 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void addToWatchlist() {
-        showMessage(getApplicationContext(), "Esta en proceso... \nDame tiempo Daniela 😭");
+        firebaseManager.addMovieToWatchList(currentMovie, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+            } else {
+                showMessage(getApplicationContext(), result);
+            }
+        });
     }
 
     private void markAsWatched() {

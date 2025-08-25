@@ -1,5 +1,6 @@
 package com.merino.ddfilms.ui.fragment;
 
+import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.annotation.SuppressLint;
@@ -70,26 +71,27 @@ public class SearchFragment extends Fragment {
         // Verificamos si venimos de una lista
         Bundle argumentos = getArguments();
         if (argumentos != null) {
-            String listID = argumentos.getString("listID");
+            String collection = argumentos.getString("collection");
+            String documentID = argumentos.getString("documentID");
             String listName = argumentos.getString("listName");
             int[] moviesID = argumentos.getIntArray("moviesID");
             // Lo pasamos a una lista
             List<Integer> moviesIDList = Arrays.stream(moviesID)
                     .boxed()
                     .collect(Collectors.toList());
-            if (listID != null && listName != null) {
-                setupViewAddMode(listID, listName, moviesIDList);
+            if (collection != null && documentID != null && listName != null) {
+                setupViewAddMode(collection, documentID, listName, moviesIDList);
             }
         }
 
         return view;
     }
 
-    private void setupViewAddMode(String listID, String listName, List<Integer> moviesIDList) {
+    private void setupViewAddMode(String collection, String documentID, String listName, List<Integer> moviesIDList) {
         movieAdapter.setAddMode(true);
         movieAdapter.setMoviesIdList(moviesIDList);
         movieAdapter.setOnAddClickListener((position, movie) -> {
-            firebaseManager.addMovieToList(listID, movie, (result, error) -> {
+            firebaseManager.addMovieToList(collection, documentID, movie, (result, error) -> {
                 if (error != null) {
                     showMessage(getContext(), error.getMessage());
                 } else if (result != null) {
@@ -102,7 +104,7 @@ public class SearchFragment extends Fragment {
         });
 
         movieAdapter.setOnCheckClickListener((position, movie) -> {
-            firebaseManager.deleteMovieFromList(listID, movie, (result, error) -> {
+            firebaseManager.deleteMovieFromList(collection, movie, (result, error) -> {
                 if (error != null) {
                     showMessage(getContext(), error.getMessage());
                 } else if (result != null) {

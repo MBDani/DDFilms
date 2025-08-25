@@ -35,8 +35,8 @@ public class MovieListViewModel extends ViewModel {
         firebaseManager.createNewMovieList(listName, userID, callback);
     }
 
-    public void addMovieToList(String listID, Movie movie, TaskCompletionCallback<String> callback) {
-        firebaseManager.addMovieToList(listID, movie, callback);
+    public void addMovieToList(String collection, String listID, Movie movie, TaskCompletionCallback<String> callback) {
+        firebaseManager.addMovieToList(collection, listID, movie, callback);
     }
 }
 

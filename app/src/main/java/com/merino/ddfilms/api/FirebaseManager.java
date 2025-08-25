@@ -1,5 +1,8 @@
 package com.merino.ddfilms.api;
 
+import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
+import static com.merino.ddfilms.utils.StringUtils.WATCH_LIST;
+
 import android.content.Context;
 import android.content.Intent;
 import android.widget.Toast;
@@ -33,6 +36,7 @@ public class FirebaseManager {
     private final FirebaseAuth firebaseAuth;
     private final FirebaseFirestore firebaseFirestore;
     private final FirebaseRemoteConfig firebaseRemoteConfig;
+
 
     public FirebaseManager() {
         this.firebaseAuth = FirebaseAuth.getInstance();
@@ -94,7 +98,7 @@ public class FirebaseManager {
     }
 
     public void createNewMovieList(String listName, String userID, TaskCompletionCallback<String> callback) {
-        // Verificar si ya existe una lista con el mismo nombre
+        // Verificar si ya existe una lista con el mismo nombre y usuario
         firebaseFirestore.collection("movieLists").whereEqualTo("name", listName).whereEqualTo("userID", userID).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && !task.getResult().isEmpty()) {
                 // La lista ya existe
@@ -128,7 +132,7 @@ public class FirebaseManager {
 
             // Recuperamos los nombres de las listas de películas
             HashMap<String, String> listNameMap = new HashMap<>();
-            movieListIds.forEach(id -> getMovieListByID(id, (document, error) -> {
+            movieListIds.forEach(id -> getMovieListByID(id, "movieLists", (document, error) -> {
                 if (error != null) {
                     callback.onComplete(null, error);
                 } else {
@@ -144,8 +148,8 @@ public class FirebaseManager {
         }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener las películas del usuario")));
     }
 
-    public void addMovieToList(String listID, Movie movie, TaskCompletionCallback<String> callback) {
-        getMovieListByID(listID, (documentSnapshot, error) -> {
+    public void addMovieToList(String collection, String documentID, Movie movie, TaskCompletionCallback<String> callback) {
+        getMovieListByID(documentID, collection, (documentSnapshot, error) -> {
             if (error != null) {
                 callback.onComplete(null, error);
             } else {
@@ -155,26 +159,56 @@ public class FirebaseManager {
                     callback.onComplete(null, new Exception("La película ya se encuentra en la lista: " + listName));
                 } else {
                     // Setteamos la fecha de creación
-                    Date date = new Date();
-                    String formattedDate = Utils.formatDate(date);
-                    movie.setCreatedAt(formattedDate);
-
-                    // Obtenemos el nombre del usuario y guardamos en la base de datos
-                    getUserName(getCurrentUserUID(), (userName, errorGetUser) -> {
-                        if (errorGetUser != null) {
-                            callback.onComplete(null, errorGetUser);
-                        } else {
-                            movie.setAddedBy(userName);
-                            documentSnapshot.getReference().update("movies", FieldValue.arrayUnion(movie)).addOnSuccessListener(success -> callback.onComplete("Película agregada a la lista " + listName, null)).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al agregar la película a la lista")));
-                        }
-                    });
+                    addMovie(movie, getCurrentUserUID(), callback, documentSnapshot, "Película agregada a la lista " + listName, "Error al agregar la película a la lista");
                 }
             }
         });
     }
 
-    public void loadMovieFromListName(String listID, TaskCompletionCallback<List<Movie>> callback) {
-        firebaseFirestore.collection("movieLists").document(listID).get().addOnSuccessListener(documentSnapshot -> {
+    public void addMovieToWatchList(Movie movie, TaskCompletionCallback<String> callback) {
+        String userID = getCurrentUserUID();
+        getMovieListByID(userID, WATCH_LIST, (documentSnapshot, error) -> {
+            if (error != null) {
+                callback.onComplete(null, error);
+            } else if (!documentSnapshot.exists()) {
+                firebaseFirestore.collection(WATCH_LIST).document(userID).set(Collections.emptyMap()).addOnSuccessListener(aVoid -> {
+                    callback.onComplete("Lista de pendientes creada con éxito", null);
+                    addMovie(movie, userID, callback, documentSnapshot, "Película agregada a la lista de pendientes ", "Error al agregar la película a la lista de pendientes");
+                }).addOnFailureListener(e -> {
+                    callback.onComplete(null, new Exception("Error al crear la lista"));
+                });
+            } else {
+                boolean movieAlreadyExists = isMovieAlreadyExists(movie, documentSnapshot);
+                if (movieAlreadyExists) {
+                    callback.onComplete(null, new Exception("La película ya se encuentra en la lista de pendientes"));
+                } else {
+                    addMovie(movie, userID, callback, documentSnapshot, "Película agregada a la lista de pendientes ", "Error al agregar la película a la lista de pendientes");
+                }
+            }
+        });
+    }
+
+    private void addMovie(Movie movie, String userID, TaskCompletionCallback<String> callback, DocumentSnapshot documentSnapshot, String successMessage, String errorMessage) {
+        // Setteamos la fecha de creación
+        Date date = new Date();
+        String formattedDate = Utils.formatDate(date);
+        movie.setCreatedAt(formattedDate);
+
+        // Obtenemos el nombre del usuario y guardamos en la base de datos
+        getUserName(userID, (userName, errorGetUser) -> {
+            if (errorGetUser != null) {
+                callback.onComplete(null, errorGetUser);
+            } else {
+                movie.setAddedBy(userName);
+                documentSnapshot.getReference().update("movies", FieldValue.arrayUnion(movie))
+                        .addOnSuccessListener(success -> callback.onComplete(successMessage, null))
+                        .addOnFailureListener(e -> callback.onComplete(null, new Exception(errorMessage)));
+            }
+        });
+    }
+
+    public void loadMovieFromList(String listID, String collectionName, TaskCompletionCallback<List<Movie>> callback) {
+        firebaseFirestore.collection(collectionName).document(listID).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot != null) {
                 List<Movie> movieList = parseMovieList(documentSnapshot);
                 callback.onComplete(movieList, null);
@@ -184,8 +218,8 @@ public class FirebaseManager {
         }).addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al obtener la lista de películas")));
     }
 
-    private void getMovieListByID(String listID, TaskCompletionCallback<DocumentSnapshot> callback) {
-        firebaseFirestore.collection("movieLists").document(listID).get().addOnSuccessListener(documentSnapshot -> {
+    private void getMovieListByID(String documentID, String collection, TaskCompletionCallback<DocumentSnapshot> callback) {
+        firebaseFirestore.collection(collection).document(documentID).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot != null) {
                 callback.onComplete(documentSnapshot, null);
             } else {
@@ -215,7 +249,7 @@ public class FirebaseManager {
     }
 
     public void getListUsersIDsAndNames(String listID, TaskCompletionCallback<HashMap<String, String>> callback) {
-        getMovieListByID(listID, (document, error) -> {
+        getMovieListByID(listID, MOVIE_LIST, (document, error) -> {
             if (error != null) {
                 callback.onComplete(null, error);
             } else {
@@ -242,7 +276,7 @@ public class FirebaseManager {
 
     public void updateListName(String listID, String
             newListname, TaskCompletionCallback<Boolean> callback) {
-        getMovieListByID(listID, (document, error) -> {
+        getMovieListByID(listID, MOVIE_LIST, (document, error) -> {
             if (error != null) {
                 callback.onComplete(null, error);
             } else {
@@ -254,7 +288,7 @@ public class FirebaseManager {
     }
 
     public void deleteList(String listID, TaskCompletionCallback<Boolean> callback) {
-        getMovieListByID(listID, (document, error) -> {
+        getMovieListByID(listID, MOVIE_LIST, (document, error) -> {
             if (error != null) {
                 callback.onComplete(null, error);
             }
