@@ -14,7 +14,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -152,14 +151,14 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
         doneMenuItem.setVisible(true);
         movieAdapter.setEditMode(true);
         movieAdapter.setListID(userID);
-        ((MainActivity) getActivity()).setFabVisibility(false);
+        ((MainActivity) requireActivity()).setFabVisibility(false);
     }
 
     private void exitEditMode() {
         isEditMode = false;
         doneMenuItem.setVisible(false);
         movieAdapter.setEditMode(false);
-        ((MainActivity) getActivity()).setFabVisibility(true);
+        ((MainActivity) requireActivity()).setFabVisibility(true);
     }
 
     @Override

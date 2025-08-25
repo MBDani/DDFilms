@@ -1,5 +1,6 @@
 package com.merino.ddfilms.ui.fragment;
 
+import static com.merino.ddfilms.utils.StringUtils.DIARY_LIST;
 import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
@@ -91,29 +92,39 @@ public class SearchFragment extends Fragment {
         movieAdapter.setAddMode(true);
         movieAdapter.setMoviesIdList(moviesIDList);
         movieAdapter.setOnAddClickListener((position, movie) -> {
-            firebaseManager.addMovieToList(collection, documentID, movie, (result, error) -> {
-                if (error != null) {
-                    showMessage(getContext(), error.getMessage());
-                } else if (result != null) {
-                    showMessage(getContext(), "Agregada a la lista " + listName);
-                    moviesIDList.add(movie.getId());
-                    movieAdapter.setMoviesIdList(moviesIDList);
-                    movieAdapter.notifyDataSetChanged();
-                }
-            });
+            addMovie(collection, documentID, listName, moviesIDList, movie);
+            if (collection.equals(DIARY_LIST))
+                deleteMovie(collection, documentID, listName, moviesIDList, movie);
         });
 
         movieAdapter.setOnCheckClickListener((position, movie) -> {
-            firebaseManager.deleteMovieFromList(collection, documentID, movie, (result, error) -> {
-                if (error != null) {
-                    showMessage(getContext(), error.getMessage());
-                } else if (result != null) {
-                    showMessage(getContext(), "Eliminada de la lista " + listName);
-                    moviesIDList.removeIf(id -> id == movie.getId());
-                    movieAdapter.setMoviesIdList(moviesIDList);
-                    movieAdapter.notifyDataSetChanged();
-                }
-            });
+            deleteMovie(collection, documentID, listName, moviesIDList, movie);
+        });
+    }
+
+    private void deleteMovie(String collection, String documentID, String listName, List<Integer> moviesIDList, Movie movie) {
+        firebaseManager.deleteMovieFromList(collection, documentID, movie, (result, error) -> {
+            if (error != null) {
+                showMessage(getContext(), error.getMessage());
+            } else if (result != null) {
+                showMessage(getContext(), "Eliminada de la lista " + listName);
+                moviesIDList.removeIf(id -> id == movie.getId());
+                movieAdapter.setMoviesIdList(moviesIDList);
+                movieAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    private void addMovie(String collection, String documentID, String listName, List<Integer> moviesIDList, Movie movie) {
+        firebaseManager.addMovieToList(collection, documentID, movie, (result, error) -> {
+            if (error != null) {
+                showMessage(getContext(), error.getMessage());
+            } else if (result != null) {
+                showMessage(getContext(), "Agregada a la lista " + listName);
+                moviesIDList.add(movie.getId());
+                movieAdapter.setMoviesIdList(moviesIDList);
+                movieAdapter.notifyDataSetChanged();
+            }
         });
     }
 

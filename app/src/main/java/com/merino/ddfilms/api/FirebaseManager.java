@@ -1,7 +1,9 @@
 package com.merino.ddfilms.api;
 
+import static com.merino.ddfilms.utils.StringUtils.DIARY_LIST;
 import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
 import static com.merino.ddfilms.utils.StringUtils.WATCH_LIST;
+import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.content.Context;
 import android.content.Intent;
@@ -165,24 +167,25 @@ public class FirebaseManager {
         });
     }
 
-    public void addMovieToWatchList(Movie movie, TaskCompletionCallback<String> callback) {
+    public void addMovieToWatchOrDiaryList(String collection, Movie movie, TaskCompletionCallback<String> callback) {
+        String listName = collection.equals(WATCH_LIST) ? "pendientes" : "diario";
         String userID = getCurrentUserUID();
-        getMovieListByID(userID, WATCH_LIST, (documentSnapshot, error) -> {
+        getMovieListByID(userID, collection, (documentSnapshot, error) -> {
             if (error != null) {
                 callback.onComplete(null, error);
             } else if (!documentSnapshot.exists()) {
-                firebaseFirestore.collection(WATCH_LIST).document(userID).set(Collections.emptyMap()).addOnSuccessListener(aVoid -> {
-                    callback.onComplete("Lista de pendientes creada con éxito", null);
-                    addMovie(movie, userID, callback, documentSnapshot, "Película agregada a la lista de pendientes ", "Error al agregar la película a la lista de pendientes");
+                firebaseFirestore.collection(collection).document(userID).set(Collections.emptyMap()).addOnSuccessListener(aVoid -> {
+                    callback.onComplete("Lista de " + listName + " creada con éxito", null);
+                    addMovie(movie, userID, callback, documentSnapshot, "Película agregada a la lista de " + listName, "Error al agregar la película a la lista de");
                 }).addOnFailureListener(e -> {
                     callback.onComplete(null, new Exception("Error al crear la lista"));
                 });
             } else {
                 boolean movieAlreadyExists = isMovieAlreadyExists(movie, documentSnapshot);
                 if (movieAlreadyExists) {
-                    callback.onComplete(null, new Exception("La película ya se encuentra en la lista de pendientes"));
+                    callback.onComplete(null, new Exception("La película ya se encuentra en " + listName));
                 } else {
-                    addMovie(movie, userID, callback, documentSnapshot, "Película agregada a la lista de pendientes ", "Error al agregar la película a la lista de pendientes");
+                    addMovie(movie, userID, callback, documentSnapshot, "Película agregada a " + listName, "Error al agregar la película a " + listName);
                 }
             }
         });

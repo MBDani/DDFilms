@@ -1,6 +1,9 @@
 package com.merino.ddfilms.ui;
 
 import static com.merino.ddfilms.model.Credits.Crew.getDirector;
+import static com.merino.ddfilms.utils.StringUtils.DIARY_LIST;
+import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
+import static com.merino.ddfilms.utils.StringUtils.WATCH_LIST;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.annotation.SuppressLint;
@@ -229,7 +232,7 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void addToWatchlist() {
-        firebaseManager.addMovieToWatchList(currentMovie, (result, error) -> {
+        firebaseManager.addMovieToWatchOrDiaryList(WATCH_LIST, currentMovie, (result, error) -> {
             if (error != null) {
                 showMessage(getApplicationContext(), error.getMessage());
             } else {
@@ -239,7 +242,22 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void markAsWatched() {
-        showMessage(getApplicationContext(), "Esta en proceso... \nDame tiempo Daniela 😭");
+        firebaseManager.addMovieToWatchOrDiaryList(DIARY_LIST, currentMovie, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+            } else {
+                showMessage(getApplicationContext(), result);
+                deleteMovieFromWatchList();
+            }
+        });
+    }
+
+    private void deleteMovieFromWatchList() {
+        firebaseManager.deleteMovieFromList(WATCH_LIST, userId, currentMovie, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+            }
+        });
     }
 
     private void getMovieCredits(int id) {
