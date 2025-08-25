@@ -7,12 +7,13 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,9 +37,7 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
     private MovieAdapter movieAdapter;
     private RecyclerView movieListRecyclerView;
     private boolean isEditMode = false;
-    private Toolbar toolbar;
     private MenuItem doneMenuItem;
-    private MenuItem moreActionsMenuItem;
     private final FirebaseManager firebaseManager = new FirebaseManager();
     private List<Movie> movieList = new ArrayList<>();
     private final String userID = firebaseManager.getCurrentUserUID();
@@ -46,9 +45,9 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_watchlist, container, false);
+        setHasOptionsMenu(true);
 
         setupViews(view);
-//        setupToolbar();
         setupRecyclerView();
         loadMoviesFromList();
 
@@ -57,56 +56,6 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
 
     private void setupViews(View view) {
         movieListRecyclerView = view.findViewById(R.id.movie_list_recycler_view);
-//        toolbar = view.findViewById(R.id.toolbar);
-    }
-
-    private void setupToolbar() {
-        AppCompatActivity activity = (AppCompatActivity) getActivity();
-        if (activity == null) return;
-
-        activity.setSupportActionBar(toolbar);
-        ActionBar bar = activity.getSupportActionBar();
-        if (bar != null) {
-            bar.setDisplayHomeAsUpEnabled(true);
-            bar.setTitle("Pendientes");
-        }
-
-        // Opcional: manejar clic en flecha de regreso
-        toolbar.setNavigationOnClickListener(v -> activity.onBackPressed());
-    }
-
-    private void setupAddMovieFragment() {
-        Intent intent = new Intent(getContext(), SearchActivity.class);
-        intent.putExtra("collection", WATCH_LIST);
-        intent.putExtra("documentID", firebaseManager.getCurrentUserUID());
-        intent.putExtra("listName", "Pendientes");
-
-        int[] moviesID = movieList.stream()
-                .mapToInt(Movie::getId)
-                .toArray();
-        intent.putExtra("moviesID", moviesID);
-        startActivity(intent);
-    }
-
-    @SuppressLint("NonConstantResourceId")
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                if (isEditMode) {
-                    exitEditMode();
-                } else {
-//                    onBackPressed();
-                }
-                return true;
-            case R.id.action_more:
-//                showBottomSheet();
-                return true;
-            case R.id.action_done:
-                exitEditMode();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void setupRecyclerView() {
@@ -132,6 +81,53 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
         movieListRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        // Inflamos los dos menús: edit_mode_menu y list_menu (mismos ids que en la Activity)
+        inflater.inflate(R.menu.edit_mode_menu, menu);
+        inflater.inflate(R.menu.list_menu, menu);
+
+        // Guardamos referencias a los items para poder togglear su visibilidad
+        doneMenuItem = menu.findItem(R.id.action_done);
+        menu.findItem(R.id.action_more).setVisible(false);
+
+        // Estado inicial según isEditMode
+        if (doneMenuItem != null) doneMenuItem.setVisible(isEditMode);
+
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                if (isEditMode)
+                    exitEditMode();
+                else
+                    requireActivity().onBackPressed();
+                return true;
+            case R.id.action_done:
+                exitEditMode();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void setupAddMovieFragment() {
+        Intent intent = new Intent(getContext(), SearchActivity.class);
+        intent.putExtra("collection", WATCH_LIST);
+        intent.putExtra("documentID", firebaseManager.getCurrentUserUID());
+        intent.putExtra("listName", "Pendientes");
+
+        int[] moviesID = movieList.stream()
+                .mapToInt(Movie::getId)
+                .toArray();
+        intent.putExtra("moviesID", moviesID);
+        startActivity(intent);
+    }
+
+
     @SuppressLint("NotifyDataSetChanged")
     private void updateMoviesList(List<Movie> movies) {
         // Ponemos las películas agregadas más recientemente primero
@@ -154,7 +150,6 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
     private void enterEditMode() {
         isEditMode = true;
         doneMenuItem.setVisible(true);
-        moreActionsMenuItem.setVisible(false);
         movieAdapter.setEditMode(true);
         movieAdapter.setListID(userID);
         ((MainActivity) getActivity()).setFabVisibility(false);
@@ -163,7 +158,6 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
     private void exitEditMode() {
         isEditMode = false;
         doneMenuItem.setVisible(false);
-        moreActionsMenuItem.setVisible(true);
         movieAdapter.setEditMode(false);
         ((MainActivity) getActivity()).setFabVisibility(true);
     }
