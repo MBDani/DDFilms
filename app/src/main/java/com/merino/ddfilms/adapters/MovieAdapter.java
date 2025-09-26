@@ -204,7 +204,16 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
                         convertView = LayoutInflater.from(itemView.getContext()).inflate(R.layout.spinner_dropdown_item, parent, false);
                     }
                     TextView textView = convertView.findViewById(R.id.dropdown_text);
-                    textView.setText(getItem(position));
+                    String item = getItem(position);
+                    textView.setText(item);
+
+                    // Cambiar color según si está seleccionado o no
+                    if (Objects.equals(item, currentAddedBy)) {
+                        textView.setTextColor(itemView.getContext().getResources().getColor(R.color.gold_dark));
+                    } else {
+                        textView.setTextColor(itemView.getContext().getResources().getColor(android.R.color.white));
+                    }
+
                     return convertView;
                 }
             };
