@@ -6,8 +6,11 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -35,6 +38,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     @Setter
     @Getter
     private List<Integer> moviesIdList = new ArrayList<>();
+    @Setter
+    @Getter
+    private List<String> usersList = new ArrayList<>();
     private boolean isEditMode = false;
     private boolean isAddMode = false;
     private OnItemLongClickListener longClickListener;
@@ -42,6 +48,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     private OnDeleteClickListener deleteClickListener;
     private OnAddClickListener addClickListener;
     private OnCheckClickListener checkClickListener;
+    private OnAddedByChangedListener addedByChangedListener;
 
     @Setter
     private String listID;
@@ -62,6 +69,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         void onCheckClick(int position, Movie movie);
     }
 
+    public interface OnAddedByChangedListener {
+        void onAddedByChanged(int position, Movie movie, String newAddedBy);
+    }
+
     public void setOnItemLongClickListener(OnItemLongClickListener listener) {
         this.longClickListener = listener;
     }
@@ -76,6 +87,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     public void setOnCheckClickListener(OnCheckClickListener listener) {
         this.checkClickListener = listener;
+    }
+
+    public void setOnAddedByChangedListener(OnAddedByChangedListener listener) {
+        this.addedByChangedListener = listener;
     }
 
     public void setEditMode(boolean editMode) {
@@ -147,11 +162,13 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         private final TextView overviewTextView;
         private final TextView yearTextView;
         private final TextView voteAverageTextView;
-        private final TextView addedBy;
+        private final Spinner addedBySpinner;
         private final TextView createdAtTextView;
         private final ImageButton deleteButton;
         private final ImageButton addButton;
         private final ImageButton checkButton;
+        private ArrayAdapter<String> spinnerAdapter;
+        private String currentAddedBy = "";
 
         public MovieViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -160,13 +177,64 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView = itemView.findViewById(R.id.overview_text_view);
             yearTextView = itemView.findViewById(R.id.year_text_view);
             voteAverageTextView = itemView.findViewById(R.id.vote_average_text_view);
-            addedBy = itemView.findViewById(R.id.added_by_text_view);
+            addedBySpinner = itemView.findViewById(R.id.added_by_spinner);
             createdAtTextView = itemView.findViewById(R.id.created_at_text_view);
             deleteButton = itemView.findViewById(R.id.delete_button);
             addButton = itemView.findViewById(R.id.add_button);
             checkButton = itemView.findViewById(R.id.check_button);
 
             setupClickListeners();
+            setupSpinner();
+        }
+
+        private void setupSpinner() {
+            // Crear adapter personalizado vacío inicialmente
+            spinnerAdapter = new ArrayAdapter<String>(itemView.getContext(), R.layout.spinner_item_layout, new ArrayList<>()) {
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getView(position, convertView, parent);
+                    TextView textView = view.findViewById(R.id.spinner_text);
+                    textView.setText(getItem(position));
+                    return view;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    if (convertView == null) {
+                        convertView = LayoutInflater.from(itemView.getContext()).inflate(R.layout.spinner_dropdown_item, parent, false);
+                    }
+                    TextView textView = convertView.findViewById(R.id.dropdown_text);
+                    textView.setText(getItem(position));
+                    return convertView;
+                }
+            };
+
+            addedBySpinner.setAdapter(spinnerAdapter);
+        }
+
+        private void setupSpinnerListener() {
+            // Listener para detectar cambios
+            addedBySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selectedUser = spinnerAdapter.getItem(position);
+
+                    // Solo notificar si realmente cambió el valor
+                    if (addedByChangedListener != null && !Objects.equals(currentAddedBy, selectedUser)) {
+                        Movie movie = getMovieAtPosition(getBindingAdapterPosition());
+                        if (movie != null) {
+                            // Actualizar el valor actual para futuras comparaciones
+                            currentAddedBy = selectedUser;
+                            addedByChangedListener.onAddedByChanged(getBindingAdapterPosition(), movie, selectedUser);
+                        }
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    // No hacer nada
+                }
+            });
         }
 
         private void setupClickListeners() {
@@ -221,10 +289,43 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView.setText(movie.getOverview());
             voteAverageTextView.setText(String.format("%.1f", movie.getVoteAverage()));
 
-            if (!isAddMode && movie.getAddedBy() != null && !movie.getAddedBy().isEmpty()) {
-                addedBy.setText(movie.getAddedBy());
+            boolean shouldShowSpinner = !isAddMode && movie.getAddedBy() != null && !movie.getAddedBy().isEmpty();
+
+            if (shouldShowSpinner) {
+                addedBySpinner.setOnItemSelectedListener(null);
+
+                List<String> options = new ArrayList<>();
+
+                if (usersList != null && !usersList.isEmpty()) {
+                    for (String user : usersList) {
+                        if (!options.contains(user)) {
+                            options.add(user);
+                        }
+                    }
+                    options.add("Común"); // Dejamos siempre esta última opción
+                }
+
+                // Actualizar adapter del spinner
+                spinnerAdapter.clear();
+                spinnerAdapter.addAll(options);
+                spinnerAdapter.notifyDataSetChanged();
+
+                String movieAddedBy = movie.getAddedBy();
+                currentAddedBy = movieAddedBy;
+
+                int selectedPosition = options.indexOf(movieAddedBy);
+                if (selectedPosition >= 0) {
+                    addedBySpinner.setSelection(selectedPosition);
+                }
+
+                setupSpinnerListener();
+
+                addedBySpinner.setVisibility(View.VISIBLE);
                 posterImageView.setMaxHeight(500);
                 posterImageView.setMinimumHeight(500);
+            } else {
+                addedBySpinner.setVisibility(View.GONE);
+                addedBySpinner.setOnItemSelectedListener(null);
             }
 
             deleteButton.setVisibility(isEditMode ? View.VISIBLE : View.GONE);

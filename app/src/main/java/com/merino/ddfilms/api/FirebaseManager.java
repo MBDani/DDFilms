@@ -1,9 +1,7 @@
 package com.merino.ddfilms.api;
 
-import static com.merino.ddfilms.utils.StringUtils.DIARY_LIST;
 import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
 import static com.merino.ddfilms.utils.StringUtils.WATCH_LIST;
-import static com.merino.ddfilms.utils.Utils.showMessage;
 
 import android.content.Context;
 import android.content.Intent;
@@ -210,7 +208,7 @@ public class FirebaseManager {
         });
     }
 
-    public void loadMovieFromList(String listID, String collectionName, TaskCompletionCallback<List<Movie>> callback) {
+    public void getMoviesFromList(String listID, String collectionName, TaskCompletionCallback<List<Movie>> callback) {
         firebaseFirestore.collection(collectionName).document(listID).get().addOnSuccessListener(documentSnapshot -> {
             if (documentSnapshot != null) {
                 List<Movie> movieList = parseMovieList(documentSnapshot);
@@ -362,6 +360,37 @@ public class FirebaseManager {
                             .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
                 })
                 .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir la lista al usuario")));
+    }
+
+    public void updateMovieAddedBy(int movieID, String newAddedBy, String listID, TaskCompletionCallback<Boolean> callback) {
+        firebaseFirestore.collection("movieLists").document(listID)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        List<Movie> movies = parseMovieList(snapshot);
+                        boolean updated = false;
+
+                        for (Movie m : movies) {
+                            if (m.getId() == movieID) {
+                                m.setAddedBy(newAddedBy);
+                                updated = true;
+                                break;
+                            }
+                        }
+
+                        if (updated) {
+                            firebaseFirestore.collection("movieLists").document(listID)
+                                    .update("movies", movies)
+                                    .addOnSuccessListener(aVoid -> callback.onComplete(true, null))
+                                    .addOnFailureListener(e -> callback.onComplete(false, e));
+                        } else {
+                            callback.onComplete(false, new Exception("Película no encontrada en la lista"));
+                        }
+                    } else {
+                        callback.onComplete(false, new Exception("No existe la lista"));
+                    }
+                })
+                .addOnFailureListener(e -> callback.onComplete(false, e));
     }
 
     public void postReview(Review review, TaskCompletionCallback<Review> callback) {

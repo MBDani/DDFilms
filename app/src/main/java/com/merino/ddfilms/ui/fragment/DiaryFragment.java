@@ -30,7 +30,6 @@ import com.merino.ddfilms.ui.components.Fab.ShowsFab;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 public class DiaryFragment extends Fragment implements FabHost, ShowsFab {
 
@@ -138,7 +137,7 @@ public class DiaryFragment extends Fragment implements FabHost, ShowsFab {
     }
 
     private void loadMoviesFromList() {
-        firebaseManager.loadMovieFromList(userID, DIARY_LIST, (movies, error) -> {
+        firebaseManager.getMoviesFromList(userID, DIARY_LIST, (movies, error) -> {
             if (error != null) {
                 showMessage(getContext(), error.getMessage());
             } else if (movies != null) {

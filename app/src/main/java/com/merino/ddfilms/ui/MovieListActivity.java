@@ -40,6 +40,7 @@ public class MovieListActivity extends AppCompatActivity {
     private MenuItem moreActionsMenuItem;
     private final FirebaseManager firebaseManager = new FirebaseManager();
     private List<Movie> movieList = new ArrayList<>();
+    private List<String> usersNames = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,6 +137,11 @@ public class MovieListActivity extends AppCompatActivity {
                 }
             });
         });
+        movieAdapter.setOnAddedByChangedListener((position, movie, newAddedBy) -> {
+            // Actualizar la película localmente
+            movie.setAddedBy(newAddedBy);
+            updateMovieAddedByInDatabase(movie.getId(), newAddedBy);
+        });
         movieListRecyclerView.setAdapter(movieAdapter);
         movieListRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
     }
@@ -196,14 +202,46 @@ public class MovieListActivity extends AppCompatActivity {
         movieAdapter.setMovies(movies);
         movieAdapter.notifyDataSetChanged();
         movieList = movies;
+        loadListUsers();
+    }
+
+    private void loadListUsers() {
+        firebaseManager.getListUsersIDsAndNames(listID, (mapUsersResult, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+            } else if (mapUsersResult != null) {
+                usersNames = new ArrayList<>(mapUsersResult.values());
+
+                List<String> uniqueUsers = new ArrayList<>();
+                for (String user : usersNames) {
+                    if (!uniqueUsers.contains(user)) {
+                        uniqueUsers.add(user);
+                    }
+                }
+                usersNames = uniqueUsers;
+
+                movieAdapter.setUsersList(usersNames);
+                movieAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     private void loadMoviesFromList(String listID) {
-        firebaseManager.loadMovieFromList(listID, MOVIE_LIST, (movies, error) -> {
+        firebaseManager.getMoviesFromList(listID, MOVIE_LIST, (movies, error) -> {
             if (error != null) {
                 showMessage(getApplicationContext(), error.getMessage());
             } else if (movies != null) {
                 updateMoviesList(movies);
+            }
+        });
+    }
+
+    private void updateMovieAddedByInDatabase(int movieID, String newAddedBy) {
+        firebaseManager.updateMovieAddedBy(movieID, newAddedBy, listID, (result, error) -> {
+            if (error != null) {
+                showMessage(getApplicationContext(), error.getMessage());
+            } else if (result != null) {
+                showMessage(getApplicationContext(), "Película actualizada con éxito");
             }
         });
     }

@@ -137,7 +137,7 @@ public class WatchlistFragment extends Fragment implements FabHost, ShowsFab {
     }
 
     private void loadMoviesFromList() {
-        firebaseManager.loadMovieFromList(userID, WATCH_LIST, (movies, error) -> {
+        firebaseManager.getMoviesFromList(userID, WATCH_LIST, (movies, error) -> {
             if (error != null) {
                 showMessage(getContext(), error.getMessage());
             } else if (movies != null) {
