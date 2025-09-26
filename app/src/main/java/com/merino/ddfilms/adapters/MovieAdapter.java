@@ -221,7 +221,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             overviewTextView.setText(movie.getOverview());
             voteAverageTextView.setText(String.format("%.1f", movie.getVoteAverage()));
 
-            if (movie.getAddedBy() != null && !movie.getAddedBy().isEmpty()) {
+            if (!isAddMode && movie.getAddedBy() != null && !movie.getAddedBy().isEmpty()) {
                 addedBy.setText(movie.getAddedBy());
                 posterImageView.setMaxHeight(500);
                 posterImageView.setMinimumHeight(500);
