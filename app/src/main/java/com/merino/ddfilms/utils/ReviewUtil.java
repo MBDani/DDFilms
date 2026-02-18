@@ -99,6 +99,14 @@ public class ReviewUtil implements
         });
     }
 
+    @SuppressLint("NotifyDataSetChanged")
+    public void sortReviews(java.util.Comparator<Review> comparator) {
+        if (reviewsList != null && !reviewsList.isEmpty()) {
+            reviewsList.sort(comparator);
+            runOnMain(() -> reviewAdapter.notifyDataSetChanged());
+        }
+    }
+
     public void postReview(Review review) {
         review.setUserId(userId);
         review.setUserName(userName);

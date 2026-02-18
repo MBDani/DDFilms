@@ -71,6 +71,30 @@ public class DateFormatter {
         };
     }
 
+    public Comparator<Review> reviewDateAscComparator() {
+        return (r1, r2) -> {
+            Date d1 = parseDateToString(r1.getReviewDate());
+            Date d2 = parseDateToString(r2.getReviewDate());
+            return d1.compareTo(d2);
+        };
+    }
+
+    public Comparator<Review> reviewLikesDescComparator() {
+        return (r1, r2) -> Integer.compare(r2.getLikeCount().size(), r1.getLikeCount().size());
+    }
+
+    public Comparator<Review> reviewDislikesDescComparator() {
+        return (r1, r2) -> Integer.compare(r2.getDislikeCount().size(), r1.getDislikeCount().size());
+    }
+
+    public Comparator<Review> reviewRatingDescComparator() {
+        return (r1, r2) -> Double.compare(r2.getRating(), r1.getRating());
+    }
+
+    public Comparator<Review> reviewRatingAscComparator() {
+        return (r1, r2) -> Double.compare(r1.getRating(), r2.getRating());
+    }
+
     public Date parseDateToString(String dateString) {
         if (dateString == null) return new Date(0);
         try {

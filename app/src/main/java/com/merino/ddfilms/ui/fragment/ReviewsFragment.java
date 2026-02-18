@@ -18,6 +18,12 @@ public class ReviewsFragment extends Fragment{
     private ReviewUtil reviewUtil;
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reviews, container, false);
         reviewUtil = new ReviewUtil(requireContext());
@@ -34,10 +40,64 @@ public class ReviewsFragment extends Fragment{
         reviewsRecyclerView = view.findViewById(R.id.recyclerView_fragment_reviews);
     }
 
+    @Override
+    public void onCreateOptionsMenu(android.view.Menu menu, android.view.MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_reviews_filter, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(android.view.MenuItem item) {
+        if (item.getItemId() == R.id.action_filter) {
+            // Find the MenuItem's view to anchor the popup if possible, otherwise use a fallback
+            View view = getActivity().findViewById(R.id.action_filter);
+            showFilterMenu(view != null ? view : getActivity().findViewById(R.id.toolbar));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showFilterMenu(android.view.View anchor) {
+        if (anchor == null) return;
+        android.widget.PopupMenu popup = new android.widget.PopupMenu(requireContext(), anchor);
+        popup.getMenu().add(0, 1, 0, "Más recientes");
+        popup.getMenu().add(0, 2, 0, "Más antiguas");
+        popup.getMenu().add(0, 3, 0, "Likes");
+        popup.getMenu().add(0, 4, 0, "Dislikes");
+        popup.getMenu().add(0, 5, 0, "Mejor valoración");
+        popup.getMenu().add(0, 6, 0, "Peor valoración");
+
+        popup.setOnMenuItemClickListener(item -> {
+            com.merino.ddfilms.utils.DateFormatter df = new com.merino.ddfilms.utils.DateFormatter();
+            switch (item.getItemId()) {
+                case 1:
+                    reviewUtil.sortReviews(df.reviewDateDescComparator());
+                    return true;
+                case 2:
+                    reviewUtil.sortReviews(df.reviewDateAscComparator());
+                    return true;
+                case 3:
+                    reviewUtil.sortReviews(df.reviewLikesDescComparator());
+                    return true;
+                case 4:
+                    reviewUtil.sortReviews(df.reviewDislikesDescComparator());
+                    return true;
+                case 5:
+                    reviewUtil.sortReviews(df.reviewRatingDescComparator());
+                    return true;
+                case 6:
+                    reviewUtil.sortReviews(df.reviewRatingAscComparator());
+                    return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
     private void setupRecyclerViews() {
         // Configurar RecyclerView para reviews
         reviewsRecyclerView.setAdapter(reviewUtil.getReviewAdapter());
         reviewsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        reviewsRecyclerView.setNestedScrollingEnabled(false);
+        // nestedScrollingEnabled removed/true by default for proper scrolling within Fragment
     }
 }
