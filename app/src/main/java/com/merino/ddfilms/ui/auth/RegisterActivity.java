@@ -18,6 +18,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.model.User;
 import com.merino.ddfilms.ui.MainActivity;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 
 
 public class RegisterActivity extends AppCompatActivity {
@@ -38,7 +39,11 @@ public class RegisterActivity extends AppCompatActivity {
 
         edt_user = findViewById(R.id.user_edt);
         edt_email = findViewById(R.id.email_edt);
+        edt_email = findViewById(R.id.email_edt);
         edt_pw = findViewById(R.id.pw_edt);
+
+        // Fix for Edge-to-Edge (Android 15+)
+        EdgeToEdgeHelper.applyWindowInsets(findViewById(R.id.register_container), true, true, true, true);
     }
 
     public void btnNavigateToLoginActivity(View view) {

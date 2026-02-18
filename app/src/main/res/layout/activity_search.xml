@@ -5,6 +5,7 @@
     android:layout_height="match_parent">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appbar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -21,7 +22,7 @@
     <FrameLayout
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_marginTop="75dp"
+        android:layout_below="@id/appbar_layout"
         android:layout_height="match_parent" />
 
 </RelativeLayout>

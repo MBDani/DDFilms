@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -61,7 +62,18 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
+        toggle.syncState();
+
+        // Fix for Edge-to-Edge (Android 15+)
+        // Apply top inset to AppBarLayout to avoid status bar overlap
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.app_bar_layout), true, false);
+
         NavigationView navigationView = findViewById(R.id.navigation_view);
+        // Apply top and bottom insets to NavigationView to avoid overlap with status bar and nav bar
+        EdgeToEdgeHelper.applyWindowInsetsPending(navigationView, true, true);
+
+        // Apply bottom inset to main content to avoid overlap with navigation bar
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.main_content_scroll), false, true);
 
         personalizedNavHeader(navigationView);
 

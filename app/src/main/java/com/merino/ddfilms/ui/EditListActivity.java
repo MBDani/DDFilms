@@ -11,7 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.merino.ddfilms.R;
+import com.merino.ddfilms.R;
 import com.merino.ddfilms.api.FirebaseManager;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,7 +50,13 @@ public class EditListActivity extends AppCompatActivity {
 
         // Cargar datos actuales
         listNameInput.setText(currentListName);
+        // Cargar datos actuales
+        listNameInput.setText(currentListName);
         loadListUsers();
+
+        // Fix for Edge-to-Edge (Android 15+)
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.appbar_layout), true, false);
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.edit_list_root), false, true);
     }
 
     private void loadListUsers() {

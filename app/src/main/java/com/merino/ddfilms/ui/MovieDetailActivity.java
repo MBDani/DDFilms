@@ -2,7 +2,6 @@ package com.merino.ddfilms.ui;
 
 import static com.merino.ddfilms.model.Credits.Crew.getDirector;
 import static com.merino.ddfilms.utils.StringUtils.DIARY_LIST;
-import static com.merino.ddfilms.utils.StringUtils.MOVIE_LIST;
 import static com.merino.ddfilms.utils.StringUtils.WATCH_LIST;
 import static com.merino.ddfilms.utils.Utils.showMessage;
 
@@ -16,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,6 +36,7 @@ import com.merino.ddfilms.transitions.DetailsTransition;
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment;
 import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment;
 import com.merino.ddfilms.ui.utils.CustomFabMenu;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 import com.merino.ddfilms.utils.ReviewUtil;
 
 import java.util.ArrayList;
@@ -126,10 +127,16 @@ public class MovieDetailActivity extends AppCompatActivity {
         backButton = findViewById(R.id.back_button);
         nestedScrollView = findViewById(R.id.nested_scroll_view);
         appBarLayout = findViewById(R.id.appbar_layout);
+        Toolbar toolbar = findViewById(R.id.toolbar);
 
         castRecyclerView = findViewById(R.id.cast_recycler_view);
         crewRecyclerView = findViewById(R.id.crew_recycler_view);
         reviewsRecyclerView = findViewById(R.id.reviews_recycler_view);
+
+        // Fix for Edge-to-Edge (Android 15+)
+        // Reverted to fitsSystemWindows="true" in XML for AppBarLayout to match original design (margin for status bar)
+        // EdgeToEdgeHelper.applyWindowInsetsToMargin(toolbar, true, false, false, false);
+        EdgeToEdgeHelper.applyWindowInsetsPending(nestedScrollView, false, true);
     }
 
     private void setUpButtons() {

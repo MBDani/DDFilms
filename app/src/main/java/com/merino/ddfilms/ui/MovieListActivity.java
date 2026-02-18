@@ -22,6 +22,7 @@ import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.MovieAdapter;
 import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.model.Movie;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +52,15 @@ public class MovieListActivity extends AppCompatActivity {
         setupToolbar();
         setupRecyclerView();
         loadMoviesFromList(listID);
+        setupRecyclerView();
+        loadMoviesFromList(listID);
         fabAdd.setOnClickListener(v -> setupAddMovieFragment());
+
+        // Fix for Edge-to-Edge (Android 15+)
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.appbar_layout), true, false);
+        // Apply bottom inset to root or content to avoid nav bar overlap
+        // Since it's a CoordinatorLayout, applying to root might be enough or FAB needs handling
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(android.R.id.content), false, true);
     }
 
     private void setupViews() {

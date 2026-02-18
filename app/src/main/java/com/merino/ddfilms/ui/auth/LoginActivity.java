@@ -12,7 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.merino.ddfilms.R;
+import com.merino.ddfilms.R;
 import com.merino.ddfilms.ui.MainActivity;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -37,6 +39,9 @@ public class LoginActivity extends AppCompatActivity {
             String password = passwordEditText.getText().toString();
             loginWithEmailAndPassword(email, password);
         });
+
+        // Fix for Edge-to-Edge (Android 15+)
+        EdgeToEdgeHelper.applyWindowInsets(findViewById(R.id.login_container), true, true, true, true);
     }
 
     private void loginWithEmailAndPassword(String email, String password) {

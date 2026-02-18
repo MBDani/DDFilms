@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.merino.ddfilms.R;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 
 public class ForgotPasswordActivity extends AppCompatActivity {
 
@@ -23,6 +24,9 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         setContentView(R.layout.activity_forgot_password);
         mAuth = FirebaseAuth.getInstance();
         edt_email = findViewById(R.id.editText_email2);
+
+        // Fix for Edge-to-Edge (Android 15+)
+        EdgeToEdgeHelper.applyWindowInsets(findViewById(R.id.forgot_password_container), true, true, true, true);
     }
 
     public void ResetPassword(View view) {

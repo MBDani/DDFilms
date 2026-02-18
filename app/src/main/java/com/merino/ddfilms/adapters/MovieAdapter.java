@@ -32,7 +32,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
-    @Setter
     @Getter
     private List<Movie> movies = new ArrayList<>();
     @Setter

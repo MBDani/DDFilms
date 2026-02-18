@@ -7,6 +7,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.merino.ddfilms.R;
 import com.merino.ddfilms.ui.fragment.SearchFragment;
+import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 
 import java.util.Objects;
 
@@ -19,7 +20,13 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
         toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setupToolbar();
+
+        // Fix for Edge-to-Edge (Android 15+)
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.appbar_layout), true, false);
+        EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.fragment_container), false, true);
+
         if (savedInstanceState == null) {
             Bundle bundle = getIntent().getExtras();
             SearchFragment searchFragment = new SearchFragment();
