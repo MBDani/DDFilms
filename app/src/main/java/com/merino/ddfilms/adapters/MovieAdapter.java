@@ -43,6 +43,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     private boolean isEditMode = false;
     private boolean isAddMode = false;
     private OnItemLongClickListener longClickListener;
+    private long lastClickTime = 0;
+    private static final long CLICK_INTERVAL = 1200;
 
     private OnDeleteClickListener deleteClickListener;
     private OnAddClickListener addClickListener;
@@ -248,6 +250,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         private void setupClickListeners() {
             itemView.setOnClickListener(v -> {
                 if (!isEditMode) {
+                    long currentTime = android.os.SystemClock.elapsedRealtime();
+                    if (currentTime - lastClickTime < CLICK_INTERVAL) {
+                        return;
+                    }
+                    lastClickTime = currentTime;
+
                     Movie movie = getMovieAtPosition(getAdapterPosition());
                     if (movie != null) {
                         Intent intent = new Intent(itemView.getContext(), MovieDetailActivity.class);

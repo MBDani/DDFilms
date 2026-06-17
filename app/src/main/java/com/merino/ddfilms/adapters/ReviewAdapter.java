@@ -146,7 +146,7 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
                 movieTitle.setText(review.getMovieTitle());
                 if (review.getPosterPath() != null) {
                      Glide.with(context)
-                        .load("https://image.tmdb.org/t/p/w200/" + review.getPosterPath())
+                        .load("https://image.tmdb.org/t/p/w200" + review.getPosterPath())
                         .placeholder(R.drawable.placeholder_poster)
                         .into(moviePoster);
                 }

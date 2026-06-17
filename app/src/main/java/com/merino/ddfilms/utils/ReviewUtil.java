@@ -64,6 +64,15 @@ public class ReviewUtil implements
     private NestedScrollView nestedScrollView;
     private RecyclerView recyclerView;
 
+    public interface OnReviewsLoadedListener {
+        void onReviewsLoaded();
+    }
+    private OnReviewsLoadedListener reviewsLoadedListener;
+
+    public void setOnReviewsLoadedListener(OnReviewsLoadedListener listener) {
+        this.reviewsLoadedListener = listener;
+    }
+
     public ReviewUtil(Context context) {
         this.context = context;
         this.userId = firebaseManager.getCurrentUserUID();
@@ -147,6 +156,9 @@ public class ReviewUtil implements
         firebaseManager.getReviews(movieId, (reviews, error) -> {
             if (error != null) {
                 showMessage(context, error.getMessage());
+                if (reviewsLoadedListener != null) {
+                    runOnMain(() -> reviewsLoadedListener.onReviewsLoaded());
+                }
             } else if (reviews != null) {
                 getCurrenUserReview(reviews);
                 setUpLikeAndDislikeReviews(reviews);
@@ -163,7 +175,16 @@ public class ReviewUtil implements
                 int end = Math.min(PAGE_SIZE, allReviewsList.size());
                 reviewsList.addAll(allReviewsList.subList(0, end));
                 
-                runOnMain(() -> reviewAdapter.notifyDataSetChanged());
+                runOnMain(() -> {
+                    reviewAdapter.notifyDataSetChanged();
+                    if (reviewsLoadedListener != null) {
+                        reviewsLoadedListener.onReviewsLoaded();
+                    }
+                });
+            } else {
+                if (reviewsLoadedListener != null) {
+                    runOnMain(() -> reviewsLoadedListener.onReviewsLoaded());
+                }
             }
         });
     }

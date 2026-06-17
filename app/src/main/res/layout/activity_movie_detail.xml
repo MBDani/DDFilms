@@ -113,12 +113,23 @@
                 app:layout_constraintTop_toBottomOf="@+id/movie_title"
                 tools:text="Release Date" />
 
+            <View
+                android:id="@+id/skeleton_director"
+                android:layout_width="120dp"
+                android:layout_height="14dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_skeleton_placeholder"
+                android:visibility="visible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/movie_release_date" />
+
             <TextView
                 android:id="@+id/movie_director"
                 style="@style/MovieDetailInfo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:visibility="gone"
                 app:layout_constraintEnd_toStartOf="@+id/poster_card"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/movie_release_date"
@@ -130,6 +141,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:visibility="gone"
                 app:layout_constraintEnd_toStartOf="@+id/poster_card"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/movie_director"
@@ -144,6 +156,63 @@
                 app:layout_constraintTop_toBottomOf="@+id/poster_card"
                 tools:text="Movie overview" />
 
+            <LinearLayout
+                android:id="@+id/skeleton_bottom_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="24dp"
+                android:visibility="visible"
+                app:layout_constraintTop_toBottomOf="@+id/movie_overview">
+
+                <!-- Cast Skeleton -->
+                <View
+                    android:layout_width="80dp"
+                    android:layout_height="18dp"
+                    android:background="@drawable/bg_skeleton_placeholder" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+                    <include layout="@layout/item_person_skeleton" />
+                    <include layout="@layout/item_person_skeleton" />
+                    <include layout="@layout/item_person_skeleton" />
+                </LinearLayout>
+
+                <!-- Crew Skeleton -->
+                <View
+                    android:layout_width="80dp"
+                    android:layout_height="18dp"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/bg_skeleton_placeholder" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+                    <include layout="@layout/item_person_skeleton" />
+                    <include layout="@layout/item_person_skeleton" />
+                    <include layout="@layout/item_person_skeleton" />
+                </LinearLayout>
+
+                <!-- Reviews Skeleton -->
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="18dp"
+                    android:layout_marginTop="24dp"
+                    android:background="@drawable/bg_skeleton_placeholder" />
+
+                <include 
+                    layout="@layout/item_review_skeleton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" />
+
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/cast_title"
                 style="@style/MovieDetailSectionTitle"
@@ -151,6 +220,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/cast_title"
+                android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/movie_overview" />
 
@@ -161,6 +231,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal"
+                android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintTop_toBottomOf="@+id/cast_title"
                 tools:listitem="@layout/item_person" />
@@ -172,6 +243,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/crew_title"
+                android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/cast_recycler_view" />
 
@@ -182,6 +254,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal"
+                android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintTop_toBottomOf="@+id/crew_title"
                 tools:listitem="@layout/item_person" />
@@ -193,6 +266,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="@string/reviews_title"
+                android:visibility="gone"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/crew_recycler_view" />
 
@@ -202,6 +276,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:nestedScrollingEnabled="false"
+                android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintTop_toBottomOf="@+id/reviews_title"
                 tools:listitem="@layout/item_review" />

@@ -70,10 +70,16 @@ public class MovieDetailActivity extends AppCompatActivity {
     private NestedScrollView nestedScrollView;
     private AppBarLayout appBarLayout;
     private ReviewUtil reviewUtil;
+    private boolean isTransitionStarted = false;
+    private android.view.View skeletonDirector;
+    private android.view.View skeletonBottomContainer;
+    private int apiCallsCompleted = 0;
+    private static final int TOTAL_API_CALLS = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        supportPostponeEnterTransition();
         setContentView(R.layout.activity_movie_detail);
 
         tmdbService = TMDBClient.getClient(API_KEY).create(TMDBService.class);
@@ -85,12 +91,6 @@ public class MovieDetailActivity extends AppCompatActivity {
         setupRecyclerViews();
 
         // Recuperamos el objeto Movie de los extras
-        Movie movie = getIntent().getParcelableExtra("movie");
-
-        getMovieCredits(movie.getId());
-        getMovieDetails(movie.getId());
-
-        // Recuperamos el objeto Movie de los extras
         currentMovie = getIntent().getParcelableExtra("movie");
 
         if (currentMovie != null) {
@@ -98,6 +98,8 @@ public class MovieDetailActivity extends AppCompatActivity {
             getMovieDetails(currentMovie.getId());
             initReviews();
             setupMovieData(currentMovie);
+        } else {
+            supportStartPostponedEnterTransition();
         }
         getUserData();
         setupCustomFabMenu();
@@ -110,6 +112,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         if (highlightReviewId != null) {
             reviewUtil.setHighlightReviewId(highlightReviewId);
         }
+        reviewUtil.setOnReviewsLoadedListener(this::checkLoadingComplete);
         reviewUtil.loadMovieReviews(currentMovie.getId());
     }
 
@@ -136,6 +139,9 @@ public class MovieDetailActivity extends AppCompatActivity {
         castRecyclerView = findViewById(R.id.cast_recycler_view);
         crewRecyclerView = findViewById(R.id.crew_recycler_view);
         reviewsRecyclerView = findViewById(R.id.reviews_recycler_view);
+
+        skeletonDirector = findViewById(R.id.skeleton_director);
+        skeletonBottomContainer = findViewById(R.id.skeleton_bottom_container);
 
         // Fix for Edge-to-Edge (Android 15+)
         // Reverted to fitsSystemWindows="true" in XML for AppBarLayout to match original design (margin for status bar)
@@ -191,9 +197,61 @@ public class MovieDetailActivity extends AppCompatActivity {
                     .into(backdropImageView);
         }
         if (movie.getPosterPath() != null && !movie.getPosterPath().isEmpty()) {
-            Glide.with(this)
-                    .load("https://image.tmdb.org/t/p/w500/" + movie.getPosterPath())
-                    .into(posterImageView);
+            String posterUrl = "https://image.tmdb.org/t/p/w500" + movie.getPosterPath();
+            String thumbnailUrl = "https://image.tmdb.org/t/p/w200" + movie.getPosterPath();
+
+            if (!isTransitionStarted) {
+                com.bumptech.glide.RequestBuilder<android.graphics.drawable.Drawable> thumbnailRequest = Glide.with(this)
+                        .load(thumbnailUrl)
+                        .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                                if (!isTransitionStarted) {
+                                    isTransitionStarted = true;
+                                    supportStartPostponedEnterTransition();
+                                }
+                                return false;
+                            }
+                        });
+
+                Glide.with(this)
+                        .load(posterUrl)
+                        .thumbnail(thumbnailRequest)
+                        .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@androidx.annotation.Nullable com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                                if (!isTransitionStarted) {
+                                    isTransitionStarted = true;
+                                    supportStartPostponedEnterTransition();
+                                }
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                                if (!isTransitionStarted) {
+                                    isTransitionStarted = true;
+                                    supportStartPostponedEnterTransition();
+                                }
+                                return false;
+                            }
+                        })
+                        .into(posterImageView);
+            } else {
+                Glide.with(this)
+                        .load(posterUrl)
+                        .into(posterImageView);
+            }
+        } else {
+            if (!isTransitionStarted) {
+                isTransitionStarted = true;
+                supportStartPostponedEnterTransition();
+            }
         }
     }
 
@@ -302,12 +360,14 @@ public class MovieDetailActivity extends AppCompatActivity {
                 } else {
                     Log.e("MovieDetailActivity", "Error en la respuesta: " + response.message());
                 }
+                checkLoadingComplete();
             }
 
             @Override
             public void onFailure(Call<Credits> call, Throwable t) {
                 Log.e("MovieDetailActivity", "Error al obtener créditos de la película", t);
                 showMessage(getApplicationContext(), "Error al obtener créditos de la película");
+                checkLoadingComplete();
             }
         });
     }
@@ -335,14 +395,97 @@ public class MovieDetailActivity extends AppCompatActivity {
                 } else {
                     Log.e("MovieDetailActivity", "Error en la respuesta: " + response.message());
                 }
+                checkLoadingComplete();
             }
 
             @Override
             public void onFailure(Call<MovieDetails> call, Throwable t) {
                 Log.e("MovieDetailActivity", "Error al obtener detalles de la película", t);
                 showMessage(getApplicationContext(), "Error al obtener detalles de la película");
+                checkLoadingComplete();
             }
         });
+    }
+
+    private void checkLoadingComplete() {
+        apiCallsCompleted++;
+        if (apiCallsCompleted >= TOTAL_API_CALLS) {
+            showSkeleton(false);
+        }
+    }
+
+    private void showSkeleton(boolean show) {
+        int skeletonVisibility = show ? android.view.View.VISIBLE : android.view.View.GONE;
+
+        if (show) {
+            if (skeletonDirector != null) {
+                skeletonDirector.setAlpha(1f);
+                skeletonDirector.setVisibility(android.view.View.VISIBLE);
+            }
+            if (skeletonBottomContainer != null) {
+                skeletonBottomContainer.setAlpha(1f);
+                skeletonBottomContainer.setVisibility(android.view.View.VISIBLE);
+            }
+            
+            if (movieDirector != null) movieDirector.setVisibility(android.view.View.GONE);
+            findViewById(R.id.cast_title).setVisibility(android.view.View.GONE);
+            findViewById(R.id.cast_recycler_view).setVisibility(android.view.View.GONE);
+            findViewById(R.id.crew_title).setVisibility(android.view.View.GONE);
+            findViewById(R.id.crew_recycler_view).setVisibility(android.view.View.GONE);
+            findViewById(R.id.reviews_title).setVisibility(android.view.View.GONE);
+            findViewById(R.id.reviews_recycler_view).setVisibility(android.view.View.GONE);
+        } else {
+            // Animación suave de desvanecimiento para el skeleton y aparición para el contenido
+            if (skeletonDirector != null && skeletonDirector.getVisibility() == android.view.View.VISIBLE) {
+                skeletonDirector.animate().alpha(0f).setDuration(200).withEndAction(() -> {
+                    skeletonDirector.setVisibility(android.view.View.GONE);
+                    if (movieDirector != null) {
+                        movieDirector.setAlpha(0f);
+                        movieDirector.setVisibility(android.view.View.VISIBLE);
+                        movieDirector.animate().alpha(1f).setDuration(200).start();
+                    }
+                }).start();
+            } else {
+                if (movieDirector != null) movieDirector.setVisibility(android.view.View.VISIBLE);
+            }
+
+            if (skeletonBottomContainer != null && skeletonBottomContainer.getVisibility() == android.view.View.VISIBLE) {
+                skeletonBottomContainer.animate().alpha(0f).setDuration(200).withEndAction(() -> {
+                    skeletonBottomContainer.setVisibility(android.view.View.GONE);
+                    
+                    // Mostrar y animar contenido
+                    android.view.View[] contentViews = new android.view.View[]{
+                            findViewById(R.id.cast_title),
+                            findViewById(R.id.cast_recycler_view),
+                            findViewById(R.id.crew_title),
+                            findViewById(R.id.crew_recycler_view),
+                            findViewById(R.id.reviews_title),
+                            findViewById(R.id.reviews_recycler_view)
+                    };
+                    for (android.view.View view : contentViews) {
+                        if (view != null) {
+                            view.setAlpha(0f);
+                            view.setVisibility(android.view.View.VISIBLE);
+                            view.animate().alpha(1f).setDuration(200).start();
+                        }
+                    }
+                }).start();
+            } else {
+                android.view.View[] contentViews = new android.view.View[]{
+                        findViewById(R.id.cast_title),
+                        findViewById(R.id.cast_recycler_view),
+                        findViewById(R.id.crew_title),
+                        findViewById(R.id.crew_recycler_view),
+                        findViewById(R.id.reviews_title),
+                        findViewById(R.id.reviews_recycler_view)
+                };
+                for (android.view.View view : contentViews) {
+                    if (view != null) {
+                        view.setVisibility(android.view.View.VISIBLE);
+                    }
+                }
+            }
+        }
     }
 
 }

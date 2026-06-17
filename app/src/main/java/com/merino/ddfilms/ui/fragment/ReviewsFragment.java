@@ -21,6 +21,8 @@ public class ReviewsFragment extends Fragment{
     private ReviewUtil reviewUtil;
     private NestedScrollView mainNestedScrollView;
     private NestedScrollView.OnScrollChangeListener scrollChangeListener;
+    private long lastClickTime = 0;
+    private static final long CLICK_INTERVAL = 1200;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -173,6 +175,12 @@ public class ReviewsFragment extends Fragment{
             
             @Override
             public void onReviewClicked(com.merino.ddfilms.model.Review review, android.view.View sharedElement) {
+                long currentTime = android.os.SystemClock.elapsedRealtime();
+                if (currentTime - lastClickTime < CLICK_INTERVAL) {
+                    return;
+                }
+                lastClickTime = currentTime;
+
                 android.content.Intent intent = new android.content.Intent(requireContext(), com.merino.ddfilms.ui.MovieDetailActivity.class);
                 
                 // Construct basic Movie object
