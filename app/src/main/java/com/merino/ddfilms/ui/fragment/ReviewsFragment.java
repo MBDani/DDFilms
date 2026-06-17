@@ -5,6 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,6 +19,8 @@ public class ReviewsFragment extends Fragment{
 
     private RecyclerView reviewsRecyclerView;
     private ReviewUtil reviewUtil;
+    private NestedScrollView mainNestedScrollView;
+    private NestedScrollView.OnScrollChangeListener scrollChangeListener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -40,6 +44,17 @@ public class ReviewsFragment extends Fragment{
         super.onResume();
         if (reviewUtil != null) {
             reviewUtil.loadAllReviews();
+        }
+        if (mainNestedScrollView != null && scrollChangeListener != null) {
+            mainNestedScrollView.setOnScrollChangeListener(scrollChangeListener);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mainNestedScrollView != null) {
+            mainNestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) null);
         }
     }
 
@@ -106,6 +121,44 @@ public class ReviewsFragment extends Fragment{
         reviewUtil.getReviewAdapter().setShowMovieInfo(true);
         reviewsRecyclerView.setAdapter(reviewUtil.getReviewAdapter());
         reviewsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        reviewUtil.setScrollTargets(null, null, reviewsRecyclerView);
+        
+        // Buscar el NestedScrollView padre en MainActivity
+        if (getActivity() != null) {
+            mainNestedScrollView = getActivity().findViewById(R.id.main_content_scroll);
+        }
+        
+        if (mainNestedScrollView != null) {
+            scrollChangeListener = (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                // Si scroll llegó cerca del final (por ejemplo, a 300px o menos)
+                View child = v.getChildAt(v.getChildCount() - 1);
+                if (child != null) {
+                    int diff = (child.getBottom() - (v.getHeight() + scrollY));
+                    if (diff <= 300) {
+                        reviewUtil.loadNextPage();
+                    }
+                }
+            };
+        } else {
+            // Fallback: usar el scroll listener directo del RecyclerView
+            reviewsRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                    super.onScrolled(recyclerView, dx, dy);
+                    if (dy > 0) { // Solo al hacer scroll hacia abajo
+                        LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                        if (layoutManager != null) {
+                            int totalItemCount = layoutManager.getItemCount();
+                            int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
+
+                            if (lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition >= totalItemCount - 3) {
+                                reviewUtil.loadNextPage();
+                            }
+                        }
+                    }
+                }
+            });
+        }
         
         reviewUtil.getReviewAdapter().setListener(new com.merino.ddfilms.adapters.ReviewAdapter.OnReviewInteractionListener() {
             @Override

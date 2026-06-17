@@ -34,6 +34,11 @@ public class ReviewUtil implements
         WriteReviewDialogFragment.OnReviewSubmittedListener {
 
     private List<Review> reviewsList;
+    private List<Review> allReviewsList;
+    private int currentPage = 1;
+    private boolean isPageLoading = false;
+    private static final int PAGE_SIZE = 15;
+    private java.util.Comparator<Review> currentComparator;
     @Getter
     private ReviewAdapter reviewAdapter;
     @Getter
@@ -63,7 +68,9 @@ public class ReviewUtil implements
         this.context = context;
         this.userId = firebaseManager.getCurrentUserUID();
         this.reviewsList = new ArrayList<>();
+        this.allReviewsList = new ArrayList<>();
         this.reviewAdapter = new ReviewAdapter(reviewsList, this);
+        this.currentComparator = dateFormatter.reviewDateDescComparator();
     }
 
     public void setScrollTargets(AppBarLayout appBarLayout,
@@ -72,6 +79,19 @@ public class ReviewUtil implements
         this.appBarLayout = appBarLayout;
         this.nestedScrollView = nestedScrollView;
         this.recyclerView = recyclerView;
+        
+        if (nestedScrollView != null) {
+            nestedScrollView.setOnScrollChangeListener((NestedScrollView.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                // Si scroll llegó cerca del final (por ejemplo, a 300px o menos)
+                View child = v.getChildAt(v.getChildCount() - 1);
+                if (child != null) {
+                    int diff = (child.getBottom() - (v.getHeight() + scrollY));
+                    if (diff <= 300) {
+                        loadNextPage();
+                    }
+                }
+            });
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -82,13 +102,44 @@ public class ReviewUtil implements
             } else if (reviews != null) {
                 getCurrenUserReview(reviews);
                 setUpLikeAndDislikeReviews(reviews);
+                
+                allReviewsList.clear();
+                allReviewsList.addAll(reviews);
+                
+                // Sort with current comparator
+                allReviewsList.sort(currentComparator != null ? currentComparator : dateFormatter.reviewDateDescComparator());
+                
+                currentPage = 1;
+                isPageLoading = false;
                 reviewsList.clear();
-                reviewsList.addAll(reviews.stream()
-                        .sorted(dateFormatter.reviewDateDescComparator())
-                        .collect(Collectors.toList()));
+                int end = Math.min(PAGE_SIZE, allReviewsList.size());
+                reviewsList.addAll(allReviewsList.subList(0, end));
+                
                 runOnMain(() -> reviewAdapter.notifyDataSetChanged());
             }
         });
+    }
+
+    /**
+     * Carga la siguiente página de reseñas de forma perezosa (Lazy Load).
+     */
+    public void loadNextPage() {
+        if (allReviewsList == null || reviewsList == null) return;
+        if (isPageLoading) return;
+        
+        int start = currentPage * PAGE_SIZE;
+        int end = Math.min(start + PAGE_SIZE, allReviewsList.size());
+        
+        if (start < end) {
+            isPageLoading = true;
+            List<Review> nextPageItems = allReviewsList.subList(start, end);
+            reviewsList.addAll(nextPageItems);
+            currentPage++;
+            runOnMain(() -> {
+                reviewAdapter.notifyItemRangeInserted(start, nextPageItems.size());
+                new Handler(Looper.getMainLooper()).post(() -> isPageLoading = false);
+            });
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -99,9 +150,19 @@ public class ReviewUtil implements
             } else if (reviews != null) {
                 getCurrenUserReview(reviews);
                 setUpLikeAndDislikeReviews(reviews);
-                reviewsList.addAll(reviews.stream()
-                        .sorted(dateFormatter.reviewDateDescComparator())
-                        .collect(Collectors.toList()));
+                
+                allReviewsList.clear();
+                allReviewsList.addAll(reviews);
+                
+                // Sort with current comparator
+                allReviewsList.sort(currentComparator != null ? currentComparator : dateFormatter.reviewDateDescComparator());
+                
+                currentPage = 1;
+                isPageLoading = false;
+                reviewsList.clear();
+                int end = Math.min(PAGE_SIZE, allReviewsList.size());
+                reviewsList.addAll(allReviewsList.subList(0, end));
+                
                 runOnMain(() -> reviewAdapter.notifyDataSetChanged());
             }
         });
@@ -109,8 +170,14 @@ public class ReviewUtil implements
 
     @SuppressLint("NotifyDataSetChanged")
     public void sortReviews(java.util.Comparator<Review> comparator) {
-        if (reviewsList != null && !reviewsList.isEmpty()) {
-            reviewsList.sort(comparator);
+        this.currentComparator = comparator;
+        if (allReviewsList != null && !allReviewsList.isEmpty()) {
+            allReviewsList.sort(comparator);
+            currentPage = 1;
+            isPageLoading = false;
+            reviewsList.clear();
+            int end = Math.min(PAGE_SIZE, allReviewsList.size());
+            reviewsList.addAll(allReviewsList.subList(0, end));
             runOnMain(() -> reviewAdapter.notifyDataSetChanged());
         }
     }
@@ -158,15 +225,23 @@ public class ReviewUtil implements
     }
 
     public void addReviewToRecycler(Review review) {
-        if (userReview != null)
-            reviewsList.remove(userReview);
+        if (userReview != null) {
+            allReviewsList.removeIf(r -> r.getId().equals(userReview.getId()));
+            reviewsList.removeIf(r -> r.getId().equals(userReview.getId()));
+        }
 
-        reviewsList.add(0, review);
+        allReviewsList.add(0, review);
+        allReviewsList.sort(currentComparator != null ? currentComparator : dateFormatter.reviewDateDescComparator());
+
+        currentPage = 1;
+        isPageLoading = false;
+        reviewsList.clear();
+        int end = Math.min(PAGE_SIZE, allReviewsList.size());
+        reviewsList.addAll(allReviewsList.subList(0, end));
+
         runOnMain(() -> {
-            reviewAdapter.setReviewList(reviewsList);
-            reviewAdapter.notifyItemInserted(0);
+            reviewAdapter.notifyDataSetChanged();
         });
-
 
         userReview = review;
     }
@@ -190,11 +265,11 @@ public class ReviewUtil implements
                     return;
                 }
                 runOnMain(() -> {
+                    allReviewsList.removeIf(r -> r.getId().equals(review.getId()));
                     reviewsList.removeIf(r -> r.getId().equals(review.getId()));
                     if (userReview != null && userReview.getId().equals(review.getId())) {
                         userReview = null;
                     }
-                    reviewAdapter.setReviewList(reviewsList);
                     reviewAdapter.notifyDataSetChanged();
                     showMessage(context, "Reseña borrada con éxito");
                 });
