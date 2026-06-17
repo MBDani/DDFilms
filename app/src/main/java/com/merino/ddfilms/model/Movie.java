@@ -12,8 +12,10 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 public class Movie implements Parcelable {
     private boolean adult;
     @SerializedName("backdrop_path")
@@ -60,9 +62,6 @@ public class Movie implements Parcelable {
         voteCount = in.readInt();
         createdAt = in.readString();
         addedBy = in.readString();
-    }
-
-    protected Movie() {
     }
 
     // Necesario para escribir el objeto en un Parcel

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.merino.ddfilms.R;
+import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.utils.ReviewUtil;
 
 public class ReviewsFragment extends Fragment{
@@ -96,8 +97,46 @@ public class ReviewsFragment extends Fragment{
 
     private void setupRecyclerViews() {
         // Configurar RecyclerView para reviews
+        reviewUtil.getReviewAdapter().setShowMovieInfo(true);
         reviewsRecyclerView.setAdapter(reviewUtil.getReviewAdapter());
         reviewsRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        // nestedScrollingEnabled removed/true by default for proper scrolling within Fragment
+        
+        reviewUtil.getReviewAdapter().setListener(new com.merino.ddfilms.adapters.ReviewAdapter.OnReviewInteractionListener() {
+            @Override
+            public void onLikeClicked(com.merino.ddfilms.model.Review review, int position) {
+                reviewUtil.onLikeClicked(review, position);
+            }
+
+            @Override
+            public void onDislikeClicked(com.merino.ddfilms.model.Review review, int position) {
+                 reviewUtil.onDislikeClicked(review, position);
+            }
+            
+            @Override
+            public void onReviewClicked(com.merino.ddfilms.model.Review review, android.view.View sharedElement) {
+                android.content.Intent intent = new android.content.Intent(requireContext(), com.merino.ddfilms.ui.MovieDetailActivity.class);
+                
+                // Construct basic Movie object
+                Movie movie = new Movie();
+                movie.setId(review.getMovieId());
+                movie.setTitle(review.getMovieTitle());
+                movie.setPosterPath(review.getPosterPath());
+                movie.setBackdropPath(review.getBackdropPath());
+
+                intent.putExtra("movie", movie);
+                intent.putExtra("highlight_review_id", review.getId());
+
+                if (sharedElement != null) {
+                    android.app.ActivityOptions options = android.app.ActivityOptions.makeSceneTransitionAnimation(
+                            requireActivity(), 
+                            sharedElement, 
+                            "moviePosterTransition" 
+                    );
+                    startActivity(intent, options.toBundle());
+                } else {
+                    startActivity(intent);
+                }
+            }
+        });
     }
 }

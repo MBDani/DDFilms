@@ -71,8 +71,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
 
     // Lombok
-    implementation 'org.projectlombok:lombok:1.18.28'
-    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    implementation 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
 
     // Android material
     implementation("com.google.android.material:material:1.12.0")

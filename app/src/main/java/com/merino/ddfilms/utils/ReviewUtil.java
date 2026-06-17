@@ -14,6 +14,7 @@ import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.merino.ddfilms.R;
 import com.merino.ddfilms.adapters.ReviewAdapter;
 import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.model.Movie;
@@ -45,6 +46,13 @@ public class ReviewUtil implements
     private String userName;
     @Setter
     private Movie currentMovie;
+
+    @Setter
+    private String highlightReviewId;
+
+    public void setHighlightReviewId(String highlightReviewId) {
+        this.highlightReviewId = highlightReviewId;
+    }
 
     // Scroll targets (se setean desde la Activity)
     private AppBarLayout appBarLayout;
@@ -108,12 +116,32 @@ public class ReviewUtil implements
     }
 
     public void postReview(Review review) {
+        if (userId == null) userId = firebaseManager.getCurrentUserUID();
+        
+        // Ensure username is present
+        if (userName == null) {
+            firebaseManager.getUserName(userId, (name, error) -> {
+                userName = name != null ? name : "Usuario";
+                review.setUserName(userName);
+                proceedToPost(review);
+            });
+        } else {
+            review.setUserName(userName);
+            proceedToPost(review);
+        }
+    }
+
+    private void proceedToPost(Review review) {
         review.setUserId(userId);
-        review.setUserName(userName);
-        review.setMovieId(currentMovie.getId());
+        if (currentMovie != null) {
+            review.setMovieId(currentMovie.getId());
+            review.setMovieTitle(currentMovie.getTitle());
+            review.setPosterPath(currentMovie.getPosterPath());
+            review.setBackdropPath(currentMovie.getBackdropPath());
+        }
         review.setReviewDate(new Date().toString());
-        review.setLikeCount(new ArrayList<>());
-        review.setDislikeCount(new ArrayList<>());
+        if (review.getLikeCount() == null) review.setLikeCount(new ArrayList<>());
+        if (review.getDislikeCount() == null) review.setDislikeCount(new ArrayList<>());
 
         firebaseManager.postReview(review, (reviewResponse, error) -> {
             if (error != null) {
@@ -227,6 +255,70 @@ public class ReviewUtil implements
                 });
             }
         });
+    }
+
+    public void scrollToReview(String reviewId) {
+        if (reviewsList == null || reviewsList.isEmpty() || reviewId == null) return;
+
+        int index = -1;
+        for (int i = 0; i < reviewsList.size(); i++) {
+            if (reviewsList.get(i).getId().equals(reviewId)) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index != -1) {
+            final int targetIndex = index;
+            recyclerView.postDelayed(() -> {
+                // Collapse AppBar first
+                if (appBarLayout != null) appBarLayout.setExpanded(false, true);
+
+                // Find view holder
+                View view = recyclerView.getLayoutManager().findViewByPosition(targetIndex);
+                if (view == null) {
+                    // Item not currently visible, scroll closer first
+                    recyclerView.scrollToPosition(targetIndex);
+                }
+
+                // Allow layout to happen then precise scroll
+                recyclerView.postDelayed(() -> {
+                    View targetView = recyclerView.getLayoutManager().findViewByPosition(targetIndex);
+
+                    if (targetView != null && nestedScrollView != null) {
+                        int startY = nestedScrollView.getScrollY();
+                        int targetY = (int) (recyclerView.getY() + targetView.getTop()); // Changed getY to getTop for relative position in recycler
+
+                        ValueAnimator scrollAnim = ValueAnimator.ofInt(startY, targetY);
+                        scrollAnim.setDuration(1200);
+                        scrollAnim.setInterpolator(new DecelerateInterpolator());
+                        scrollAnim.addUpdateListener(anim -> {
+                            int y = (int) anim.getAnimatedValue();
+                            nestedScrollView.scrollTo(0, y);
+                        });
+                        scrollAnim.start();
+
+                        // Highlight animation
+                        runOnMain(() -> {
+                            targetView.setAlpha(0.2f);
+                            targetView.animate().alpha(1f).setDuration(1000).start();
+
+                            int originalColor = android.graphics.Color.TRANSPARENT;
+                            int highlightColor = androidx.core.content.ContextCompat.getColor(context, R.color.white_60);
+
+                            ValueAnimator colorAnim = ValueAnimator.ofArgb(highlightColor, originalColor);
+                            colorAnim.setDuration(2000);
+                            colorAnim.addUpdateListener(anim -> targetView.setBackgroundColor((int) anim.getAnimatedValue()));
+                            colorAnim.start();
+                        });
+                    } else if (targetView != null) {
+                        // Fallback if no nested scroll view (e.g. standard recycler)
+                        recyclerView.smoothScrollToPosition(targetIndex);
+                    }
+                }, 200);
+
+            }, 500);
+        }
     }
 
     // --------------------- Likes / dislikes  ------------------------------------------

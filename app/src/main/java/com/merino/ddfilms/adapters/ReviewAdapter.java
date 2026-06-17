@@ -30,10 +30,22 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
         void onLikeClicked(Review review, int position);
 
         void onDislikeClicked(Review review, int position);
+        
+        default void onReviewClicked(Review review, View sharedElement) {}
+    }
+
+    private boolean showMovieInfo = false;
+
+    public void setShowMovieInfo(boolean showMovieInfo) {
+        this.showMovieInfo = showMovieInfo;
     }
 
     public ReviewAdapter(List<Review> reviewList, OnReviewInteractionListener listener) {
         this.reviewList = reviewList;
+        this.listener = listener;
+    }
+
+    public void setListener(OnReviewInteractionListener listener) {
         this.listener = listener;
     }
 
@@ -49,7 +61,14 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
         Review review = reviewList.get(position);
         holder.setupLikeDislikeButtons(review, position);
-        holder.bind(review, position);
+        holder.bind(review, position, showMovieInfo);
+        
+        holder.itemView.setOnClickListener(v -> {
+            if (showMovieInfo && listener != null) {
+                // Pass the poster view for transition
+                listener.onReviewClicked(review, holder.moviePoster);
+            }
+        });
     }
 
     @Override
@@ -83,6 +102,11 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
         private TextView likeCount;
         private TextView dislikeCount;
 
+        // Movie Info
+        private View movieInfoLayout;
+        private ImageView moviePoster;
+        private TextView movieTitle;
+
         private ImageView[] stars = new ImageView[5];
 
         public ReviewViewHolder(@NonNull View itemView) {
@@ -100,6 +124,10 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
             likeCount = itemView.findViewById(R.id.like_count);
             dislikeCount = itemView.findViewById(R.id.dislike_count);
 
+            movieInfoLayout = itemView.findViewById(R.id.movie_info_layout);
+            moviePoster = itemView.findViewById(R.id.movie_poster_review);
+            movieTitle = itemView.findViewById(R.id.movie_title_review);
+
             // Inicializar array de estrellas
             stars[0] = itemView.findViewById(R.id.star_1);
             stars[1] = itemView.findViewById(R.id.star_2);
@@ -108,7 +136,22 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
             stars[4] = itemView.findViewById(R.id.star_5);
         }
 
-        public void bind(Review review, int position) {
+        public void bind(Review review, int position, boolean showMovieInfo) {
+            
+            if (showMovieInfo) {
+                movieInfoLayout.setVisibility(View.VISIBLE);
+                movieTitle.setText(review.getMovieTitle());
+                if (review.getPosterPath() != null) {
+                     Glide.with(context)
+                        .load("https://image.tmdb.org/t/p/w200/" + review.getPosterPath())
+                        .placeholder(R.drawable.placeholder_poster)
+                        .into(moviePoster);
+                }
+                moviePoster.setTransitionName("poster_" + review.getMovieId());
+            } else {
+                 movieInfoLayout.setVisibility(View.GONE);
+            }
+
             // Configurar información del usuario
             userName.setText(review.getUserName());
             reviewDate.setText(review.getFormattedDate());

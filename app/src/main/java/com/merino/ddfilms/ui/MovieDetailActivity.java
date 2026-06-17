@@ -106,6 +106,10 @@ public class MovieDetailActivity extends AppCompatActivity {
     private void initReviews() {
         reviewUtil.setScrollTargets(appBarLayout, nestedScrollView, reviewsRecyclerView);
         reviewUtil.setCurrentMovie(currentMovie);
+        String highlightReviewId = getIntent().getStringExtra("highlight_review_id");
+        if (highlightReviewId != null) {
+            reviewUtil.setHighlightReviewId(highlightReviewId);
+        }
         reviewUtil.loadMovieReviews(currentMovie.getId());
     }
 
@@ -170,17 +174,27 @@ public class MovieDetailActivity extends AppCompatActivity {
         getWindow().setSharedElementEnterTransition(new DetailsTransition());
 
         movieTitle.setText(movie.getTitle());
-        String movieYearDurationText = movieYearDuration.getText() + movie.getReleaseDate();
+        String releaseDate = movie.getReleaseDate();
+        if (releaseDate != null && releaseDate.length() >= 4) {
+             releaseDate = releaseDate.substring(0, 4);
+        } else {
+             releaseDate = "";
+        }
+        String movieYearDurationText = releaseDate + (movieDetails != null ? "  •  " + movieDetails.getDuration() : "");
         movieYearDuration.setText(movieYearDurationText);
         movieOverview.setText(movie.getOverview());
 
         // Usamos Glide para cargar las imágenes
-        Glide.with(this)
-                .load("https://image.tmdb.org/t/p/w500/" + movie.getBackdropPath())
-                .into(backdropImageView);
-        Glide.with(this)
-                .load("https://image.tmdb.org/t/p/w500/" + movie.getPosterPath())
-                .into(posterImageView);
+        if (movie.getBackdropPath() != null && !movie.getBackdropPath().isEmpty()) {
+            Glide.with(this)
+                    .load("https://image.tmdb.org/t/p/w500/" + movie.getBackdropPath())
+                    .into(backdropImageView);
+        }
+        if (movie.getPosterPath() != null && !movie.getPosterPath().isEmpty()) {
+            Glide.with(this)
+                    .load("https://image.tmdb.org/t/p/w500/" + movie.getPosterPath())
+                    .into(posterImageView);
+        }
     }
 
     private void setupCustomFabMenu() {
@@ -305,7 +319,19 @@ public class MovieDetailActivity extends AppCompatActivity {
             public void onResponse(Call<MovieDetails> call, Response<MovieDetails> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     movieDetails = response.body();
-                    duration.setText(movieDetails.getDuration());
+                    
+                    // Update currentMovie with full details to repair any partial data
+                    if (currentMovie != null) {
+                        currentMovie.setTitle(movieDetails.getTitle());
+                        currentMovie.setOverview(movieDetails.getOverview());
+                        currentMovie.setReleaseDate(movieDetails.getReleaseDate());
+                        currentMovie.setBackdropPath(movieDetails.getBackdropPath());
+                        
+                        // Update UI
+                        setupMovieData(currentMovie);
+                        
+                        reviewUtil.setCurrentMovie(currentMovie);
+                    }
                 } else {
                     Log.e("MovieDetailActivity", "Error en la respuesta: " + response.message());
                 }
