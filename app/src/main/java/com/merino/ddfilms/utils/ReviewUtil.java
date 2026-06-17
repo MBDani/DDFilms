@@ -181,6 +181,27 @@ public class ReviewUtil implements
         }
     }
 
+    @Override
+    public void onReviewDeleted(Review review) {
+        if (review.getId() != null) {
+            firebaseManager.deleteReview(review.getId(), (success, error) -> {
+                if (error != null) {
+                    showMessage(context, error.getMessage());
+                    return;
+                }
+                runOnMain(() -> {
+                    reviewsList.removeIf(r -> r.getId().equals(review.getId()));
+                    if (userReview != null && userReview.getId().equals(review.getId())) {
+                        userReview = null;
+                    }
+                    reviewAdapter.setReviewList(reviewsList);
+                    reviewAdapter.notifyDataSetChanged();
+                    showMessage(context, "Reseña borrada con éxito");
+                });
+            });
+        }
+    }
+
     private void updateReview(Review review) {
         review.setReviewDate(new Date().toString());
         review.setLikeCount(new ArrayList<>());
@@ -343,6 +364,29 @@ public class ReviewUtil implements
         } else {
             // Si no tenía dislike, añadirlo
             addDislike(review, position);
+        }
+    }
+
+    @Override
+    public void onReviewClicked(Review review, View sharedElement) {
+        if (review.getUserId() != null && review.getUserId().equals(userId)) {
+            if (context instanceof androidx.fragment.app.FragmentActivity) {
+                // Reconstruct basic Movie object or use currentMovie
+                Movie movie = currentMovie;
+                if (movie == null) {
+                    movie = new Movie();
+                    movie.setId(review.getMovieId());
+                    movie.setTitle(review.getMovieTitle());
+                    movie.setPosterPath(review.getPosterPath());
+                    movie.setBackdropPath(review.getBackdropPath());
+                }
+
+                WriteReviewDialogFragment dialog = new WriteReviewDialogFragment(movie, review);
+                dialog.setOnReviewSubmittedListener(this);
+
+                androidx.fragment.app.FragmentManager fm = ((androidx.fragment.app.FragmentActivity) context).getSupportFragmentManager();
+                dialog.show(fm, "WriteReviewDialogFragment");
+            }
         }
     }
 

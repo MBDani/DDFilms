@@ -64,9 +64,12 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
         holder.bind(review, position, showMovieInfo);
         
         holder.itemView.setOnClickListener(v -> {
-            if (showMovieInfo && listener != null) {
-                // Pass the poster view for transition
-                listener.onReviewClicked(review, holder.moviePoster);
+            if (listener != null) {
+                String currentUserId = com.google.firebase.auth.FirebaseAuth.getInstance().getUid();
+                boolean isOwnReview = review.getUserId() != null && review.getUserId().equals(currentUserId);
+                if (showMovieInfo || isOwnReview) {
+                    listener.onReviewClicked(review, holder.moviePoster);
+                }
             }
         });
     }

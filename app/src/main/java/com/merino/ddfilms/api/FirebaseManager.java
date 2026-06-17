@@ -413,6 +413,12 @@ public class FirebaseManager {
                 .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al actualizar reseña", e)));
     }
 
+    public void deleteReview(String reviewId, TaskCompletionCallback<Boolean> callback) {
+        firebaseFirestore.collection("reviews").document(reviewId).delete()
+                .addOnSuccessListener(aVoid -> callback.onComplete(true, null))
+                .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al borrar la reseña", e)));
+    }
+
     public void getReviews(Integer movieId, TaskCompletionCallback<List<Review>> callback) {
         firebaseFirestore.collection("reviews")
                 .whereEqualTo("movieId", movieId)

@@ -32,9 +32,15 @@ public class ReviewsFragment extends Fragment{
         initViews(view);
         setupRecyclerViews();
 
-        reviewUtil.loadAllReviews();
-
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (reviewUtil != null) {
+            reviewUtil.loadAllReviews();
+        }
     }
 
     private void initViews(View view) {

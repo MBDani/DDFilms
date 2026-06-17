@@ -77,7 +77,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movie_detail);
 
         tmdbService = TMDBClient.getClient(API_KEY).create(TMDBService.class);
-        reviewUtil = new ReviewUtil(getApplicationContext());
+        reviewUtil = new ReviewUtil(this);
 
         // Inicializamos las vistas
         initViews();

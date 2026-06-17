@@ -30,6 +30,7 @@ public class WriteReviewDialogFragment extends DialogFragment {
 
     public interface OnReviewSubmittedListener {
         void onReviewSubmitted(Review review);
+        default void onReviewDeleted(Review review) {}
     }
 
     public WriteReviewDialogFragment(Movie movie, Review userReview) {
@@ -62,6 +63,14 @@ public class WriteReviewDialogFragment extends DialogFragment {
         super.onViewCreated(view, savedInstanceState);
 
         initViews(view);
+
+        // Configurar título del diálogo
+        TextView dialogTitle = view.findViewById(R.id.dialog_title);
+        if (review != null && review.getId() != null) {
+            dialogTitle.setText(R.string.update_review_title);
+        } else {
+            dialogTitle.setText(R.string.write_review_title);
+        }
 
         if (review != null) {
             if (review.getReviewText() != null) {
@@ -149,6 +158,7 @@ public class WriteReviewDialogFragment extends DialogFragment {
     private void setupButtons(View view) {
         MaterialButton cancelButton = view.findViewById(R.id.cancel_button);
         MaterialButton publishButton = view.findViewById(R.id.publish_button);
+        MaterialButton deleteButton = view.findViewById(R.id.delete_button);
 
         cancelButton.setOnClickListener(v -> dismiss());
 
@@ -159,6 +169,22 @@ public class WriteReviewDialogFragment extends DialogFragment {
                 showMessage(getContext(), "Es obligatoria la puntucación");
             }
         });
+
+        if (review != null && review.getId() != null) {
+            publishButton.setText(R.string.update_review_button);
+            deleteButton.setVisibility(View.VISIBLE);
+            deleteButton.setOnClickListener(v -> deleteReview());
+        } else {
+            publishButton.setText(R.string.publish_review);
+            deleteButton.setVisibility(View.GONE);
+        }
+    }
+
+    private void deleteReview() {
+        if (listener != null && review != null && review.getId() != null) {
+            listener.onReviewDeleted(review);
+        }
+        dismiss();
     }
 
     private void submitReview() {

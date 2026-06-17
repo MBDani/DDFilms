@@ -36,6 +36,9 @@
     <string name="like_review">like_review</string>
     <string name="dislike_review">dislike_review</string>
     <string name="write_review_title">Escribir reseña</string>
+    <string name="update_review_title">Actualizar reseña</string>
+    <string name="update_review_button">Actualizar</string>
+    <string name="delete_review">Borrar</string>
     <string name="no_rating">Sin valoración</string>
     <string name="your_review">Tu review</string>
     <string name="review_hint">Escribe aquí tu reseña</string>
