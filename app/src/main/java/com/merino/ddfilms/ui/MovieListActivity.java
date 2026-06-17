@@ -13,6 +13,7 @@ import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -57,6 +58,12 @@ public class MovieListActivity extends AppCompatActivity {
         fabAdd.setOnClickListener(v -> setupAddMovieFragment());
 
         // Fix for Edge-to-Edge (Android 15+)
+        // Forward insets to children since fitsSystemWindows is false on CoordinatorLayout
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.coordinator_layout), (v, insets) -> {
+            ViewCompat.onApplyWindowInsets(findViewById(R.id.appbar_layout), insets);
+            return insets;
+        });
+
         EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.appbar_layout), true, false);
         // Apply bottom inset to root or content to avoid nav bar overlap
         // Since it's a CoordinatorLayout, applying to root might be enough or FAB needs handling

@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.merino.ddfilms'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.merino.ddfilms"
         minSdk 30
-        targetSdk 35
+        targetSdk 36
         versionCode 4
         versionName "4"
 

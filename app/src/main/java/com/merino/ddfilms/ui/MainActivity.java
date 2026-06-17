@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.view.ViewCompat;
 import com.merino.ddfilms.utils.EdgeToEdgeHelper;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
 
         // Configurar el DrawerLayout con el NavigationView
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.navigation_view);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         toggle.getDrawerArrowDrawable().setColor(getResources().getColor(R.color.primary_light, null));
         drawerLayout.addDrawerListener(toggle);
@@ -65,10 +67,17 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
         toggle.syncState();
 
         // Fix for Edge-to-Edge (Android 15+)
+        // Forward insets to children since fitsSystemWindows is false on DrawerLayout
+        ViewCompat.setOnApplyWindowInsetsListener(drawerLayout, (v, insets) -> {
+            ViewCompat.onApplyWindowInsets(findViewById(R.id.app_bar_layout), insets);
+            ViewCompat.onApplyWindowInsets(navigationView, insets);
+            ViewCompat.onApplyWindowInsets(findViewById(R.id.main_content_scroll), insets);
+            return insets;
+        });
+
         // Apply top inset to AppBarLayout to avoid status bar overlap
         EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.app_bar_layout), true, false);
 
-        NavigationView navigationView = findViewById(R.id.navigation_view);
         // Apply top and bottom insets to NavigationView to avoid overlap with status bar and nav bar
         EdgeToEdgeHelper.applyWindowInsetsPending(navigationView, true, true);
 
