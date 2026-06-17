@@ -158,7 +158,7 @@ public class WriteReviewDialogFragment extends DialogFragment {
     private void setupButtons(View view) {
         MaterialButton cancelButton = view.findViewById(R.id.cancel_button);
         MaterialButton publishButton = view.findViewById(R.id.publish_button);
-        MaterialButton deleteButton = view.findViewById(R.id.delete_button);
+        View deleteButton = view.findViewById(R.id.delete_button);
 
         cancelButton.setOnClickListener(v -> dismiss());
 
