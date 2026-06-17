@@ -477,6 +477,58 @@ public class FirebaseManager {
                 .addOnSuccessListener(success -> callback.onComplete(true, null))
                 .addOnFailureListener(e -> callback.onComplete(null, new Exception("Error al añadir dislike a la lista")));
     }
+
+    public void getUserProfileImageUrl(String uid, TaskCompletionCallback<String> callback) {
+        firebaseFirestore.collection("users").document(uid).get().addOnSuccessListener(documentSnapshot -> {
+            if (documentSnapshot.exists()) {
+                callback.onComplete(documentSnapshot.getString("userProfileImageUrl"), null);
+            } else {
+                callback.onComplete(null, null); // Return null instead of error to handle new/empty profiles gracefully
+            }
+        }).addOnFailureListener(e -> callback.onComplete(null, e));
+    }
+
+    public void updateUserProfileImage(String userId, String imagePath, TaskCompletionCallback<Boolean> callback) {
+        firebaseFirestore.collection("reviews")
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    firebaseFirestore.runTransaction(transaction -> {
+                        DocumentReference userRef = firebaseFirestore.collection("users").document(userId);
+                        DocumentSnapshot userSnapshot = transaction.get(userRef);
+
+                        // Read all review documents first
+                        List<DocumentReference> reviewRefs = new ArrayList<>();
+                        for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                            DocumentReference ref = doc.getReference();
+                            transaction.get(ref);
+                            reviewRefs.add(ref);
+                        }
+
+                        // Write operations
+                        if (userSnapshot.exists()) {
+                            transaction.update(userRef, "userProfileImageUrl", imagePath);
+                        } else {
+                            Map<String, Object> userData = new HashMap<>();
+                            userData.put("userProfileImageUrl", imagePath);
+                            transaction.set(userRef, userData, com.google.firebase.firestore.SetOptions.merge());
+                        }
+
+                        for (DocumentReference ref : reviewRefs) {
+                            transaction.update(ref, "userProfileImageUrl", imagePath);
+                        }
+
+                        return null;
+                    }).addOnSuccessListener(result -> {
+                        callback.onComplete(true, null);
+                    }).addOnFailureListener(e -> {
+                        callback.onComplete(null, e);
+                    });
+                })
+                .addOnFailureListener(e -> {
+                    callback.onComplete(null, e);
+                });
+    }
 }
 
 

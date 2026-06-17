@@ -139,4 +139,9 @@
         <item name="android:windowExitAnimation">@anim/fade_out</item>
     </style>
 
+    <style name="DialogScaleFadeAnimation">
+        <item name="android:windowEnterAnimation">@anim/dialog_scale_fade_in</item>
+        <item name="android:windowExitAnimation">@anim/dialog_scale_fade_out</item>
+    </style>
+
 </resources>

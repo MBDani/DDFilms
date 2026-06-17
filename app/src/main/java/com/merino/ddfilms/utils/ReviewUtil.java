@@ -231,16 +231,21 @@ public class ReviewUtil implements
         if (review.getLikeCount() == null) review.setLikeCount(new ArrayList<>());
         if (review.getDislikeCount() == null) review.setDislikeCount(new ArrayList<>());
 
-        firebaseManager.postReview(review, (reviewResponse, error) -> {
-            if (error != null) {
-                showMessage(context, error.getMessage());
-                return;
+        firebaseManager.getUserProfileImageUrl(userId, (imageUrl, errorGetUrl) -> {
+            if (imageUrl != null) {
+                review.setUserProfileImageUrl(imageUrl);
             }
-            runOnMain(() -> {
-                addReviewToRecycler(reviewResponse);
-                if (appBarLayout != null && nestedScrollView != null && recyclerView != null) {
-                    scrollToNewReview();
+            firebaseManager.postReview(review, (reviewResponse, error) -> {
+                if (error != null) {
+                    showMessage(context, error.getMessage());
+                    return;
                 }
+                runOnMain(() -> {
+                    addReviewToRecycler(reviewResponse);
+                    if (appBarLayout != null && nestedScrollView != null && recyclerView != null) {
+                        scrollToNewReview();
+                    }
+                });
             });
         });
     }

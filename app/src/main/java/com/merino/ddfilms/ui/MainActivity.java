@@ -35,6 +35,7 @@ import com.merino.ddfilms.ui.fragment.ReviewsFragment;
 import com.merino.ddfilms.ui.fragment.SearchFragment;
 import com.merino.ddfilms.ui.fragment.SettingsFragment;
 import com.merino.ddfilms.ui.fragment.WatchlistFragment;
+import com.merino.ddfilms.ui.fragment.ProfilePicturePickerDialog;
 
 import java.util.Objects;
 
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
     private DrawerLayout drawerLayout;
     private FirebaseManager firebaseManager = new FirebaseManager();
     private FloatingActionButton activityFab;
+    private String currentProfileImageUrl = null;
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -176,15 +178,35 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
             profileMail.setText(userEmail);
         });
 
-        // Todo recuperar imagen del usuario
-        String profileImageUrl = null; // URL de la imagen o null si no hay
+        // Recuperar imagen del usuario
+        firebaseManager.getUserProfileImageUrl(uid, (url, error) -> {
+            if (url != null) {
+                currentProfileImageUrl = url;
+                Glide.with(MainActivity.this)
+                        .load(url)
+                        .placeholder(R.drawable.ic_default_profile)
+                        .error(R.drawable.ic_default_profile)
+                        .into(profileImage);
+            } else {
+                profileImage.setImageResource(R.drawable.ic_default_profile);
+            }
+        });
 
-        // Carga la imagen con Glide o Picasso
-        if (profileImageUrl != null) {
-            Glide.with(this).load(profileImageUrl).placeholder(R.drawable.ic_default_profile) // Imagen genérica
-                    .into(profileImage);
-        } else {
-            profileImage.setImageResource(R.drawable.ic_default_profile); // Imagen genérica
+        // Configurar clic en el botón de edición
+        ImageView editProfileIcon = headerView.findViewById(R.id.edit_profile_icon);
+        if (editProfileIcon != null) {
+            editProfileIcon.setOnClickListener(v -> {
+                ProfilePicturePickerDialog dialog = ProfilePicturePickerDialog.newInstance(currentProfileImageUrl);
+                dialog.setOnProfileImageUpdatedListener(newImagePath -> {
+                    currentProfileImageUrl = newImagePath;
+                    Glide.with(MainActivity.this)
+                            .load(newImagePath)
+                            .placeholder(R.drawable.ic_default_profile)
+                            .error(R.drawable.ic_default_profile)
+                            .into(profileImage);
+                });
+                dialog.show(getSupportFragmentManager(), "ProfilePicturePickerDialog");
+            });
         }
     }
 
