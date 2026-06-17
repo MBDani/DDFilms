@@ -49,8 +49,8 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private TMDBService tmdbService;
     private static final String API_KEY = ApiKeyManager.getInstance().getApiKey();
-    private static Credits credits;
-    private static MovieDetails movieDetails;
+    private Credits credits;
+    private MovieDetails movieDetails;
     private ImageView backdropImageView;
     private ImageView posterImageView;
     private TextView movieTitle;
