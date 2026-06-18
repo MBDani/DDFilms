@@ -53,8 +53,6 @@ public class MovieListActivity extends AppCompatActivity {
         setupToolbar();
         setupRecyclerView();
         loadMoviesFromList(listID);
-        setupRecyclerView();
-        loadMoviesFromList(listID);
         fabAdd.setOnClickListener(v -> setupAddMovieFragment());
 
         // Fix for Edge-to-Edge (Android 15+)
@@ -136,6 +134,7 @@ public class MovieListActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         movieAdapter = new MovieAdapter();
+        movieAdapter.setListID(listID);
         movieAdapter.setOnItemLongClickListener(position -> {
             if (!isEditMode) {
                 enterEditMode();

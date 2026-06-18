@@ -9,6 +9,12 @@ public class MovieLists {
     String id;
     String name;
     String description;
+    List<String> userID;
     List<Movie> movies;
 
+    // Denormalized fields
+    List<String> coverPreviews;
+    List<String> memberAvatarsPreview;
+    String lastUpdated;
+    int moviesCount;
 }

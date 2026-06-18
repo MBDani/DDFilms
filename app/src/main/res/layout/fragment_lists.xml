@@ -1,41 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/coordinator_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/main_background_gradient">
 
+    <!-- RecyclerView takes full screen, with padding at the bottom so elements scroll past the FAB -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/lists_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="96dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    <!-- Initial loading indicator -->
+    <ProgressBar
+        android:id="@+id/lists_loading_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminateTint="@color/gold_dark"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Load more progress indicator at the bottom -->
+    <ProgressBar
+        android:id="@+id/lists_load_more_progress"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:indeterminateTint="@color/gold_dark"
+        android:visibility="gone"
+        android:layout_marginBottom="90dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Premium Floating Extended FAB at the Bottom Right -->
     <LinearLayout
         android:id="@+id/create_list_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
         android:orientation="horizontal"
-        android:padding="12dp"
-        android:layout_marginBottom="200dp"
-        android:background="@drawable/edit_text_background"
+        android:gravity="center"
+        android:paddingHorizontal="20dp"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="24dp"
+        android:background="@drawable/bg_create_list_card"
+        android:elevation="8dp"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_add"
-            app:tint="@color/white" />
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_add_simple"
+            app:tint="@color/primary_dark" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="Crear nueva lista"
-            android:textColor="@color/white"
-            android:fontFamily="sans-serif-medium" />
+            android:layout_marginStart="8dp"
+            android:text="NUEVA LISTA"
+            android:textColor="@color/primary_dark"
+            android:fontFamily="@font/montserrat_bold"
+            android:textSize="12sp"
+            android:letterSpacing="0.08" />
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/lists_recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        />
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

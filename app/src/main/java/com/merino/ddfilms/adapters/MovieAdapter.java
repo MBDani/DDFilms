@@ -319,6 +319,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
                         }
                     }
                     options.add("Común"); // Dejamos siempre esta última opción
+                } else {
+                    String movieAddedBy = movie.getAddedBy();
+                    if (movieAddedBy != null && !movieAddedBy.isEmpty()) {
+                        options.add(movieAddedBy);
+                    }
+                    options.add("Común");
                 }
 
                 // Actualizar adapter del spinner

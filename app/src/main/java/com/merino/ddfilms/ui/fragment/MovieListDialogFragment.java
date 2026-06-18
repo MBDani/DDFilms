@@ -34,8 +34,6 @@ public class MovieListDialogFragment extends DialogFragment {
 
     private final Movie movie;
 
-    private HashMap<String, String> mapMovieLists = new HashMap<>();
-
     public MovieListDialogFragment(Movie movieId) {
         this.movie = movieId;
     }
@@ -68,9 +66,8 @@ public class MovieListDialogFragment extends DialogFragment {
         createListButton.setOnClickListener(v -> showCreateListDialog());
         closeButton.setOnClickListener(v -> dismiss());
 
-        loadMovieListNames();
+        loadMovieLists();
 
-        // Redondear esquinas
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setBackgroundDrawableResource(R.drawable.main_background_gradient);
         }
@@ -78,22 +75,19 @@ public class MovieListDialogFragment extends DialogFragment {
         return view;
     }
 
-    private void loadMovieListNames() {
-        viewModel.loadMovieListNames((listMapMovies, error) -> {
-            if (listMapMovies != null) {
-                mapMovieLists.clear();
-                mapMovieLists.putAll(listMapMovies);
-                List<String> listMovies = new ArrayList<>(listMapMovies.values());
-                viewModel.setMovieLists(listMovies);
+    private void loadMovieLists() {
+        viewModel.loadMovieLists((lists, error) -> {
+            if (lists != null) {
+                viewModel.setMovieLists(lists);
             } else if (error != null) {
                 showMessage(getContext(), error.getMessage());
             }
         });
     }
 
-    private void addMovieToSelectedList(String listName) {
-        String documentID = getListIDByName(listName);
-        viewModel.addMovieToList(MOVIE_LIST,documentID, movie, (result, error) -> {
+    private void addMovieToSelectedList(com.merino.ddfilms.model.MovieLists list) {
+        String documentID = list.getId();
+        viewModel.addMovieToList(MOVIE_LIST, documentID, movie, (result, error) -> {
             if (error != null) {
                 showMessage(getContext(), error.getMessage());
             } else if (result != null) {
@@ -101,18 +95,6 @@ public class MovieListDialogFragment extends DialogFragment {
                 dismiss();
             }
         });
-    }
-
-    @Nullable
-    private String getListIDByName(String listName) {
-        String listID = null;
-        for (String key : mapMovieLists.keySet()) {
-            if (Objects.equals(mapMovieLists.get(key), listName)) {
-                listID = key;
-                break;
-            }
-        }
-        return listID;
     }
 
     private void showCreateListDialog() {
@@ -127,7 +109,7 @@ public class MovieListDialogFragment extends DialogFragment {
                 showMessage(getContext(), error.getMessage());
             } else if (result != null) {
                 showMessage(getContext(), result);
-                loadMovieListNames();
+                loadMovieLists();
             }
         });
     }

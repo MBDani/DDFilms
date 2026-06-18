@@ -123,4 +123,25 @@ public class Movie implements Parcelable {
         movie.setAddedBy((String) movieMap.get("addedBy"));
         return movie;
     }
+
+    public java.util.Map<String, Object> toMap() {
+        java.util.Map<String, Object> map = new java.util.HashMap<>();
+        map.put("adult", adult);
+        map.put("backdropPath", backdropPath);
+        map.put("genreIds", genreIds);
+        map.put("id", id);
+        map.put("originalLanguage", originalLanguage);
+        map.put("originalTitle", originalTitle);
+        map.put("overview", overview);
+        map.put("popularity", popularity);
+        map.put("posterPath", posterPath);
+        map.put("releaseDate", releaseDate);
+        map.put("title", title);
+        map.put("video", video);
+        map.put("voteAverage", voteAverage);
+        map.put("voteCount", voteCount);
+        map.put("createdAt", createdAt);
+        map.put("addedBy", addedBy);
+        return map;
+    }
 }

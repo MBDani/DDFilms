@@ -6,28 +6,28 @@ import androidx.lifecycle.ViewModel;
 
 import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.model.Movie;
+import com.merino.ddfilms.model.MovieLists;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
 
-import java.util.HashMap;
 import java.util.List;
 
 public class MovieListViewModel extends ViewModel {
 
-    private final MutableLiveData<List<String>> movieLists = new MutableLiveData<>();
+    private final MutableLiveData<List<MovieLists>> movieLists = new MutableLiveData<>();
 
     private final FirebaseManager firebaseManager = new FirebaseManager();
 
-    public LiveData<List<String>> getMovieLists() {
+    public LiveData<List<MovieLists>> getMovieLists() {
         return movieLists;
     }
 
-    public void setMovieLists(List<String> list) {
+    public void setMovieLists(List<MovieLists> list) {
         movieLists.setValue(list);
     }
 
-    public void loadMovieListNames(TaskCompletionCallback<HashMap<String, String>> callback) {
+    public void loadMovieLists(TaskCompletionCallback<List<MovieLists>> callback) {
         String userID = firebaseManager.getCurrentUserUID();
-        firebaseManager.getMovieListsNameAndID(userID, callback);
+        firebaseManager.getMovieLists(userID, callback);
     }
 
     public void createNewMovieList(String listName, TaskCompletionCallback<String> callback) {
@@ -39,4 +39,3 @@ public class MovieListViewModel extends ViewModel {
         firebaseManager.addMovieToList(collection, listID, movie, callback);
     }
 }
-
