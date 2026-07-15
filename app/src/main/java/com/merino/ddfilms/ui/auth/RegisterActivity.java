@@ -65,10 +65,10 @@ public class RegisterActivity extends AppCompatActivity {
     private boolean areFieldsEmpties(String email, String usuario, String password) {
         boolean isValid = true;
         if (TextUtils.isEmpty(email) || TextUtils.isEmpty(usuario)) {
-            Toast.makeText(this, "Por favor, rellene todos los campos", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.fill_all_fields, Toast.LENGTH_SHORT).show();
             isValid = false;
         } else if (password.length() < 6) {
-            Toast.makeText(this, "Por favor, ingrese una contraseña con un mínimo de 6 caracteres", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.password_length_error, Toast.LENGTH_LONG).show();
             isValid = false;
         }
         return isValid;
@@ -79,26 +79,26 @@ public class RegisterActivity extends AppCompatActivity {
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, task -> {
 
                 if (task.isSuccessful()) {
-                    Toast.makeText(RegisterActivity.this, "Se ha registro la cuenta: " + email, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, getString(R.string.account_registered, email), Toast.LENGTH_SHORT).show();
 
                     FirebaseUser firebaseUser = mAuth.getCurrentUser();
                     if (firebaseUser == null) {
-                        Toast.makeText(RegisterActivity.this, "Error al obtener el usuario", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, R.string.error_getting_user, Toast.LENGTH_SHORT).show();
                     } else {
                         createUser(firebaseUser, user, email, password);
                     }
 
                 } else {
                     if (task.getException() instanceof FirebaseAuthUserCollisionException) {
-                        Toast.makeText(RegisterActivity.this, "El email ya está en uso", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, R.string.email_already_in_use, Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(RegisterActivity.this, "No se pudo registrar el usuario", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, R.string.registration_failed, Toast.LENGTH_SHORT).show();
 
                     }
                 }
             });
         } catch (Exception e) {
-            Toast.makeText(RegisterActivity.this, "Fallo de conexión con la base de datos", Toast.LENGTH_SHORT).show();
+            Toast.makeText(RegisterActivity.this, R.string.db_connection_failed, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -107,7 +107,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         try {
             firebaseFirestore.collection("users").document(firebaseUser.getUid()).set(userModel).addOnSuccessListener(aVoid -> {
-                Toast.makeText(RegisterActivity.this, "Datos almacenados en la nube", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, R.string.data_stored_cloud, Toast.LENGTH_SHORT).show();
 
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putString("user_email", email);
@@ -117,9 +117,9 @@ public class RegisterActivity extends AppCompatActivity {
 
                 navigateToMainActivity();
 
-            }).addOnFailureListener(e -> Toast.makeText(RegisterActivity.this, "No se han podido guardar sus datos", Toast.LENGTH_SHORT).show());
+            }).addOnFailureListener(e -> Toast.makeText(RegisterActivity.this, R.string.error_saving_data, Toast.LENGTH_SHORT).show());
         } catch (Exception e) {
-            Toast.makeText(RegisterActivity.this, "Fallo de conexión con la base de datos", Toast.LENGTH_SHORT).show();
+            Toast.makeText(RegisterActivity.this, R.string.db_connection_failed, Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -13,7 +13,7 @@
         android:layout_marginBottom="16dp"
         app:boxStrokeColor="@color/gold_dark"
         app:hintTextColor="@color/gold_light"
-        android:hint="Search movies"
+        android:hint="@string/search_movies_hint"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
         <com.google.android.material.textfield.TextInputEditText

@@ -107,7 +107,7 @@ public class SearchFragment extends Fragment {
             if (error != null) {
                 showMessage(getContext(), error.getMessage());
             } else if (result != null) {
-                showMessage(getContext(), "Eliminada de la lista " + listName);
+                showMessage(getContext(), getString(R.string.removed_from_list, listName));
                 moviesIDList.removeIf(id -> id == movie.getId());
                 movieAdapter.setMoviesIdList(moviesIDList);
                 movieAdapter.notifyDataSetChanged();
@@ -120,7 +120,7 @@ public class SearchFragment extends Fragment {
             if (error != null) {
                 showMessage(getContext(), error.getMessage());
             } else if (result != null) {
-                showMessage(getContext(), "Agregada a la lista " + listName);
+                showMessage(getContext(), getString(R.string.added_to_list_message, listName));
                 moviesIDList.add(movie.getId());
                 movieAdapter.setMoviesIdList(moviesIDList);
                 movieAdapter.notifyDataSetChanged();
@@ -160,37 +160,37 @@ public class SearchFragment extends Fragment {
     }
 
     private void searchMovies(String query) {
-        tmdbService.searchMovies(query, false, "es-ES", 1).enqueue(new Callback<SearchResponse>() {
+        tmdbService.searchMovies(query, false, getString(R.string.tmdb_api_language), 1).enqueue(new Callback<SearchResponse>() {
             @Override
             public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     updateMoviesList(response.body().getResults());
                 } else {
-                    showMessage(getContext(), "Error en la búsqueda");
+                    showMessage(getContext(), getString(R.string.error_searching));
                 }
             }
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showMessage(getContext(), "Error de conexión: " + t.getMessage());
+                showMessage(getContext(), getString(R.string.error_connection, t.getMessage()));
             }
         });
     }
 
     private void loadPopularMovies() {
-        tmdbService.getPopularMovies(API_KEY, "es-ES").enqueue(new Callback<>() {
+        tmdbService.getPopularMovies(API_KEY, getString(R.string.tmdb_api_language)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     updateMoviesList(response.body().getResults());
                 } else {
-                    showMessage(getContext(), "Error al cargar películas populares");
+                    showMessage(getContext(), getString(R.string.error_loading_popular));
                 }
             }
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showMessage(getContext(), "Error de conexión: " + t.getMessage());
+                showMessage(getContext(), getString(R.string.error_connection, t.getMessage()));
             }
         });
     }

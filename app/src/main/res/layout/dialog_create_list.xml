@@ -22,7 +22,7 @@
             android:layout_weight="1"
             android:fontFamily="sans-serif-medium"
             android:gravity="center"
-            android:text="Crear nueva lista"
+            android:text="@string/create_new_list"
             android:textColor="@color/white"
             android:textSize="20sp" />
 
@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:background="@drawable/edit_text_background"
-        android:hint="Nombre de la lista"
+        android:hint="@string/list_name_hint"
         android:padding="8dp"
         android:textColor="@color/white"
         android:textColorHint="@color/white_60" />
@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/button_primary"
         android:fontFamily="sans-serif-medium"
-        android:text="Crear"
+        android:text="@string/create"
         android:textColor="@color/black"
         app:backgroundTint="@null" />
 

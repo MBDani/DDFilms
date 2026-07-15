@@ -1,0 +1,137 @@
+<resources>
+    <string name="app_name">DDFilms</string>
+
+    <string name="bt_login">Iniciar sesión</string>
+    <string name="bt_register">Registrarse</string>
+    <string name="bt_logout">Cerrar sesión</string>
+    <string name="bt_recovery">Recuperar</string>
+
+    <string name="edt_user">Usuario</string>
+    <string name="edt_email">Email</string>
+    <string name="edt_pw">Contraseña</string>
+    <string name="edt_without_account">¿No tienes cuenta? Regístrate ahora.</string>
+    <string name="edt_forget_password">Olvidé mi contraseña</string>
+    <string name="edt_with_account">¿Ya tienes cuenta? Inicia sesión ahora.</string>
+
+    <string name="invalid_username">Usuario no válido</string>
+    <string name="invalid_password">La contraseña debe tener más de 5 caracteres</string>
+    <string name="login_failed">Error al iniciar sesión</string>
+
+    <string name="navigation_drawer_open">Abrir menú lateral</string>
+    <string name="navigation_drawer_close">Cerrar menú lateral</string>
+
+    <string name="recovery_instructions">Introduce tu email para recibir instrucciones de recuperación de contraseña</string>
+    <string name="search_movies_hint">Buscar película</string>
+    <string name="back_button">atrás</string>
+    <string name="movie_backdrop">fondo del póster</string>
+    <string name="movie_poster">póster de la película</string>
+    <string name="cast_title">Reparto</string>
+    <string name="crew_title">Equipo</string>
+
+    <string name="reviews_title">Reseñas</string>
+    <string name="add_review">Añadir reseña</string>
+    <string name="star_rating">valoración por estrellas</string>
+    <string name="like_review">me gusta</string>
+    <string name="dislike_review">no me gusta</string>
+    <string name="write_review_title">Escribir reseña</string>
+    <string name="update_review_title">Actualizar reseña</string>
+    <string name="update_review_button">Actualizar</string>
+    <string name="delete_review">Borrar</string>
+    <string name="no_rating">Sin valoración</string>
+    <string name="your_review">Tu reseña</string>
+    <string name="review_hint">Escribe aquí tu reseña</string>
+    <string name="cancel">Cancelar</string>
+    <string name="publish_review">Publicar reseña</string>
+    <string name="rating_required">Es obligatoria la valoración</string>
+    <string name="reviewing_movie">Reseñando la película %s</string>
+    <string name="current_rating">Valoración actual %s</string>
+
+    <string name="menu_options">Opciones del menú</string>
+    <string name="write_review">Escribir reseña</string>
+    <string name="add_to_list">Añadir a lista</string>
+    <string name="pending_to_watch">Pendientes</string>
+    <string name="watched">Vista</string>
+    <string name="mark_as_watched">Marcar como vista</string>
+    <string name="add_to_watchlist">Añadir a pendientes</string>
+
+    <!-- New extracted strings -->
+    <string name="delete">Borrar</string>
+    <string name="edit">Editar</string>
+    <string name="share_private_link">Compartir enlace privado</string>
+    <string name="create_new_list">Crear nueva lista</string>
+    <string name="create">Crear</string>
+    <string name="list_name_hint">Nombre de la lista</string>
+    <string name="choose_avatar">Elige tu avatar</string>
+    <string name="preview">Vista previa</string>
+    <string name="confirm">Confirmar</string>
+    <string name="btn_new_list">NUEVA LISTA</string>
+    <string name="profile_title">Perfil</string>
+    <string name="profile_content_placeholder">El contenido del perfil va aquí...</string>
+    <string name="enable_notifications">Activar notificaciones</string>
+    <string name="reset_preferences">Restablecer preferencias</string>
+
+    <!-- Java extracted strings -->
+    <string name="logout_success">Sesión cerrada con éxito</string>
+    <string name="list_added_to_user">Se ha agregado la lista al usuario</string>
+    <string name="incomplete_data">Datos incompletos</string>
+    <string name="invalid_link">Enlace no válido</string>
+    <string name="loading">Cargando...</string>
+    <string name="password_reset_email_sent">Se ha enviado un correo para restablecer tu contraseña. Redirigiendo a la pantalla de Login.</string>
+    <string name="password_reset_failed">No se pudo enviar el correo de restablecimiento de contraseña</string>
+    <string name="fill_email">Introduce el email</string>
+    <string name="fill_all_fields">Por favor, rellene todos los campos</string>
+    <string name="password_length_error">Por favor, introduce una contraseña con al menos 6 caracteres</string>
+    <string name="account_registered">Se ha registrado la cuenta: %s</string>
+    <string name="error_getting_user">Error al obtener el usuario</string>
+    <string name="email_already_in_use">El email ya está en uso</string>
+    <string name="registration_failed">No se pudo registrar el usuario</string>
+    <string name="db_connection_failed">Fallo de conexión con la base de datos</string>
+    <string name="data_stored_cloud">Datos almacenados en la nube</string>
+    <string name="error_saving_data">No se han podido guardar sus datos</string>
+    <string name="cancel_profile_pic_desc">Cancelar selección de foto de perfil</string>
+    <string name="confirm_profile_pic_desc">Confirmar selección de foto de perfil</string>
+    <string name="error_loading_avatars">Error al cargar los avatares locales</string>
+    <string name="please_select_avatar">Por favor, selecciona un avatar</string>
+    <string name="profile_picture_updated">Foto de perfil actualizada con éxito</string>
+    <string name="list_name_cannot_be_empty">El nombre no puede estar vacío</string>
+    <string name="added_on">Añadido el %s</string>
+    <string name="logout_dialog_title">Cerrar sesión</string>
+    <string name="logout_dialog_message">¿Estás seguro de que quieres cerrar sesión?</string>
+    <string name="dialog_yes">Sí</string>
+    <string name="dialog_no">No</string>
+    <string name="delete_list_dialog_title">Eliminar lista %s</string>
+    <string name="delete_list_dialog_message">¿Estás seguro de que quieres eliminar esta lista? Esta acción no se puede deshacer.</string>
+    <string name="list_deleted_success">Lista eliminada con éxito</string>
+    <string name="movie_updated_success">Película actualizada con éxito</string>
+    <string name="list_name_updated_success">Nombre de la lista actualizado con éxito</string>
+    <string name="error_getting_api_key">Error al obtener la API key: %s</string>
+    <string name="error_getting_credits">Error al obtener créditos de la película</string>
+    <string name="error_getting_details">Error al obtener detalles de la película</string>
+    <string name="error_loading_lists">Error al cargar listas: %s</string>
+    <string name="error_generic">Error: %s</string>
+    <string name="error_prefix">Error: %s</string>
+    <string name="error_loading_popular">Error al cargar películas populares</string>
+    <string name="error_connection">Error de conexión: %s</string>
+    <string name="removed_from_list">Eliminada de la lista %s</string>
+    <string name="added_to_list_message">Agregada a la lista %s</string>
+    <string name="error_searching">Error en la búsqueda</string>
+    <string name="review_deleted_success">Reseña borrada con éxito</string>
+    <string name="no_director_found">No se ha encontrado ningún director</string>
+
+    <string name="tmdb_api_language">es-ES</string>
+    <string name="auth_language_code">es</string>
+
+    <!-- Menu XML strings -->
+    <string name="menu_popular">Popular</string>
+    <string name="menu_search">Buscar</string>
+    <string name="menu_profile">Perfil</string>
+    <string name="menu_watchlist">Pendientes</string>
+    <string name="menu_lists">Listas</string>
+    <string name="menu_diary">Diario</string>
+    <string name="menu_reviews">Reseñas</string>
+    <string name="menu_settings">Ajustes</string>
+    <string name="menu_sign_out">Cerrar sesión</string>
+    <string name="menu_done">Hecho</string>
+    <string name="menu_more">Más</string>
+    <string name="menu_filter">Filtrar</string>
+</resources>

@@ -340,13 +340,14 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void getMovieCredits(int id) {
-        tmdbService.getMovieCredits(id, API_KEY, "es-ES").enqueue(new Callback<Credits>() {
+        tmdbService.getMovieCredits(id, API_KEY, getString(R.string.tmdb_api_language)).enqueue(new Callback<Credits>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onResponse(Call<Credits> call, Response<Credits> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     credits = response.body();
-                    String labelMovieDirector = movieDirector.getText() + getDirector(credits.getCrew());
+                    String director = getDirector(credits.getCrew());
+                    String labelMovieDirector = director != null ? director : getString(R.string.no_director_found);
                     movieDirector.setText(labelMovieDirector);
 
                     // Actualizar listas de los adaptadores
@@ -366,14 +367,14 @@ public class MovieDetailActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<Credits> call, Throwable t) {
                 Log.e("MovieDetailActivity", "Error al obtener créditos de la película", t);
-                showMessage(getApplicationContext(), "Error al obtener créditos de la película");
+                showMessage(getApplicationContext(), getString(R.string.error_getting_credits));
                 checkLoadingComplete();
             }
         });
     }
 
     private void getMovieDetails(int id) {
-        tmdbService.getMovieDetails(id, API_KEY, "es-ES").enqueue(new Callback<MovieDetails>() {
+        tmdbService.getMovieDetails(id, API_KEY, getString(R.string.tmdb_api_language)).enqueue(new Callback<MovieDetails>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onResponse(Call<MovieDetails> call, Response<MovieDetails> response) {
@@ -401,7 +402,7 @@ public class MovieDetailActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<MovieDetails> call, Throwable t) {
                 Log.e("MovieDetailActivity", "Error al obtener detalles de la película", t);
-                showMessage(getApplicationContext(), "Error al obtener detalles de la película");
+                showMessage(getApplicationContext(), getString(R.string.error_getting_details));
                 checkLoadingComplete();
             }
         });

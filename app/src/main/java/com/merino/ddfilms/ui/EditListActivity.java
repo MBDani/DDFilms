@@ -103,7 +103,7 @@ public class EditListActivity extends AppCompatActivity {
             if (error != null) {
                 showMessage(getApplicationContext(), error.getMessage());
             } else if (result != null && result) {
-                showMessage(getApplicationContext(), "Nombre de la lista actualizado con éxito");
+                showMessage(getApplicationContext(), getString(R.string.list_name_updated_success));
                 finish();
                 // TODO ver que hacemos
             }

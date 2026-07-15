@@ -13,7 +13,7 @@
             android:id="@+id/profile_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Profile Title"
+            android:text="@string/profile_title"
             android:textSize="24sp"
             android:paddingBottom="8dp" />
 
@@ -21,7 +21,7 @@
             android:id="@+id/profile_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Profile content goes here..."
+            android:text="@string/profile_content_placeholder"
             android:textSize="16sp" />
     </LinearLayout>
 </ScrollView>

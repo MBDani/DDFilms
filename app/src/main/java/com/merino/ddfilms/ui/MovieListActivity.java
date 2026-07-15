@@ -185,9 +185,9 @@ public class MovieListActivity extends AppCompatActivity {
     }
 
     private void showDeleteConfirmation() {
-        new AlertDialog.Builder(this).setTitle("Eliminar lista " + listName).setMessage("¿Estás seguro de que quieres eliminar esta lista? Esta acción no se puede deshacer.").setPositiveButton("Sí", (dialog, which) -> {
+        new AlertDialog.Builder(this).setTitle(getString(R.string.delete_list_dialog_title, listName)).setMessage(R.string.delete_list_dialog_message).setPositiveButton(R.string.dialog_yes, (dialog, which) -> {
             deleteList();
-        }).setNegativeButton("No", (dialog, which) -> {
+        }).setNegativeButton(R.string.dialog_no, (dialog, which) -> {
             dialog.dismiss();
         }).show();
     }
@@ -197,7 +197,7 @@ public class MovieListActivity extends AppCompatActivity {
             if (error != null) {
                 showMessage(getApplicationContext(), error.getMessage());
             } else {
-                showMessage(getApplicationContext(), "Lista eliminada con éxito");
+                showMessage(getApplicationContext(), getString(R.string.list_deleted_success));
                 finish();
             }
         });
@@ -256,7 +256,7 @@ public class MovieListActivity extends AppCompatActivity {
             if (error != null) {
                 showMessage(getApplicationContext(), error.getMessage());
             } else if (result != null) {
-                showMessage(getApplicationContext(), "Película actualizada con éxito");
+                showMessage(getApplicationContext(), getString(R.string.movie_updated_success));
             }
         });
     }

@@ -297,7 +297,7 @@ public class ReviewUtil implements
                         userReview = null;
                     }
                     reviewAdapter.notifyDataSetChanged();
-                    showMessage(context, "Reseña borrada con éxito");
+                    showMessage(context, context.getString(R.string.review_deleted_success));
                 });
             });
         }

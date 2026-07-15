@@ -82,8 +82,8 @@ public class ProfilePicturePickerDialog extends DialogFragment {
         MaterialButton btnConfirm = view.findViewById(R.id.btn_confirm);
 
         // Set content descriptions for screen readers
-        btnCancel.setContentDescription("Cancelar selección de foto de perfil");
-        btnConfirm.setContentDescription("Confirmar selección de foto de perfil");
+        btnCancel.setContentDescription(getString(R.string.cancel_profile_pic_desc));
+        btnConfirm.setContentDescription(getString(R.string.confirm_profile_pic_desc));
 
         if (currentAvatarPath != null && !currentAvatarPath.isEmpty()) {
             Glide.with(this)
@@ -103,7 +103,7 @@ public class ProfilePicturePickerDialog extends DialogFragment {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(getContext(), "Error al cargar los avatares locales", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.error_loading_avatars, Toast.LENGTH_SHORT).show();
         }
 
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
@@ -123,7 +123,7 @@ public class ProfilePicturePickerDialog extends DialogFragment {
         btnConfirm.setOnClickListener(v -> {
             String finalPath = adapter.getSelectedAvatarPath();
             if (finalPath == null) {
-                Toast.makeText(getContext(), "Por favor, selecciona un avatar", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.please_select_avatar, Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -135,9 +135,9 @@ public class ProfilePicturePickerDialog extends DialogFragment {
                 if (isAdded()) {
                     loadingOverlay.setVisibility(View.GONE);
                     if (error != null) {
-                        Snackbar.make(view, "Error: " + error.getMessage(), Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(view, getString(R.string.error_prefix, error.getMessage()), Snackbar.LENGTH_LONG).show();
                     } else if (success != null && success) {
-                        Toast.makeText(getContext(), "Foto de perfil actualizada con éxito", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.profile_picture_updated, Toast.LENGTH_SHORT).show();
                         if (listener != null) {
                             listener.onProfileImageUpdated(finalPath);
                         }

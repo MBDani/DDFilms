@@ -54,7 +54,7 @@ public class LoginActivity extends AppCompatActivity {
                         finish();
                     } else {
                         // Login failed, show an error message
-                        Toast.makeText(LoginActivity.this, "Authentication failed.",
+                        Toast.makeText(LoginActivity.this, getString(R.string.login_failed),
                                 Toast.LENGTH_SHORT).show();
                     }
                 });

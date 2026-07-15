@@ -1,58 +1,137 @@
 <resources>
     <string name="app_name">DDFilms</string>
 
-    <string name="bt_login">Iniciar sesión</string>
-    <string name="bt_register">Registrarse</string>
-    <string name="bt_logout">Cerrar sesión</string>
-    <string name="bt_recovery"> Recuperar </string>
+    <string name="bt_login">Log in</string>
+    <string name="bt_register">Register</string>
+    <string name="bt_logout">Log out</string>
+    <string name="bt_recovery">Recover</string>
 
-    <string name="edt_user"> Usuario </string>
-    <string name="edt_email"> Email </string>
-    <string name="edt_pw"> Contraseña </string>
-    <string name="edt_without_account">¿No tienes cuenta? Registrate ahora.</string>
-    <string name="edt_forget_password"> Olvide mi contraseña </string>
-    <string name="edt_with_account">¿Ya tienes cuenta? Inicia sesión ahora.</string>
+    <string name="edt_user">Username</string>
+    <string name="edt_email">Email</string>
+    <string name="edt_pw">Password</string>
+    <string name="edt_without_account">Don\'t have an account? Register now.</string>
+    <string name="edt_forget_password">Forgot my password</string>
+    <string name="edt_with_account">Already have an account? Log in now.</string>
 
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
-    <string name="login_failed">"Login failed"</string>
-
+    <string name="login_failed">Login failed</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="recovery_instructions">Introduce tu email para recibir instrucciones de recuperación de contraseña</string>
-    <string name="search_movies_hint">Search</string>
+    <string name="recovery_instructions">Enter your email to receive password recovery instructions</string>
+    <string name="search_movies_hint">Search movies</string>
     <string name="back_button">back</string>
     <string name="movie_backdrop">poster_background</string>
     <string name="movie_poster">movie_poster</string>
     <string name="cast_title">Cast</string>
     <string name="crew_title">Crew</string>
 
-
     <string name="reviews_title">Reviews</string>
-    <string name="add_review">Añadir review</string>
+    <string name="add_review">Add review</string>
     <string name="star_rating">star_rating</string>
     <string name="like_review">like_review</string>
     <string name="dislike_review">dislike_review</string>
-    <string name="write_review_title">Escribir reseña</string>
-    <string name="update_review_title">Actualizar reseña</string>
-    <string name="update_review_button">Actualizar</string>
-    <string name="delete_review">Borrar</string>
-    <string name="no_rating">Sin valoración</string>
-    <string name="your_review">Tu review</string>
-    <string name="review_hint">Escribe aquí tu reseña</string>
-    <string name="cancel">Cancelar</string>
-    <string name="publish_review">Publicar review</string>
-    <string name="rating_required">rating_required</string>
-    <string name="reviewing_movie">reviewing_movie %s</string>
-    <string name="current_rating">current_rating %s</string>
+    <string name="write_review_title">Write review</string>
+    <string name="update_review_title">Update review</string>
+    <string name="update_review_button">Update</string>
+    <string name="delete_review">Delete</string>
+    <string name="no_rating">No rating</string>
+    <string name="your_review">Your review</string>
+    <string name="review_hint">Write your review here</string>
+    <string name="cancel">Cancel</string>
+    <string name="publish_review">Publish review</string>
+    <string name="rating_required">Rating is required</string>
+    <string name="reviewing_movie">Reviewing movie %s</string>
+    <string name="current_rating">Current rating %s</string>
 
-    <string name="menu_options">Opciones del menú</string>
-    <string name="write_review">Escribir reseña</string>
-    <string name="add_to_list">Añadir a lista</string>
-    <string name="pending_to_watch">Pendiente de ver</string>
-    <string name="watched">Vista</string>
-    <string name="mark_as_watched">Marcar como vista</string>
-    <string name="add_to_watchlist">Añadir a pendientes</string>
+    <string name="menu_options">Menu options</string>
+    <string name="write_review">Write review</string>
+    <string name="add_to_list">Add to list</string>
+    <string name="pending_to_watch">Watchlist</string>
+    <string name="watched">Watched</string>
+    <string name="mark_as_watched">Mark as watched</string>
+    <string name="add_to_watchlist">Add to watchlist</string>
+
+    <!-- New extracted strings -->
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="share_private_link">Share private link</string>
+    <string name="create_new_list">Create new list</string>
+    <string name="create">Create</string>
+    <string name="list_name_hint">List name</string>
+    <string name="choose_avatar">Choose your avatar</string>
+    <string name="preview">Preview</string>
+    <string name="confirm">Confirm</string>
+    <string name="btn_new_list">NEW LIST</string>
+    <string name="profile_title">Profile Title</string>
+    <string name="profile_content_placeholder">Profile content goes here...</string>
+    <string name="enable_notifications">Enable Notifications</string>
+    <string name="reset_preferences">Reset Preferences</string>
+
+    <!-- Java extracted strings -->
+    <string name="logout_success">Logged out successfully</string>
+    <string name="list_added_to_user">The list has been added to the user</string>
+    <string name="incomplete_data">Incomplete data</string>
+    <string name="invalid_link">Invalid link</string>
+    <string name="loading">Loading...</string>
+    <string name="password_reset_email_sent">A password reset email has been sent. Redirecting to Login.</string>
+    <string name="password_reset_failed">Failed to send password reset email</string>
+    <string name="fill_email">Please fill in the email</string>
+    <string name="fill_all_fields">Please fill in all fields</string>
+    <string name="password_length_error">Please enter a password with a minimum of 6 characters</string>
+    <string name="account_registered">Account registered: %s</string>
+    <string name="error_getting_user">Error obtaining user</string>
+    <string name="email_already_in_use">Email already in use</string>
+    <string name="registration_failed">Failed to register user</string>
+    <string name="db_connection_failed">Database connection failed</string>
+    <string name="data_stored_cloud">Data stored in the cloud</string>
+    <string name="error_saving_data">Failed to save your data</string>
+    <string name="cancel_profile_pic_desc">Cancel profile picture selection</string>
+    <string name="confirm_profile_pic_desc">Confirm profile picture selection</string>
+    <string name="error_loading_avatars">Error loading local avatars</string>
+    <string name="please_select_avatar">Please select an avatar</string>
+    <string name="profile_picture_updated">Profile picture updated successfully</string>
+    <string name="list_name_cannot_be_empty">Name cannot be empty</string>
+    <string name="added_on">Added on %s</string>
+    <string name="logout_dialog_title">Log out</string>
+    <string name="logout_dialog_message">Are you sure you want to log out?</string>
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
+    <string name="delete_list_dialog_title">Delete list %s</string>
+    <string name="delete_list_dialog_message">Are you sure you want to delete this list? This action cannot be undone.</string>
+    <string name="list_deleted_success">List deleted successfully</string>
+    <string name="movie_updated_success">Movie updated successfully</string>
+    <string name="list_name_updated_success">List name updated successfully</string>
+    <string name="error_getting_api_key">Error getting API key: %s</string>
+    <string name="error_getting_credits">Error getting movie credits</string>
+    <string name="error_getting_details">Error getting movie details</string>
+    <string name="error_loading_lists">Error loading lists: %s</string>
+    <string name="error_generic">Error: %s</string>
+    <string name="error_prefix">Error: %s</string>
+    <string name="error_loading_popular">Error loading popular movies</string>
+    <string name="error_connection">Connection error: %s</string>
+    <string name="removed_from_list">Removed from list %s</string>
+    <string name="added_to_list_message">Added to list %s</string>
+    <string name="error_searching">Error searching</string>
+    <string name="review_deleted_success">Review deleted successfully</string>
+    <string name="no_director_found">No director found</string>
+
+    <string name="tmdb_api_language">en-US</string>
+    <string name="auth_language_code">en</string>
+
+    <!-- Menu XML strings -->
+    <string name="menu_popular">Popular</string>
+    <string name="menu_search">Search</string>
+    <string name="menu_profile">Profile</string>
+    <string name="menu_watchlist">Watchlist</string>
+    <string name="menu_lists">Lists</string>
+    <string name="menu_diary">Diary</string>
+    <string name="menu_reviews">Reviews</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_sign_out">Sign out</string>
+    <string name="menu_done">Done</string>
+    <string name="menu_more">More</string>
+    <string name="menu_filter">Filter</string>
 </resources>

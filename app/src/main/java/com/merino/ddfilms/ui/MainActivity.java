@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
         // Configurar Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Objects.requireNonNull(getSupportActionBar()).setTitle("DDFilms");
+        Objects.requireNonNull(getSupportActionBar()).setTitle(R.string.app_name);
 
         // Configurar el DrawerLayout con el NavigationView
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
@@ -253,9 +253,9 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
     }
 
     private void showLogoutConfirmationDialog() {
-        new AlertDialog.Builder(this).setTitle("Cerrar sesión").setMessage("¿Estás seguro de que quieres cerrar sesión?").setPositiveButton("Sí", (dialog, which) -> {
+        new AlertDialog.Builder(this).setTitle(R.string.logout_dialog_title).setMessage(R.string.logout_dialog_message).setPositiveButton(R.string.dialog_yes, (dialog, which) -> {
             FirebaseManager.getInstance().logoutUser(this);
-        }).setNegativeButton("No", (dialog, which) -> {
+        }).setNegativeButton(R.string.dialog_no, (dialog, which) -> {
             // Simplemente cierra el diálogo
             dialog.dismiss();
         }).show();

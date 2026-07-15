@@ -63,19 +63,19 @@ public class PopularFragment extends Fragment {
 
 
     private void loadPopularMovies() {
-        tmdbService.getPopularMovies(API_KEY, "es-ES").enqueue(new Callback<>() {
+        tmdbService.getPopularMovies(API_KEY, getString(R.string.tmdb_api_language)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<SearchResponse> call, @NonNull Response<SearchResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     updateMoviesList(response.body().getResults());
                 } else {
-                    showMessage(getContext(), "Error al cargar películas populares");
+                    showMessage(getContext(), getString(R.string.error_loading_popular));
                 }
             }
 
             @Override
             public void onFailure(Call<SearchResponse> call, Throwable t) {
-                showMessage(getContext(), "Error de conexión: " + t.getMessage());
+                showMessage(getContext(), getString(R.string.error_connection, t.getMessage()));
             }
         });
     }

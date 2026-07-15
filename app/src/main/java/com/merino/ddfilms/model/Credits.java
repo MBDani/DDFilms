@@ -167,7 +167,7 @@ public class Credits implements Parcelable {
 
         public static String getDirector(List<Crew> crew) {
             Optional<String> directorName = crew.stream().filter(member -> "Director".equals(member.getJob())).map(Crew::getName).findFirst();
-            return directorName.orElse("No director found");
+            return directorName.orElse(null);
         }
 
         public static final Creator<Crew> CREATOR = new Creator<Crew>() {

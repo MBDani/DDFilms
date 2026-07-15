@@ -32,7 +32,7 @@ public class CreateListDialogFragment extends DialogFragment {
         createButton.setOnClickListener(v -> {
             String listName = listNameInput.getText().toString().trim();
             if (TextUtils.isEmpty(listName)) {
-                listNameInput.setError("El nombre no puede estar vacío");
+                listNameInput.setError(getString(R.string.list_name_cannot_be_empty));
             } else {
                 if (listener != null) {
                     listener.onListCreated(listName);

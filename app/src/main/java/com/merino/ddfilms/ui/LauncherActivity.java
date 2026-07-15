@@ -14,6 +14,7 @@ import com.merino.ddfilms.api.TMDBService;
 import com.merino.ddfilms.configuration.ApiKeyManager;
 import com.merino.ddfilms.ui.auth.LoginActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
+import com.merino.ddfilms.R;
 
 public class LauncherActivity extends AppCompatActivity {
 
@@ -41,7 +42,7 @@ public class LauncherActivity extends AppCompatActivity {
     private void getTMDBApiKey(TaskCompletionCallback<Boolean> callback) {
         ApiKeyManager.getInstance().fetchApiKey((result, error) -> {
             if (error != null) {
-                showMessage(this, "Error al obtener la API key: " + error.getMessage());
+                showMessage(this, getString(R.string.error_getting_api_key, error.getMessage()));
                 numReintentos++;
                 if (numReintentos < 3) getTMDBApiKey(callback);
             } else {

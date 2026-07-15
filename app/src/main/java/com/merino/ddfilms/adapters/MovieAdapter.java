@@ -140,7 +140,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
         // Determine if we should show the createdAt TextView
         if (movie.getCreatedAt() != null && !isAddMode && (position == 0 || !Objects.equals(movies.get(position - 1).getCreatedAt(), movie.getCreatedAt()))) {
-            holder.createdAtTextView.setText("Añadido el " + movie.getCreatedAt());
+            holder.createdAtTextView.setText(holder.itemView.getContext().getString(R.string.added_on, movie.getCreatedAt()));
             holder.createdAtTextView.setVisibility(View.VISIBLE);
         } else {
             holder.createdAtTextView.setVisibility(View.GONE);

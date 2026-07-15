@@ -22,6 +22,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.merino.ddfilms.model.Movie;
 import com.merino.ddfilms.model.MovieLists;
 import com.merino.ddfilms.model.Review;
+import com.merino.ddfilms.R;
 import com.google.firebase.firestore.Query;
 import com.merino.ddfilms.ui.auth.LoginActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
@@ -66,7 +67,7 @@ public class FirebaseManager {
         context.startActivity(intent);
 
         // Mostrar un mensaje de confirmación
-        Toast.makeText(context, "Sesión cerrada con éxito", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, context.getString(R.string.logout_success), Toast.LENGTH_SHORT).show();
     }
 
     public String getCurrentUserUID() {

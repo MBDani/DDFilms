@@ -33,11 +33,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         String email = edt_email.getText().toString();
 
         if (!email.isEmpty()) {
-            Toast.makeText(ForgotPasswordActivity.this, "Cargando...", Toast.LENGTH_SHORT).show();
-            mAuth.setLanguageCode("es");
+            Toast.makeText(ForgotPasswordActivity.this, R.string.loading, Toast.LENGTH_SHORT).show();
+            mAuth.setLanguageCode(getString(R.string.auth_language_code));
             mAuth.sendPasswordResetEmail(email).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-                    Toast.makeText(ForgotPasswordActivity.this, "Se ha enviado un correo para restablecer tu contraseña. Redirigiendo a la pantalla de Login.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ForgotPasswordActivity.this, R.string.password_reset_email_sent, Toast.LENGTH_SHORT).show();
 
                     // Redirigmos en 2 segundos a la pantalla de login
                     try {
@@ -51,11 +51,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
 
                 } else {
-                    Toast.makeText(ForgotPasswordActivity.this, "No se puedo enviar el correo de restablecer contraseña", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ForgotPasswordActivity.this, R.string.password_reset_failed, Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
-            Toast.makeText(ForgotPasswordActivity.this, "Rellena el email", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ForgotPasswordActivity.this, R.string.fill_email, Toast.LENGTH_SHORT).show();
         }
 
 

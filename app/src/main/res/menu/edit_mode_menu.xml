@@ -3,6 +3,6 @@
     <item
         android:id="@+id/action_done"
         android:icon="@drawable/ic_done"
-        android:title="Done"
+        android:title="@string/menu_done"
         app:showAsAction="always" />
 </menu>

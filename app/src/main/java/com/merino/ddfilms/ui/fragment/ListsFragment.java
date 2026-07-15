@@ -100,7 +100,7 @@ public class ListsFragment extends Fragment {
                     isLoading = false;
                     initialLoadingProgress.setVisibility(View.GONE);
                     if (error != null) {
-                        showMessage(getContext(), "Error al cargar listas: " + error.getMessage());
+                        showMessage(getContext(), getString(R.string.error_loading_lists, error.getMessage()));
                     } else if (pair != null) {
                         List<MovieLists> newLists = pair.first;
                         lastVisible = pair.second;
@@ -129,7 +129,7 @@ public class ListsFragment extends Fragment {
                     isLoading = false;
                     loadMoreProgress.setVisibility(View.GONE);
                     if (error != null) {
-                        showMessage(getContext(), "Error: " + error.getMessage());
+                        showMessage(getContext(), getString(R.string.error_generic, error.getMessage()));
                     } else if (pair != null) {
                         List<MovieLists> newLists = pair.first;
                         lastVisible = pair.second;

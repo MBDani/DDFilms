@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.merino.ddfilms.api.FirebaseManager;
 import com.merino.ddfilms.ui.MovieListActivity;
 import com.merino.ddfilms.utils.TaskCompletionCallback;
+import com.merino.ddfilms.R;
 
 public class IntentFilterActivity extends AppCompatActivity {
 
@@ -47,18 +48,18 @@ public class IntentFilterActivity extends AppCompatActivity {
                     if (error != null) {
                         showMessage(getApplicationContext(), error.getMessage());
                     } else {
-                        showMessage(getApplicationContext(), "Se ha agregado la lista al usuario");
+                        showMessage(getApplicationContext(), getString(R.string.list_added_to_user));
                         navigateToMovieListActivity(listID, listName);
                     }
                 });
             } else {
                 // Parámetros faltantes
-                Toast.makeText(this, "Datos incompletos", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.incomplete_data, Toast.LENGTH_SHORT).show();
                 finish();
             }
         } else {
             // El Intent no tiene un URI asociado
-            Toast.makeText(this, "Enlace no válido", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.invalid_link, Toast.LENGTH_SHORT).show();
             finish();
         }
     }
