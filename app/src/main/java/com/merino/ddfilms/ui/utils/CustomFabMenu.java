@@ -153,6 +153,7 @@ public class CustomFabMenu {
 
         if (mainFabIconResId != 0) {
             mainFab.setImageResource(mainFabIconResId);
+            mainFab.setImageTintList(ContextCompat.getColorStateList(context, android.R.color.white));
         }
 
         if (mainFabColorResId != 0) {
@@ -175,6 +176,7 @@ public class CustomFabMenu {
             fab.setLayoutParams(fabParams);
 
             fab.setImageResource(item.getIconResId());
+            fab.setImageTintList(ContextCompat.getColorStateList(context, android.R.color.white));
             fab.setBackgroundTintList(ContextCompat.getColorStateList(context, item.getBackgroundColorResId()));
             fab.setSize(FloatingActionButton.SIZE_MINI);
             fab.setVisibility(View.GONE);

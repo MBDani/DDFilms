@@ -22,7 +22,7 @@
             android:layout_height="wrap_content"
             android:inputType="text"
             android:fontFamily="@font/montserrat"
-            android:textColor="@color/white"
+            android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:drawableStart="@drawable/ic_search"
             android:drawablePadding="8dp"/>

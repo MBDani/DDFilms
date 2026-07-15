@@ -16,7 +16,7 @@
         android:fontFamily="@font/montserrat_bold"
         android:text="@string/app_name"
         android:textAlignment="center"
-        android:textColor="@color/white"
+        android:textColor="@color/text_primary"
         android:textSize="36sp"
         android:elevation="4dp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -28,7 +28,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
-        android:textColorHint="@color/white_60"
+        android:textColorHint="@color/text_secondary"
         app:boxBackgroundMode="none"
         app:hintTextColor="@color/gold_light"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,8 +44,8 @@
             android:hint="@string/edt_email"
             android:inputType="textEmailAddress"
             android:padding="16dp"
-            android:textColor="@color/white"
-            android:textColorHint="@color/white_60"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
             android:textSize="16sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -54,11 +54,11 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:textColorHint="@color/white_60"
+        android:textColorHint="@color/text_secondary"
         app:boxBackgroundMode="none"
         app:hintTextColor="@color/gold_light"
         app:passwordToggleEnabled="true"
-        app:passwordToggleTint="@color/white_60"
+        app:passwordToggleTint="@color/text_secondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/email_input_layout"
@@ -72,8 +72,8 @@
             android:hint="@string/edt_pw"
             android:inputType="textPassword"
             android:padding="16dp"
-            android:textColor="@color/white"
-            android:textColorHint="@color/white_60"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
             android:textSize="16sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -84,7 +84,7 @@
         android:layout_marginTop="32dp"
         android:background="@drawable/button_primary"
         android:text="@string/bt_login"
-        android:textColor="@color/black"
+        android:textColor="@color/button_primary_text"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"

@@ -260,7 +260,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
         fabMenu = new CustomFabMenu(this, container)
                 .setMainFabIcon(R.drawable.ic_menu)
-                .setMainFabColor(R.color.primary_dark_light)
+                .setMainFabColor(R.color.main_fab_bg)
                 .setOverlayColor(R.color.black_50)
                 .setLabelBackground(R.drawable.fab_label_background)
                 .setBaseMarginBottom(40f)

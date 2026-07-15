@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:fontFamily="@font/montserrat_bold"
         android:text="Nombre Usuario"
-        android:textColor="@color/white"
+        android:textColor="@color/text_primary"
         android:textSize="20sp"/>
 
     <TextView
@@ -54,7 +54,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:fontFamily="@font/montserrat"
-        android:textColor="@color/white_60"
+        android:textColor="@color/text_secondary"
         android:text="usuario@email.com"
         android:textSize="14sp"/>
 </LinearLayout>

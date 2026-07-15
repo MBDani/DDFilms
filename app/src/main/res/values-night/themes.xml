@@ -1,26 +1,28 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.DDFilms" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Colores primarios -->
-        <item name="colorPrimary">@color/gray_dark</item>
+        <item name="colorPrimary">@color/gold_dark</item>
         <item name="colorPrimaryVariant">@color/blue_dark</item>
-        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorControlNormal">@color/text_primary</item>
 
         <!-- Colores secundarios -->
         <item name="colorSecondary">@color/accent_blue</item>
-        <item name="colorSecondaryVariant">@color/secondary_light</item>
-        <item name="colorOnSecondary">@color/black_60</item>
+        <item name="colorSecondaryVariant">@color/gray_dark</item>
+        <item name="colorOnSecondary">@color/black</item>
 
         <!-- Colores de superficie -->
         <item name="android:colorBackground">@color/primary_dark</item>
-        <item name="colorSurface">@color/primary_dark</item>
-        <item name="colorOnSurface">@color/white_60</item>
+        <item name="colorSurface">@color/primary_dark_medium</item>
+        <item name="colorOnSurface">@color/text_primary</item>
 
         <!-- Barra de estado -->
-        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:statusBarColor">@color/status_bar_color</item>
+        <item name="android:windowLightStatusBar">false</item>
 
         <!-- Otros -->
-        <item name="android:navigationBarColor">@color/primary_dark</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <item name="android:navigationBarColor">@color/status_bar_color</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
         <item name="android:fontFamily">@font</item>
     </style>
 </resources>

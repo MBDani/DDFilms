@@ -127,7 +127,7 @@
         app:boxCornerRadiusBottomStart="8dp"
         app:boxCornerRadiusTopEnd="8dp"
         app:boxCornerRadiusTopStart="8dp"
-        app:hintTextColor="@color/primary_light"
+        app:hintTextColor="@color/text_secondary"
         app:layout_constraintTop_toBottomOf="@+id/stars_rating_layout">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -136,7 +136,7 @@
             android:layout_height="wrap_content"
             android:minLines="3"
             android:maxLines="6"
-            android:textColor="@color/gold_light"
+            android:textColor="@color/text_primary"
             android:gravity="top|start"
             android:inputType="textMultiLine|textCapSentences"
             android:scrollbars="vertical" />
@@ -162,7 +162,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="12dp"
             android:background="@drawable/button_secondary"
-            android:textColor="@color/white"
+            android:textColor="@color/text_primary"
             android:text="@string/cancel"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
@@ -174,7 +174,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/button_primary"
-            android:textColor="@color/black"
+            android:textColor="@color/button_primary_text"
             android:text="@string/publish_review"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"

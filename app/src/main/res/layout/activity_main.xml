@@ -23,6 +23,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="@drawable/app_bar_background"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
                 app:titleTextColor="@color/white"
                 app:title="DDFilms"
                 app:titleTextAppearance="@style/ToolbarTitleStyle"/>
@@ -80,7 +82,7 @@
         android:background="@color/primary_dark"
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/drawer_menu"
-        app:itemTextColor="@color/white"
+        app:itemTextColor="@color/text_primary"
         app:itemIconTint="@color/gold_dark"
         app:itemTextAppearance="@style/NavigationDrawerText"/>
 

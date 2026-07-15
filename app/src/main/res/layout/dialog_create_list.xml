@@ -23,7 +23,7 @@
             android:fontFamily="sans-serif-medium"
             android:gravity="center"
             android:text="@string/create_new_list"
-            android:textColor="@color/white"
+            android:textColor="@color/text_primary"
             android:textSize="20sp" />
 
         <ImageView
@@ -35,7 +35,7 @@
             android:layout_marginBottom="15dp"
             android:contentDescription="Cerrar"
             android:src="@drawable/ic_close"
-            app:tint="@color/white" />
+            app:tint="@color/text_primary" />
     </LinearLayout>
 
     <EditText
@@ -46,8 +46,8 @@
         android:background="@drawable/edit_text_background"
         android:hint="@string/list_name_hint"
         android:padding="8dp"
-        android:textColor="@color/white"
-        android:textColorHint="@color/white_60" />
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/create_button"
@@ -56,7 +56,7 @@
         android:background="@drawable/button_primary"
         android:fontFamily="sans-serif-medium"
         android:text="@string/create"
-        android:textColor="@color/black"
+        android:textColor="@color/button_primary_text"
         app:backgroundTint="@null" />
 
 </LinearLayout>

@@ -19,7 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/add_to_list"
-            android:textColor="@color/white"
+            android:textColor="@color/text_primary"
             android:textSize="18sp"
             android:fontFamily="sans-serif-medium"
             android:gravity="start" />
@@ -31,7 +31,7 @@
             android:src="@drawable/ic_close"
             android:contentDescription="Cerrar"
             android:layout_gravity="end"
-            app:tint="@color/white" />
+            app:tint="@color/text_primary" />
     </LinearLayout>
 
     <!-- Divider -->
@@ -56,14 +56,14 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_add"
-            app:tint="@color/white" />
+            app:tint="@color/text_primary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="@string/create_new_list"
-            android:textColor="@color/white"
+            android:textColor="@color/text_primary"
             android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 

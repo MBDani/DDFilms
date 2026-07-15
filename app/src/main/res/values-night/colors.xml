@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores Principales del Tema Oscuro -->
+    <color name="primary_dark">@color/purple_950</color>
+    <color name="primary_dark_medium">@color/purple_900</color>
+    <color name="primary_dark_light">@color/purple_850</color>
+    <color name="primary_light">@color/gray_100</color>
+
+    <!-- Acentos Dorados del Tema Oscuro -->
+    <color name="gold_dark">@color/gold_500</color>
+    <color name="gold_light">@color/gold_200</color>
+
+    <!-- Secundarios -->
+    <color name="secondary_dark">@color/gray_900</color>
+    <color name="secondary_light">@color/gray_300</color>
+
+    <!-- Acentos de Acción -->
+    <color name="accent_orange_dark">@color/orange_600</color>
+    <color name="accent_orange_light">@color/orange_400</color>
+
+    <!-- Elementos del Sistema -->
+    <color name="gray_divider">@color/gray_800</color>
+
+    <!-- Roles Específicos para UI/Contenedores -->
+    <color name="skeleton_background">@color/purple_800</color>
+    <color name="dialog_stroke">@color/purple_700</color>
+
+    <!-- Tipografía Semántica -->
+    <color name="text_primary">@color/white</color>
+    <color name="text_secondary">@color/white_60</color>
+    <color name="text_hint">@color/white_60</color>
+
+    <!-- Elementos translúcidos -->
+    <color name="border_subtle">@color/white_10</color>
+    <color name="edit_text_bg">@color/white_20</color>
+    <color name="edit_text_border">@color/white_30</color>
+    <color name="ripple_color">@color/white_12</color>
+    <color name="header_solid">@color/white_15</color>
+    <color name="shadow_color">@color/black_80</color>
+    <color name="status_bar_color">@color/purple_950</color>
+
+    <!-- Degradados Especiales para Modo Noche (Púrpuras originales) -->
+    <color name="app_bar_start">@color/primary_dark</color>
+    <color name="app_bar_center">@color/primary_dark_medium</color>
+    <color name="app_bar_end">@color/primary_dark_light</color>
+
+    <color name="button_secondary_start">@color/primary_dark</color>
+    <color name="button_secondary_center">@color/primary_dark_medium</color>
+    <color name="button_secondary_end">@color/primary_dark_light</color>
+
+    <color name="dialog_bg_start">@color/primary_dark</color>
+    <color name="dialog_bg_center">@color/primary_dark_medium</color>
+    <color name="dialog_bg_end">@color/primary_dark_light</color>
+
+    <color name="main_bg_start">@color/primary_dark</color>
+    <color name="main_bg_center">@color/primary_dark_medium</color>
+    <color name="main_bg_end">@color/primary_dark_light</color>
+
+    <color name="button_primary_text">@color/black</color>
+    <color name="main_fab_bg">@color/primary_dark_light</color>
+</resources>

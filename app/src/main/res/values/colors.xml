@@ -1,47 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Colores principales -->
-    <color name="primary_dark">#1F1B24</color>    <!-- Negro azulado oscuro -->
-    <color name="primary_dark_light">#332940</color>    <!-- Negro azulado oscuro -->
-    <color name="primary_light">#F5F5F5</color>   <!-- Blanco grisáceo -->
+    <!-- ========================================== -->
+    <!-- 1. PALETA DE COLORES ABSOLUTOS (PALETTE)   -->
+    <!-- ========================================== -->
 
-    <!-- Acentos dorados -->
-    <color name="gold_dark">#FFD700</color>       <!-- Dorado oscuro -->
-    <color name="gold_light">#FFF4CC</color>      <!-- Dorado claro -->
+    <!-- Tonos Púrpuras / Oscuros -->
+    <color name="purple_950">#1F1B24</color>
+    <color name="purple_900">#2B2634</color>
+    <color name="purple_850">#332940</color>
+    <color name="purple_800">#42374F</color>
+    <color name="purple_700">#443854</color>
+
+    <!-- Tonos Grises -->
+    <color name="gray_950">#121212</color>
+    <color name="gray_900">#2D2D2D</color>
+    <color name="gray_800">#444444</color>
+    <color name="gray_500">#9E9E9E</color>
+    <color name="gray_300">#E0E0E0</color>
+    <color name="gray_100">#F5F5F5</color>
+
+    <!-- Tonos Dorados / Amarillos -->
+    <color name="gold_500">#FFD700</color>
+    <color name="gold_200">#FFF4CC</color>
+    <color name="yellow_500">#FFEB3B</color>
+
+    <!-- Tonos Naranjas -->
+    <color name="orange_600">#FF8C00</color>
+    <color name="orange_500">#FF9800</color>
+    <color name="orange_400">#FFAB40</color>
+
+    <!-- Tonos Azules -->
+    <color name="blue_900">#1A237E</color>
+    <color name="blue_500">#2196F3</color>
+    <color name="blue_400">#44B3FF</color>
+
+    <!-- Tonos Verdes -->
+    <color name="green_700">#388E3C</color>
+    <color name="green_500">#4CAF50</color>
+    <color name="green_200">#A5D6A7</color>
+
+    <!-- Tonos Rojos -->
+    <color name="red_500">#FF4444</color>
+
+    <!-- Básicos Absolutos -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- Transparencias de Blanco (Opacidad) -->
+    <color name="white_05">#0DFFFFFF</color>
+    <color name="white_10">#1AFFFFFF</color>
+    <color name="white_12">#20FFFFFF</color>
+    <color name="white_15">#26FFFFFF</color>
+    <color name="white_20">#33FFFFFF</color>
+    <color name="white_30">#4DFFFFFF</color>
+    <color name="white_60">#99FFFFFF</color>
+
+    <!-- Transparencias de Negro (Opacidad) -->
+    <color name="black_40">#66000000</color>
+    <color name="black_50">#80000000</color>
+    <color name="black_60">#99000000</color>
+    <color name="black_80">#CC000000</color>
+
+
+    <!-- ========================================== -->
+    <!-- 2. ALIAS SEMÁNTICOS (MODO CLARO / DEFAULT)  -->
+    <!-- ========================================== -->
+
+    <!-- Colores Principales del Tema -->
+    <color name="primary_dark">#F3F4F6</color>                     <!-- Fondo de ventana (Gris claro de contraste) -->
+    <color name="primary_dark_medium">@color/white</color>              <!-- Fondo de cards/buscadores (Blanco puro) -->
+    <color name="primary_dark_light">@color/white</color>               <!-- Contenedores secundarios/diálogos -->
+    <color name="primary_light">#F3F4F6</color>                         <!-- Barra de estado -->
+
+    <!-- Acentos (Rojo cinematográfico premium para tema claro) -->
+    <color name="gold_dark">#E50914</color>                             <!-- Rojo película principal -->
+    <color name="gold_light">#B91C1C</color>                            <!-- Rojo oscuro para textos de contraste (enlaces/ratings) -->
 
     <!-- Secundarios -->
-    <color name="secondary_dark">#2D2D2D</color>  <!-- Gris muy oscuro -->
-    <color name="secondary_light">#E0E0E0</color> <!-- Gris claro -->
+    <color name="secondary_dark">@color/gray_300</color>
+    <color name="secondary_light">@color/gray_800</color>
 
-    <!-- Acentos -->
-    <color name="accent_red">#FF4444</color>      <!-- Rojo para elementos destacados -->
-    <color name="accent_blue">#44B3FF</color>     <!-- Azul para elementos interactivos -->
+    <!-- Acentos de Acción -->
+    <color name="accent_red">@color/red_500</color>
+    <color name="accent_blue">@color/blue_500</color>
+    <color name="accent_green_dark">@color/green_700</color>
+    <color name="accent_green_light">@color/green_200</color>
+    <color name="accent_yellow">@color/yellow_500</color>
+    <color name="accent_orange">@color/orange_500</color>
+    <color name="accent_orange_dark">#B91C1C</color>
+    <color name="accent_orange_light">#FCA5A5</color>
 
-    <!-- Básicos -->
-    <color name="black">#000000</color>
-    <color name="white">#FFFFFF</color>
+    <!-- Elementos del Sistema -->
+    <color name="gray_medium">@color/gray_500</color>
+    <color name="gray_light">@color/gray_100</color>
+    <color name="gray_dark">@color/gray_950</color>
+    <color name="blue_dark">@color/blue_900</color>
+    <color name="gray_divider">@color/gray_300</color>
 
-    <!-- Transparencias -->
-    <color name="black_60">#99000000</color>      <!-- Negro con 60% de opacidad -->
-    <color name="black_50">#80000000</color>
-    <color name="black_80">#CC000000</color>
-    <color name="white_60">#99FFFFFF</color>      <!-- Blanco con 60% de opacidad -->
+    <!-- Roles Específicos para UI/Contenedores -->
+    <color name="skeleton_background">@color/gray_300</color>
+    <color name="dialog_stroke">@color/gray_300</color>
 
-    <!-- Tonos verdes -->
-    <color name="accent_green_dark">#388E3C</color>
-    <color name="green_500">#4CAF50</color>
-    <color name="accent_green_light">#A5D6A7</color>
+    <!-- Tipografía Semántica -->
+    <color name="text_primary">#111827</color>                          <!-- Carbón oscuro para máxima lectura -->
+    <color name="text_secondary">#4B5563</color>                        <!-- Gris medio para textos secundarios -->
+    <color name="text_hint">#4B5563</color>
 
-    <!-- Acentos adicionales -->
-    <color name="accent_yellow">#FFEB3B</color>
-    <color name="accent_orange">#FF9800</color>
+    <!-- Elementos translúcidos -->
+    <color name="border_subtle">@color/gray_300</color>
+    <color name="edit_text_bg">@color/gray_100</color>
+    <color name="edit_text_border">@color/gray_300</color>
+    <color name="ripple_color">@color/gray_300</color>
+    <color name="header_solid">@color/gray_100</color>
+    <color name="shadow_color">#20000000</color>
+    <color name="button_primary_text">@color/white</color>
 
-    <!-- Grises -->
-    <color name="gray_medium">#9E9E9E</color>
-    <color name="gray_light">#F5F5F5</color>
-    <color name="gray_dark">#121212</color>
-    <color name="blue_dark">#1A237E</color>
-    <color name="blue_500">#2196F3</color>
-    <color name="gray_divider">#444444</color> <!-- Gris intermedio oscuro -->
+    <!-- Degradados Especiales para Modo Claro -->
+    <color name="app_bar_start">#E50914</color>                         <!-- Rojo película principal -->
+    <color name="app_bar_center">#E50914</color>                        <!-- Rojo película principal -->
+    <color name="app_bar_end">#E50914</color>                           <!-- Rojo película principal -->
 
+    <color name="button_secondary_start">#E5E7EB</color>
+    <color name="button_secondary_center">#F3F4F6</color>
+    <color name="button_secondary_end">#E5E7EB</color>
+
+    <color name="dialog_bg_start">@color/white</color>
+    <color name="dialog_bg_center">@color/white</color>
+    <color name="dialog_bg_end">@color/white</color>
+
+    <color name="main_bg_start">@color/primary_dark</color>
+    <color name="main_bg_center">@color/primary_dark</color>
+    <color name="main_bg_end">@color/primary_dark</color>
+
+    <!-- Alias semánticos para transparencias -->
+    <color name="translucent_white_10">@color/white_10</color>
+    <color name="translucent_white_12">@color/white_12</color>
+    <color name="translucent_white_15">@color/white_15</color>
+    <color name="translucent_white_20">@color/white_20</color>
+    <color name="translucent_white_30">@color/white_30</color>
+    <color name="translucent_white_60">@color/white_60</color>
+    <color name="status_bar_color">#B91C1C</color>
+    <color name="main_fab_bg">@color/gold_dark</color>
 </resources>
