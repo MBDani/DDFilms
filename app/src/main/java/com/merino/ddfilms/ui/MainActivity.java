@@ -37,6 +37,15 @@ import com.merino.ddfilms.ui.fragment.SettingsFragment;
 import com.merino.ddfilms.ui.fragment.WatchlistFragment;
 import com.merino.ddfilms.ui.fragment.ProfilePicturePickerDialog;
 
+import android.Manifest;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import java.util.Objects;
 
 
@@ -46,6 +55,18 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
     private FirebaseManager firebaseManager = new FirebaseManager();
     private FloatingActionButton activityFab;
     private String currentProfileImageUrl = null;
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Log.d("MainActivity", "Notification permission granted");
+                } else {
+                    Log.d("MainActivity", "Notification permission denied");
+                    getSharedPreferences("Preferences", MODE_PRIVATE).edit()
+                            .putBoolean("notifications_enabled", false)
+                            .apply();
+                }
+            });
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -149,6 +170,46 @@ public class MainActivity extends AppCompatActivity implements ActivityFabContro
         // Cargar fragment inicial
         if (savedInstanceState == null) {
             loadFragment(new SearchFragment());
+        }
+
+        // Prompt for notifications on first entry
+        SharedPreferences prefs = getSharedPreferences("Preferences", MODE_PRIVATE);
+        if (!prefs.contains("notifications_prompted")) {
+            showNotificationOptInDialog();
+        }
+    }
+
+    private void showNotificationOptInDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.notifications_dialog_title)
+                .setMessage(R.string.notifications_dialog_message)
+                .setCancelable(false)
+                .setPositiveButton(R.string.notifications_dialog_allow, (dialog, which) -> {
+                    getSharedPreferences("Preferences", MODE_PRIVATE).edit()
+                            .putBoolean("notifications_enabled", true)
+                            .putBoolean("notifications_prompted", true)
+                            .apply();
+
+                    // Request runtime permission for Android 13+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.notifications_dialog_deny, (dialog, which) -> {
+                    getSharedPreferences("Preferences", MODE_PRIVATE).edit()
+                            .putBoolean("notifications_enabled", false)
+                            .putBoolean("notifications_prompted", true)
+                            .apply();
+                })
+                .show();
+    }
+
+    public void refreshNavHeader() {
+        NavigationView navigationView = findViewById(R.id.navigation_view);
+        if (navigationView != null) {
+            personalizedNavHeader(navigationView);
         }
     }
 

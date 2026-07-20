@@ -65,8 +65,18 @@
     <string name="preview">Preview</string>
     <string name="confirm">Confirm</string>
     <string name="btn_new_list">NEW LIST</string>
-    <string name="profile_title">Profile Title</string>
-    <string name="profile_content_placeholder">Profile content goes here...</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_settings_title">Application Settings</string>
+    <string name="theme_section_title">Visual Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <string name="notifications_card_title">Notifications</string>
+    <string name="notifications_card_desc">Receive updates and alerts on your device</string>
+    <string name="notifications_dialog_title">Enable Notifications</string>
+    <string name="notifications_dialog_message">Would you like to receive notifications about new movies, lists, and updates from DDFilms?</string>
+    <string name="notifications_dialog_allow">Enable</string>
+    <string name="notifications_dialog_deny">Not Now</string>
     <string name="enable_notifications">Enable Notifications</string>
     <string name="reset_preferences">Reset Preferences</string>
 

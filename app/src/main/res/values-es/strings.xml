@@ -66,7 +66,17 @@
     <string name="confirm">Confirmar</string>
     <string name="btn_new_list">NUEVA LISTA</string>
     <string name="profile_title">Perfil</string>
-    <string name="profile_content_placeholder">El contenido del perfil va aquí...</string>
+    <string name="profile_settings_title">Ajustes de la aplicación</string>
+    <string name="theme_section_title">Tema visual</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_system">Sistema</string>
+    <string name="notifications_card_title">Notificaciones</string>
+    <string name="notifications_card_desc">Recibir avisos y novedades en tu dispositivo</string>
+    <string name="notifications_dialog_title">Activar notificaciones</string>
+    <string name="notifications_dialog_message">¿Te gustaría recibir notificaciones sobre nuevas películas, listas y novedades de DDFilms?</string>
+    <string name="notifications_dialog_allow">Activar</string>
+    <string name="notifications_dialog_deny">Ahora no</string>
     <string name="enable_notifications">Activar notificaciones</string>
     <string name="reset_preferences">Restablecer preferencias</string>
 
