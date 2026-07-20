@@ -67,14 +67,14 @@
     <!-- ========================================== -->
 
     <!-- Colores Principales del Tema -->
-    <color name="primary_dark">#F3F4F6</color>                     <!-- Fondo de ventana (Gris claro de contraste) -->
-    <color name="primary_dark_medium">@color/white</color>              <!-- Fondo de cards/buscadores (Blanco puro) -->
+    <color name="primary_dark">#FAF7F0</color>                     <!-- Fondo de ventana (Arena cálido suave) -->
+    <color name="primary_dark_medium">@color/white</color>              <!-- Fondo de cards/buscadores (Blanco) -->
     <color name="primary_dark_light">@color/white</color>               <!-- Contenedores secundarios/diálogos -->
-    <color name="primary_light">#F3F4F6</color>                         <!-- Barra de estado -->
+    <color name="primary_light">#FAF7F0</color>                         <!-- Barra de navegación del dispositivo -->
 
-    <!-- Acentos (Rojo cinematográfico premium para tema claro) -->
-    <color name="gold_dark">#E50914</color>                             <!-- Rojo película principal -->
-    <color name="gold_light">#B91C1C</color>                            <!-- Rojo oscuro para textos de contraste (enlaces/ratings) -->
+    <!-- Acentos (Ámbar y oro para tema claro) -->
+    <color name="gold_dark">#D97706</color>                             <!-- Ámbar cinematográfico principal -->
+    <color name="gold_light">#92400E</color>                            <!-- Ámbar caramelo oscuro para textos legibles -->
 
     <!-- Secundarios -->
     <color name="secondary_dark">@color/gray_300</color>
@@ -87,47 +87,48 @@
     <color name="accent_green_light">@color/green_200</color>
     <color name="accent_yellow">@color/yellow_500</color>
     <color name="accent_orange">@color/orange_500</color>
-    <color name="accent_orange_dark">#B91C1C</color>
-    <color name="accent_orange_light">#FCA5A5</color>
+    <color name="accent_orange_dark">#92400E</color>
+    <color name="accent_orange_light">#FDE68A</color>
 
     <!-- Elementos del Sistema -->
     <color name="gray_medium">@color/gray_500</color>
     <color name="gray_light">@color/gray_100</color>
     <color name="gray_dark">@color/gray_950</color>
     <color name="blue_dark">@color/blue_900</color>
-    <color name="gray_divider">@color/gray_300</color>
+    <color name="gray_divider">#EFEFE9</color>
 
     <!-- Roles Específicos para UI/Contenedores -->
-    <color name="skeleton_background">@color/gray_300</color>
-    <color name="dialog_stroke">@color/gray_300</color>
+    <color name="skeleton_background">#EFEFE9</color>
+    <color name="dialog_stroke">#EFEFE9</color>
 
     <!-- Tipografía Semántica -->
-    <color name="text_primary">#111827</color>                          <!-- Carbón oscuro para máxima lectura -->
+    <color name="text_primary">#1F2937</color>                          <!-- Carbón suave para máxima lectura -->
     <color name="text_secondary">#4B5563</color>                        <!-- Gris medio para textos secundarios -->
     <color name="text_hint">#4B5563</color>
 
     <!-- Elementos translúcidos -->
-    <color name="border_subtle">@color/gray_300</color>
-    <color name="edit_text_bg">@color/gray_100</color>
-    <color name="edit_text_border">@color/gray_300</color>
-    <color name="ripple_color">@color/gray_300</color>
-    <color name="header_solid">@color/gray_100</color>
-    <color name="shadow_color">#20000000</color>
+    <color name="border_subtle">#EFEFE9</color>
+    <color name="edit_text_bg">#F7F7F2</color>
+    <color name="edit_text_border">#EFEFE9</color>
+    <color name="ripple_color">#EFEFE9</color>
+    <color name="header_solid">#F7F7F2</color>
+    <color name="shadow_color">#15000000</color>
     <color name="button_primary_text">@color/white</color>
 
     <!-- Degradados Especiales para Modo Claro -->
-    <color name="app_bar_start">#E50914</color>                         <!-- Rojo película principal -->
-    <color name="app_bar_center">#E50914</color>                        <!-- Rojo película principal -->
-    <color name="app_bar_end">#E50914</color>                           <!-- Rojo película principal -->
+    <color name="app_bar_start">#D97706</color>                         <!-- Ámbar cinematográfico sólido -->
+    <color name="app_bar_center">#D97706</color>                        <!-- Ámbar cinematográfico sólido -->
+    <color name="app_bar_end">#D97706</color>                           <!-- Ámbar cinematográfico sólido -->
 
-    <color name="button_secondary_start">#E5E7EB</color>
-    <color name="button_secondary_center">#F3F4F6</color>
-    <color name="button_secondary_end">#E5E7EB</color>
+    <color name="button_secondary_start">#EFEFE9</color>
+    <color name="button_secondary_center">#F7F7F2</color>
+    <color name="button_secondary_end">#EFEFE9</color>
 
     <color name="dialog_bg_start">@color/white</color>
     <color name="dialog_bg_center">@color/white</color>
     <color name="dialog_bg_end">@color/white</color>
 
+    <!-- Degradados Especiales para Fondo Principal -->
     <color name="main_bg_start">@color/primary_dark</color>
     <color name="main_bg_center">@color/primary_dark</color>
     <color name="main_bg_end">@color/primary_dark</color>
@@ -139,6 +140,6 @@
     <color name="translucent_white_20">@color/white_20</color>
     <color name="translucent_white_30">@color/white_30</color>
     <color name="translucent_white_60">@color/white_60</color>
-    <color name="status_bar_color">#B91C1C</color>
+    <color name="status_bar_color">#B45309</color>
     <color name="main_fab_bg">@color/gold_dark</color>
 </resources>
