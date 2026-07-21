@@ -6,9 +6,9 @@
     <color name="primary_dark_light">@color/purple_850</color>
     <color name="primary_light">@color/gray_100</color>
 
-    <!-- Acentos Dorados del Tema Oscuro -->
-    <color name="gold_dark">@color/gold_500</color>
-    <color name="gold_light">@color/gold_200</color>
+    <!-- Acentos Dorados del Tema Oscuro (Cambiados a Rojo Cinemático) -->
+    <color name="gold_dark">#FFB4AB</color>
+    <color name="gold_light">#E2C4C0</color>
 
     <!-- Secundarios -->
     <color name="secondary_dark">@color/gray_900</color>
@@ -16,7 +16,7 @@
 
     <!-- Acentos de Acción -->
     <color name="accent_orange_dark">@color/orange_600</color>
-    <color name="accent_orange_light">@color/orange_400</color>
+    <color name="accent_orange_light">#FF8A80</color>
 
     <!-- Elementos del Sistema -->
     <color name="gray_divider">@color/gray_800</color>

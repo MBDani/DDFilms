@@ -1,24 +1,19 @@
 package com.merino.ddfilms.transitions
 
 import android.transition.ChangeBounds
-import android.transition.ChangeTransform
-import android.transition.Fade
+import android.transition.ChangeImageTransform
 import android.transition.TransitionSet
 
 class DetailsTransition : TransitionSet() {
     init {
         ordering = ORDERING_TOGETHER
 
-        // Transición de entrada
-        val fade = Fade().apply { duration = 500 }
-        addTransition(fade)
-
         // Transición de movimiento de la imagen
-        val changeBounds = ChangeBounds().apply { duration = 500 }
+        val changeBounds = ChangeBounds().apply { duration = 350 }
         addTransition(changeBounds)
 
-        // Escala
-        val changeTransform = ChangeTransform().apply { duration = 500 }
-        addTransition(changeTransform)
+        // Escala de matriz de ImageView
+        val changeImageTransform = ChangeImageTransform().apply { duration = 350 }
+        addTransition(changeImageTransform)
     }
 }

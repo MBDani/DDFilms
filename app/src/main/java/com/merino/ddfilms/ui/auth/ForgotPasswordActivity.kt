@@ -41,8 +41,6 @@ class ForgotPasswordActivity : AppCompatActivity() {
 
                     // Redirect in 2 seconds to login activity non-blockingly
                     Handler(Looper.getMainLooper()).postDelayed({
-                        val i = Intent(applicationContext, LoginActivity::class.java)
-                        startActivity(i)
                         finish()
                     }, 2000)
                 } else {
@@ -52,5 +50,9 @@ class ForgotPasswordActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, R.string.fill_email, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    fun btnNavigateToLoginActivity(view: View) {
+        finish()
     }
 }

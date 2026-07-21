@@ -6,6 +6,7 @@
     android:background="@drawable/main_background_gradient"
     android:orientation="vertical"
     android:padding="16dp"
+    android:fitsSystemWindows="true"
     android:clipToOutline="true">
 
     <LinearLayout

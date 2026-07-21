@@ -12,6 +12,7 @@
     <string name="edt_without_account">Don\'t have an account? Register now.</string>
     <string name="edt_forget_password">Forgot my password</string>
     <string name="edt_with_account">Already have an account? Log in now.</string>
+    <string name="back_to_login">Back to Log in</string>
 
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>

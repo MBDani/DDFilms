@@ -5,137 +5,120 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.ProgressBar
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import coil.compose.AsyncImage
 import com.google.firebase.firestore.DocumentSnapshot
 import com.merino.ddfilms.R
-import com.merino.ddfilms.adapters.MovieListAdapter
 import com.merino.ddfilms.api.FirebaseManager
 import com.merino.ddfilms.model.MovieLists
 import com.merino.ddfilms.ui.MovieListActivity
 import com.merino.ddfilms.ui.viewModel.MovieListViewModel
+import com.merino.ddfilms.ui.theme.CinematicTheme
 import com.merino.ddfilms.utils.Utils.showMessage
-import java.util.ArrayList
 
 class ListsFragment : Fragment() {
 
-    private lateinit var adapter: MovieListAdapter
-    private val listsList: MutableList<MovieLists> = ArrayList()
+    private val firebaseManager = FirebaseManager.getInstance()
+    private val listsListState = mutableStateOf<List<MovieLists>>(emptyList())
+    private val isLoadingState = mutableStateOf(false)
+    private val isLastPageState = mutableStateOf(false)
     private var lastVisible: DocumentSnapshot? = null
-    private var isLoading = false
-    private var isLastPage = false
     private val PAGE_SIZE = 10
-
-    private lateinit var initialLoadingProgress: ProgressBar
-    private lateinit var loadMoreProgress: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_lists, container, false)
+    ): View {
+        resetPaginationAndLoad()
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.lists_recycler_view)
-        val createListButton = view.findViewById<LinearLayout>(R.id.create_list_button)
-        initialLoadingProgress = view.findViewById(R.id.lists_loading_progress)
-        loadMoreProgress = view.findViewById(R.id.lists_load_more_progress)
-
-        adapter = MovieListAdapter(requireContext(), listsList, this::navigateToListMoviesActivity)
-        recyclerView.layoutManager = LinearLayoutManager(context)
-        recyclerView.adapter = adapter
-
-        // Scroll listener for pagination
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as? LinearLayoutManager
-                if (layoutManager != null && !isLoading && !isLastPage) {
-                    val visibleItemCount = layoutManager.childCount
-                    val totalItemCount = layoutManager.getItemCount()
-                    val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-
-                    if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
-                        && firstVisibleItemPosition >= 0
-                        && totalItemCount >= PAGE_SIZE
-                    ) {
-                        loadNextPage()
-                    }
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                CinematicTheme {
+                    ListsScreen(
+                        listsList = listsListState.value,
+                        isLoading = isLoadingState.value,
+                        onCreateListClick = { showCreateListDialog() },
+                        onListClick = { list -> navigateToListMoviesActivity(list) },
+                        onLoadMore = {
+                            if (!isLoadingState.value && !isLastPageState.value) {
+                                loadNextPage()
+                            }
+                        }
+                    )
                 }
             }
-        })
-
-        createListButton.setOnClickListener { showCreateListDialog() }
-
-        return view
+        }
     }
 
     private fun resetPaginationAndLoad() {
-        val isFirstLoad = listsList.isEmpty()
-
         lastVisible = null
-        isLastPage = false
+        isLastPageState.value = false
+        isLoadingState.value = true
 
-        if (isFirstLoad) {
-            listsList.clear()
-            adapter.notifyDataSetChanged()
-            initialLoadingProgress.visibility = View.VISIBLE
-        }
-
-        isLoading = true
-
-        FirebaseManager.getInstance().getMovieListsPaginated(
-            FirebaseManager.getInstance().getCurrentUserUID(),
+        firebaseManager.getMovieListsPaginated(
+            firebaseManager.getCurrentUserUID(),
             null,
             PAGE_SIZE
         ) { pair, error ->
-            isLoading = false
-            initialLoadingProgress.visibility = View.GONE
+            isLoadingState.value = false
             if (error != null) {
                 showMessage(context, getString(R.string.error_loading_lists, error.message))
             } else if (pair != null) {
                 val newLists = pair.first
                 lastVisible = pair.second
-
                 if (newLists.size < PAGE_SIZE) {
-                    isLastPage = true
+                    isLastPageState.value = true
                 }
-
-                listsList.clear()
-                listsList.addAll(newLists)
-                adapter.notifyDataSetChanged()
+                listsListState.value = newLists
             }
         }
     }
 
     private fun loadNextPage() {
-        isLoading = true
-        loadMoreProgress.visibility = View.VISIBLE
-
-        FirebaseManager.getInstance().getMovieListsPaginated(
-            FirebaseManager.getInstance().getCurrentUserUID(),
+        isLoadingState.value = true
+        firebaseManager.getMovieListsPaginated(
+            firebaseManager.getCurrentUserUID(),
             lastVisible,
             PAGE_SIZE
         ) { pair, error ->
-            isLoading = false
-            loadMoreProgress.visibility = View.GONE
+            isLoadingState.value = false
             if (error != null) {
                 showMessage(context, getString(R.string.error_generic, error.message))
             } else if (pair != null) {
                 val newLists = pair.first
                 lastVisible = pair.second
-
                 if (newLists.isEmpty() || newLists.size < PAGE_SIZE) {
-                    isLastPage = true
+                    isLastPageState.value = true
                 }
-
-                val startSize = listsList.size
-                listsList.addAll(newLists)
-                adapter.notifyItemRangeInserted(startSize, newLists.size)
+                val current = listsListState.value.toMutableList()
+                current.addAll(newLists)
+                listsListState.value = current
             }
         }
     }
@@ -169,5 +152,250 @@ class ListsFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         resetPaginationAndLoad()
+    }
+}
+
+@Composable
+fun ListsScreen(
+    listsList: List<MovieLists>,
+    isLoading: Boolean,
+    onCreateListClick: () -> Unit,
+    onListClick: (MovieLists) -> Unit,
+    onLoadMore: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Mis Listas de Cine",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.weight(1f)
+            )
+
+            Button(
+                onClick = onCreateListClick,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_add),
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = "Crear", fontSize = 14.sp)
+            }
+        }
+
+        if (isLoading && listsList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else if (listsList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Aún no has creado listas. ¡Crea una nueva!",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    fontSize = 16.sp
+                )
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                itemsIndexed(listsList) { index, list ->
+                    if (index >= listsList.size - 2) {
+                        onLoadMore()
+                    }
+
+                    MovieListCard(
+                        list = list,
+                        onClick = { onListClick(list) }
+                    )
+                }
+
+                if (isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+}
+
+@Composable
+fun MovieListCard(
+    list: MovieLists,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Text(
+                text = list.name ?: "Lista sin nombre",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Stack of movie covers
+                val covers = list.coverPreviews ?: emptyList()
+                val count = list.moviesCount
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(58.dp)
+                ) {
+                    if (covers.isEmpty()) {
+                        AsyncImage(
+                            model = R.drawable.ic_empty_list_placeholder,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(CircleShape)
+                        )
+                    } else {
+                        covers.take(3).forEachIndexed { i, path ->
+                            val fullPath = if (path.startsWith("http") || path.startsWith("file")) path else "https://image.tmdb.org/t/p/w200$path"
+                            AsyncImage(
+                                model = fullPath,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .padding(start = (i * 34).dp)
+                                    .size(58.dp)
+                                    .clip(CircleShape)
+                                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                            )
+                        }
+
+                        if (count > 3) {
+                            val extra = count - 3
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .padding(start = (3 * 34).dp)
+                                    .size(58.dp)
+                                    .background(MaterialTheme.colorScheme.secondary, CircleShape)
+                            ) {
+                                Text(
+                                    text = "+${if (extra > 99) 99 else extra}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    ),
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Stack of user avatars
+                val userIDs = list.userID ?: emptyList()
+                val denormalizedAvatars = list.memberAvatarsPreview ?: emptyList()
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy((-8).dp)
+                ) {
+                    userIDs.take(4).forEachIndexed { i, uid ->
+                        var avatarUrl by remember { mutableStateOf<String?>(null) }
+
+                        LaunchedEffect(uid) {
+                            if (i < denormalizedAvatars.size) {
+                                avatarUrl = denormalizedAvatars[i]
+                            }
+                            FirebaseManager.getInstance().getUserProfileImageUrl(uid) { liveUrl, _ ->
+                                if (liveUrl != null) {
+                                    avatarUrl = liveUrl
+                                }
+                            }
+                        }
+
+                        val resolvedUrl = if (avatarUrl.isNullOrEmpty()) {
+                            R.drawable.ic_default_profile
+                        } else if (avatarUrl!!.startsWith("http") || avatarUrl!!.startsWith("file")) {
+                            avatarUrl
+                        } else if (avatarUrl!!.startsWith("avatars/")) {
+                            "file:///android_asset/$avatarUrl"
+                        } else {
+                            "file:///android_asset/avatars/${if (avatarUrl!!.endsWith(".png")) avatarUrl else "$avatarUrl.png"}"
+                        }
+
+                        AsyncImage(
+                            model = resolvedUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.5.dp, Color(0xFFD97706), CircleShape)
+                        )
+                    }
+
+                    if (userIDs.size > 4) {
+                        Text(
+                            text = "+${userIDs.size - 4}",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFFD97706),
+                            modifier = Modifier.padding(start = 12.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }

@@ -1,154 +1,140 @@
 package com.merino.ddfilms.ui.fragment
 
-import android.annotation.SuppressLint
 import android.content.Intent
+import com.merino.ddfilms.ui.MainActivity
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.merino.ddfilms.R
-import com.merino.ddfilms.adapters.MovieAdapter
 import com.merino.ddfilms.api.FirebaseManager
 import com.merino.ddfilms.model.Movie
-import com.merino.ddfilms.ui.MainActivity
+import com.merino.ddfilms.ui.MovieDetailActivity
 import com.merino.ddfilms.ui.SearchActivity
 import com.merino.ddfilms.ui.components.Fab.FabHost
 import com.merino.ddfilms.ui.components.Fab.ShowsFab
+import com.merino.ddfilms.ui.components.MoviePosterCard
+import com.merino.ddfilms.ui.theme.CinematicTheme
 import com.merino.ddfilms.utils.StringUtils.WATCH_LIST
 import com.merino.ddfilms.utils.Utils.showMessage
-import java.util.ArrayList
 
 class WatchlistFragment : Fragment(), FabHost, ShowsFab {
 
-    private lateinit var movieAdapter: MovieAdapter
-    private lateinit var movieListRecyclerView: RecyclerView
-    private var isEditMode = false
-    private var doneMenuItem: MenuItem? = null
-    private val firebaseManager = FirebaseManager()
-    private var movieList: MutableList<Movie> = ArrayList()
-    private val userID = firebaseManager.getCurrentUserUID()
+    private val firebaseManager = FirebaseManager.getInstance()
+    private val movieListState = mutableStateOf<List<Movie>>(emptyList())
+    private val isLoadingState = mutableStateOf(true)
+    private val isEditModeState = mutableStateOf(false)
+    private var userID: String? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_watchlist, container, false)
-        setHasOptionsMenu(true)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        userID = firebaseManager.getCurrentUserUID()
+    }
 
-        setupViews(view)
-        setupRecyclerView()
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         loadMoviesFromList()
 
-        return view
-    }
-
-    private fun setupViews(view: View) {
-        movieListRecyclerView = view.findViewById(R.id.movie_list_recycler_view)
-    }
-
-    private fun setupRecyclerView() {
-        movieAdapter = MovieAdapter()
-        movieAdapter.setOnItemLongClickListener { _ ->
-            if (!isEditMode) {
-                enterEditMode()
-            }
-            true
-        }
-
-        movieAdapter.setOnDeleteClickListener { position, movie ->
-            firebaseManager.deleteMovieFromList(WATCH_LIST, userID, movie) { result, error ->
-                if (error != null) {
-                    showMessage(context, error.message)
-                } else if (result != null) {
-                    movieAdapter.removeMovie(position)
-                    movieList.remove(movie)
+        return ComposeView(requireContext()).apply {
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                CinematicTheme {
+                    WatchlistScreen(
+                        moviesList = movieListState.value,
+                        isLoading = isLoadingState.value,
+                        isEditMode = isEditModeState.value,
+                        onEditModeToggle = {
+                            isEditModeState.value = !isEditModeState.value
+                        },
+                        onMovieClick = { movie, view ->
+                            val intent = Intent(requireContext(), MovieDetailActivity::class.java).apply {
+                                putExtra("movie", movie)
+                            }
+                            if (view != null) {
+                                val options = androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                    requireActivity(),
+                                    view,
+                                    "moviePosterTransition"
+                                )
+                                androidx.core.app.ActivityCompat.startActivity(requireContext(), intent, options.toBundle())
+                            } else {
+                                startActivity(intent)
+                            }
+                        },
+                        onDeleteMovie = { index, movie ->
+                            deleteMovie(index, movie)
+                        },
+                        onBackClick = {
+                            if (parentFragmentManager.backStackEntryCount > 0) {
+                                parentFragmentManager.popBackStack()
+                            } else {
+                                (activity as? MainActivity)?.loadFragment(ProfileFragment())
+                            }
+                        }
+                    )
                 }
             }
         }
-        movieListRecyclerView.adapter = movieAdapter
-        movieListRecyclerView.layoutManager = LinearLayoutManager(context)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.edit_mode_menu, menu)
-        inflater.inflate(R.menu.list_menu, menu)
-
-        doneMenuItem = menu.findItem(R.id.action_done)
-        menu.findItem(R.id.action_more)?.isVisible = false
-
-        doneMenuItem?.isVisible = isEditMode
-
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            android.R.id.home -> {
-                if (isEditMode) {
-                    exitEditMode()
-                } else {
-                    requireActivity().onBackPressedDispatcher.onBackPressed()
-                }
-                return true
-            }
-            R.id.action_done -> {
-                exitEditMode()
-                return true
+    private fun loadMoviesFromList() {
+        val uid = userID ?: return
+        isLoadingState.value = true
+        firebaseManager.getMoviesFromList(uid, WATCH_LIST) { movies, error ->
+            isLoadingState.value = false
+            if (error != null) {
+                showMessage(context, error.message)
+            } else if (movies != null) {
+                movieListState.value = movies.reversed()
             }
         }
-        return super.onOptionsItemSelected(item)
+    }
+
+    private fun deleteMovie(index: Int, movie: Movie) {
+        val uid = userID ?: return
+        firebaseManager.deleteMovieFromList(WATCH_LIST, uid, movie) { result, error ->
+            if (error != null) {
+                showMessage(context, error.message)
+            } else if (result != null) {
+                val current = movieListState.value.toMutableList()
+                if (index in current.indices) {
+                    current.removeAt(index)
+                    movieListState.value = current
+                }
+            }
+        }
     }
 
     private fun setupAddMovieFragment() {
         val intent = Intent(context, SearchActivity::class.java).apply {
             putExtra("collection", WATCH_LIST)
-            putExtra("documentID", firebaseManager.getCurrentUserUID())
+            putExtra("documentID", userID)
             putExtra("listName", "Pendientes")
-            val moviesID = movieList.map { it.id }.toIntArray()
+            val moviesID = movieListState.value.map { it.id }.toIntArray()
             putExtra("moviesID", moviesID)
         }
         startActivity(intent)
-    }
-
-    @SuppressLint("NotifyDataSetChanged")
-    private fun updateMoviesList(movies: List<Movie>) {
-        val reversed = movies.reversed()
-        movieAdapter.setMovies(reversed)
-        movieAdapter.notifyDataSetChanged()
-        movieList = ArrayList(movies)
-    }
-
-    private fun loadMoviesFromList() {
-        firebaseManager.getMoviesFromList(userID, WATCH_LIST) { movies, error ->
-            if (error != null) {
-                showMessage(context, error.message)
-            } else if (movies != null) {
-                updateMoviesList(movies)
-            }
-        }
-    }
-
-    private fun enterEditMode() {
-        isEditMode = true
-        doneMenuItem?.isVisible = true
-        movieAdapter.isEditMode = true
-        movieAdapter.listID = userID
-        (requireActivity() as MainActivity).setFabVisibility(false)
-    }
-
-    private fun exitEditMode() {
-        isEditMode = false
-        doneMenuItem?.isVisible = false
-        movieAdapter.isEditMode = false
-        (requireActivity() as MainActivity).setFabVisibility(true)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        movieAdapter.isEditMode = false
     }
 
     override fun onResume() {
@@ -159,4 +145,116 @@ class WatchlistFragment : Fragment(), FabHost, ShowsFab {
     override fun onFabClicked() {
         setupAddMovieFragment()
     }
+}
+
+@Composable
+fun WatchlistScreen(
+    moviesList: List<Movie>,
+    isLoading: Boolean,
+    isEditMode: Boolean,
+    onEditModeToggle: () -> Unit,
+    onMovieClick: (Movie, View?) -> Unit,
+    onDeleteMovie: (Int, Movie) -> Unit,
+    onBackClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_back),
+                        contentDescription = "Volver",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Películas Pendientes",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.weight(1f)
+                )
+
+            IconButton(onClick = onEditModeToggle) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isEditMode) R.drawable.ic_done else R.drawable.ic_edit
+                    ),
+                    contentDescription = "Editar",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else if (moviesList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Tu watchlist está vacía.",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    fontSize = 16.sp
+                )
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                itemsIndexed(moviesList) { index, movie ->
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        MoviePosterCard(
+                            movie = movie,
+                            onClick = { view -> onMovieClick(movie, view) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        if (isEditMode) {
+                            IconButton(
+                                onClick = { onDeleteMovie(index, movie) },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                                    .size(28.dp)
+                                    .background(
+                                        color = Color(0xFFBA1A1A),
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_remove),
+                                    contentDescription = "Eliminar",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 }

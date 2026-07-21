@@ -45,8 +45,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     fun btnNavigateToLoginActivity(view: View) {
-        val i = Intent(applicationContext, LoginActivity::class.java)
-        startActivity(i)
+        finish()
     }
 
     fun btnRegisterUser(view: View) {
