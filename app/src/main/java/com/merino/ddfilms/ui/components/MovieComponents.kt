@@ -70,7 +70,7 @@ fun MoviePosterCard(
     ) {
         AndroidView(
             factory = { ctx ->
-                val imageView = ImageView(ctx).apply {
+                ImageView(ctx).apply {
                     scaleType = ImageView.ScaleType.CENTER_CROP
                     transitionName = "moviePosterTransition"
                     clipToOutline = true
@@ -82,9 +82,9 @@ fun MoviePosterCard(
                     }
                     setOnClickListener { onClick(this) }
                 }
-
-                // Load image directly into the ImageView in factory (like the original Java code)
-                // This ensures Glide owns the ImageView lifecycle, not Compose state
+            },
+            update = { imageView ->
+                val ctx = imageView.context
                 if (!imageUrl.isNullOrEmpty()) {
                     Glide.with(ctx)
                         .load(imageUrl)
@@ -117,10 +117,7 @@ fun MoviePosterCard(
                     imageView.setImageResource(R.drawable.placeholder_poster)
                     onResourceReady?.invoke()
                 }
-
-                imageView
             },
-            // No update block needed — Glide manages the ImageView directly
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)

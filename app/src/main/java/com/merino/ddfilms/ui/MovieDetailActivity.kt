@@ -51,14 +51,15 @@ import com.merino.ddfilms.ui.components.CinematicRatingBar
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment
 import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment
 import com.merino.ddfilms.ui.theme.CinematicTheme
+import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import com.merino.ddfilms.utils.ReviewUtil
+import com.merino.ddfilms.utils.StringUtils.DIARY_LIST
+import com.merino.ddfilms.utils.StringUtils.WATCH_LIST
 import com.merino.ddfilms.utils.Utils.showMessage
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
-private const val WATCH_LIST = "watchlist"
-private const val DIARY_LIST = "diary"
 
 class MovieDetailActivity : AppCompatActivity() {
 
@@ -84,6 +85,7 @@ class MovieDetailActivity : AppCompatActivity() {
     private val directorState = mutableStateOf<String?>(null)
     private val reviewsListState = mutableStateOf<List<Review>>(emptyList())
     private val isLoadingState = mutableStateOf(true)
+    private val isProcessingActionState = mutableStateOf(false)
 
     companion object {
         private val API_KEY = ApiKeyManager.getInstance().apiKey ?: ""
@@ -125,9 +127,23 @@ class MovieDetailActivity : AppCompatActivity() {
 
         val density = resources.displayMetrics.density
 
+        val bgColor = ContextCompat.getColor(this, R.color.primary_dark)
+        val textPrimaryColor = ContextCompat.getColor(this, R.color.text_primary)
+        val textSecondaryColor = ContextCompat.getColor(this, R.color.text_secondary)
+        val accentColor = ContextCompat.getColor(this, R.color.gold_dark)
+
+        val rootFrameLayout = FrameLayout(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(bgColor)
+        }
+
         // Root Scroll Container
         val nestedScrollView = NestedScrollView(this).apply {
             isFillViewport = true
+            setBackgroundColor(bgColor)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -136,13 +152,14 @@ class MovieDetailActivity : AppCompatActivity() {
 
         val mainContainer = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
+            setBackgroundColor(bgColor)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
         }
 
-        // 1. Header FrameLayout (Backdrop + Back button)
+        // 1. Header FrameLayout (Backdrop)
         val headerHeight = (260 * density).toInt()
         val headerFrameLayout = FrameLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
@@ -160,13 +177,16 @@ class MovieDetailActivity : AppCompatActivity() {
             )
         }
 
+        val midBgColor = AndroidColor.argb(128, AndroidColor.red(bgColor), AndroidColor.green(bgColor), AndroidColor.blue(bgColor))
+        val endBgColor = AndroidColor.argb(255, AndroidColor.red(bgColor), AndroidColor.green(bgColor), AndroidColor.blue(bgColor))
+
         val gradientView = View(this).apply {
             background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
                     AndroidColor.TRANSPARENT,
-                    AndroidColor.argb(128, 18, 18, 18),
-                    AndroidColor.argb(255, 18, 18, 18)
+                    midBgColor,
+                    endBgColor
                 )
             )
             layoutParams = FrameLayout.LayoutParams(
@@ -182,6 +202,7 @@ class MovieDetailActivity : AppCompatActivity() {
                 shape = GradientDrawable.OVAL
                 setColor(AndroidColor.argb(128, 0, 0, 0))
             }
+            elevation = 16f * density
             val p = (10 * density).toInt()
             setPadding(p, p, p, p)
             setOnClickListener { supportFinishAfterTransition() }
@@ -198,7 +219,6 @@ class MovieDetailActivity : AppCompatActivity() {
 
         headerFrameLayout.addView(backdropImageView)
         headerFrameLayout.addView(gradientView)
-        headerFrameLayout.addView(backButton)
 
         // 2. Poster & Info Header Row (LinearLayout Horizontal)
         val posterRow = LinearLayout(this).apply {
@@ -220,6 +240,7 @@ class MovieDetailActivity : AppCompatActivity() {
         posterImageView = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
             transitionName = "moviePosterTransition"
+            elevation = 8f * density
             clipToOutline = true
             outlineProvider = object : android.view.ViewOutlineProvider() {
                 override fun getOutline(v: View, outline: android.graphics.Outline) {
@@ -247,20 +268,20 @@ class MovieDetailActivity : AppCompatActivity() {
             text = currentMovie?.title ?: ""
             textSize = 22f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(AndroidColor.WHITE)
+            setTextColor(textPrimaryColor)
         }
 
         metaTextView = TextView(this).apply {
             text = ""
             textSize = 14f
-            setTextColor(AndroidColor.GRAY)
+            setTextColor(textSecondaryColor)
         }
 
         directorTextView = TextView(this).apply {
             text = "Director: Cargando..."
             textSize = 14f
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setTextColor(AndroidColor.parseColor("#E91E63"))
+            setTextColor(accentColor)
         }
 
         infoContainer.addView(titleTextView)
@@ -283,6 +304,7 @@ class MovieDetailActivity : AppCompatActivity() {
                         credits = creditsState.value,
                         reviews = reviewsListState.value,
                         isLoading = isLoadingState.value,
+                        isProcessingAction = isProcessingActionState.value,
                         currentUserId = userId,
                         onWriteReviewClick = { openWriteReviewActivity() },
                         onAddToListClick = { showAddToListDialog() },
@@ -316,7 +338,11 @@ class MovieDetailActivity : AppCompatActivity() {
         mainContainer.addView(composeView)
 
         nestedScrollView.addView(mainContainer)
-        setContentView(nestedScrollView)
+
+        rootFrameLayout.addView(nestedScrollView)
+        rootFrameLayout.addView(backButton)
+
+        setContentView(rootFrameLayout)
 
         // Load images with Glide and start postponed transition when poster is ready
         val posterPath = currentMovie?.posterPath
@@ -462,7 +488,10 @@ class MovieDetailActivity : AppCompatActivity() {
     }
 
     private fun addToWatchlist() {
+        if (isProcessingActionState.value) return
+        isProcessingActionState.value = true
         firebaseManager.addMovieToWatchOrDiaryList(WATCH_LIST, movieState.value!!) { result, error ->
+            isProcessingActionState.value = false
             if (error != null) {
                 showMessage(applicationContext, error.message)
             } else {
@@ -472,8 +501,11 @@ class MovieDetailActivity : AppCompatActivity() {
     }
 
     private fun markAsWatched() {
+        if (isProcessingActionState.value) return
+        isProcessingActionState.value = true
         firebaseManager.addMovieToWatchOrDiaryList(DIARY_LIST, movieState.value!!) { result, error ->
             if (error != null) {
+                isProcessingActionState.value = false
                 showMessage(applicationContext, error.message)
             } else {
                 showMessage(applicationContext, result)
@@ -483,7 +515,13 @@ class MovieDetailActivity : AppCompatActivity() {
     }
 
     private fun deleteMovieFromWatchList() {
-        firebaseManager.deleteMovieFromList(WATCH_LIST, userId!!, movieState.value!!) { _, error ->
+        val uid = userId
+        if (uid == null) {
+            isProcessingActionState.value = false
+            return
+        }
+        firebaseManager.deleteMovieFromList(WATCH_LIST, uid, movieState.value!!) { _, error ->
+            isProcessingActionState.value = false
             if (error != null) {
                 showMessage(applicationContext, error.message)
             }
@@ -497,6 +535,7 @@ fun MovieDetailBody(
     credits: Credits?,
     reviews: List<Review>,
     isLoading: Boolean,
+    isProcessingAction: Boolean = false,
     currentUserId: String?,
     onWriteReviewClick: () -> Unit,
     onAddToListClick: () -> Unit,
@@ -556,11 +595,12 @@ fun MovieDetailBody(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "Añadir a lista", fontSize = 13.sp)
+                Text(text = stringResource(R.string.add_to_list), fontSize = 13.sp)
             }
 
             OutlinedButton(
                 onClick = onWatchlistClick,
+                enabled = !isProcessingAction,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Icon(
@@ -570,11 +610,12 @@ fun MovieDetailBody(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "Pendiente", fontSize = 13.sp)
+                Text(text = stringResource(R.string.action_watchlist), fontSize = 13.sp)
             }
 
             OutlinedButton(
                 onClick = onWatchedClick,
+                enabled = !isProcessingAction,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Icon(
@@ -584,7 +625,7 @@ fun MovieDetailBody(
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "Visto", fontSize = 13.sp)
+                Text(text = stringResource(R.string.action_diary), fontSize = 13.sp)
             }
         }
 

@@ -170,7 +170,6 @@ class FirebaseManager {
             } else if (!documentSnapshot!!.exists()) {
                 firebaseFirestore.collection(collection).document(userID).set(Collections.emptyMap<Any, Any>())
                     .addOnSuccessListener {
-                        callback.onComplete("Lista de $listName creada con éxito", null)
                         addMovie(movie, userID, callback, documentSnapshot, "Película agregada a $listName", "Error al agregar la película a $listName")
                     }
                     .addOnFailureListener {
@@ -259,7 +258,7 @@ class FirebaseManager {
 
     private fun isMovieAlreadyExists(movie: Movie, documentSnapshot: DocumentSnapshot): Boolean {
         val movieList = parseMovieList(documentSnapshot)
-        return movieList.any { it.originalTitle == movie.originalTitle }
+        return movieList.any { (it.id != 0 && it.id == movie.id) || (!it.originalTitle.isNullOrEmpty() && it.originalTitle == movie.originalTitle) }
     }
 
     @Suppress("UNCHECKED_CAST")

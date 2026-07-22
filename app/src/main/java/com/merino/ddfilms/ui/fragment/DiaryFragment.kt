@@ -1,7 +1,6 @@
 package com.merino.ddfilms.ui.fragment
 
 import android.content.Intent
-import com.merino.ddfilms.ui.MainActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -27,6 +26,7 @@ import androidx.fragment.app.Fragment
 import com.merino.ddfilms.R
 import com.merino.ddfilms.api.FirebaseManager
 import com.merino.ddfilms.model.Movie
+import com.merino.ddfilms.ui.MainActivity
 import com.merino.ddfilms.ui.MovieDetailActivity
 import com.merino.ddfilms.ui.SearchActivity
 import com.merino.ddfilms.ui.components.Fab.FabHost
@@ -115,15 +115,18 @@ class DiaryFragment : Fragment(), FabHost, ShowsFab {
 
     private fun deleteMovie(index: Int, movie: Movie) {
         val uid = userID ?: return
-        firebaseManager.deleteMovieFromList(DIARY_LIST, uid, movie) { result, error ->
+        // Optimistic UI update: remove item instantly from local state
+        val current = movieListState.value.toMutableList()
+        if (index in current.indices) {
+            current.removeAt(index)
+            movieListState.value = current
+        }
+
+        firebaseManager.deleteMovieFromList(DIARY_LIST, uid, movie) { _, error ->
             if (error != null) {
                 showMessage(context, error.message)
-            } else if (result != null) {
-                val current = movieListState.value.toMutableList()
-                if (index in current.indices) {
-                    current.removeAt(index)
-                    movieListState.value = current
-                }
+                // Revert state if remote deletion fails
+                loadMoviesFromList(showLoading = false)
             }
         }
     }
@@ -183,74 +186,78 @@ fun DiaryScreen(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Mi Diario de Cine",
+                    text = "Mi Diario de Películas",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.weight(1f)
                 )
 
-            IconButton(onClick = onEditModeToggle) {
-                Icon(
-                    painter = painterResource(
-                        id = if (isEditMode) R.drawable.ic_done else R.drawable.ic_edit
-                    ),
-                    contentDescription = "Editar",
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                IconButton(onClick = onEditModeToggle) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (isEditMode) R.drawable.ic_done else R.drawable.ic_edit
+                        ),
+                        contentDescription = "Editar",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
-        }
 
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
-        } else if (moviesList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No has registrado visionados en tu diario aún.",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    fontSize = 16.sp
-                )
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                itemsIndexed(moviesList) { index, movie ->
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        MoviePosterCard(
-                            movie = movie,
-                            onClick = { view -> onMovieClick(movie, view) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            } else if (moviesList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No has registrado visionados en tu diario aún.",
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        fontSize = 16.sp
+                    )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    itemsIndexed(
+                        moviesList,
+                        key = { index, movie -> "${movie.id}_${movie.createdAt ?: ""}_${movie.title ?: ""}_$index" }
+                    ) { index, movie ->
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            MoviePosterCard(
+                                movie = movie,
+                                onClick = { view -> onMovieClick(movie, view) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
 
-                        if (isEditMode) {
-                            IconButton(
-                                onClick = { onDeleteMovie(index, movie) },
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(4.dp)
-                                    .size(28.dp)
-                                    .background(
-                                        color = Color(0xFFBA1A1A),
-                                        shape = RoundedCornerShape(14.dp)
+                            if (isEditMode) {
+                                IconButton(
+                                    onClick = { onDeleteMovie(index, movie) },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(28.dp)
+                                        .background(
+                                            color = Color(0xFFBA1A1A),
+                                            shape = RoundedCornerShape(14.dp)
+                                        )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_remove),
+                                        contentDescription = "Eliminar",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
                                     )
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.ic_remove),
-                                    contentDescription = "Eliminar",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                }
                             }
                         }
                     }
@@ -258,5 +265,4 @@ fun DiaryScreen(
             }
         }
     }
-}
 }

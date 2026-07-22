@@ -33,68 +33,65 @@ import com.merino.ddfilms.utils.Utils.showMessage
 class MovieListActivity : AppCompatActivity() {
 
     private val firebaseManager = FirebaseManager.getInstance()
-    private var listID: String? = null
-    private var listName: String? = null
-
     private val movieListState = mutableStateOf<List<Movie>>(emptyList())
     private val usersListState = mutableStateOf<List<String>>(emptyList())
     private val isLoadingState = mutableStateOf(true)
     private val isEditModeState = mutableStateOf(false)
     private val showBottomSheetState = mutableStateOf(false)
     private val showDeleteDialogState = mutableStateOf(false)
+    private val showEditTitleDialogState = mutableStateOf(false)
+
+    private var listID: String? = null
+    private var listNameState = mutableStateOf("")
+    private var userID: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        listID = intent.getStringExtra("listID")
-        listName = intent.getStringExtra("listName") ?: "Lista de Películas"
+
+        listID = intent.getStringExtra("listID") ?: intent.getStringExtra("documentID")
+        listNameState.value = intent.getStringExtra("listName") ?: "Lista"
+        userID = firebaseManager.getCurrentUserUID()
 
         setContent {
             CinematicTheme {
                 MovieListScreen(
-                    listName = listName ?: "Lista",
+                    listName = listNameState.value,
                     movies = movieListState.value,
                     usersList = usersListState.value,
                     isLoading = isLoadingState.value,
                     isEditMode = isEditModeState.value,
                     showBottomSheet = showBottomSheetState.value,
                     showDeleteDialog = showDeleteDialogState.value,
-                    onBackClick = {
-                        if (isEditModeState.value) {
-                            isEditModeState.value = false
-                        } else {
-                            onBackPressedDispatcher.onBackPressed()
-                        }
-                    },
-                    onEditModeToggle = {
-                        isEditModeState.value = !isEditModeState.value
-                    },
-                    onMoreClick = {
-                        showBottomSheetState.value = true
-                    },
-                    onDismissBottomSheet = {
-                        showBottomSheetState.value = false
-                    },
+                    onBackClick = { finish() },
+                    onEditModeToggle = { isEditModeState.value = !isEditModeState.value },
+                    onMoreClick = { showBottomSheetState.value = true },
+                    onDismissBottomSheet = { showBottomSheetState.value = false },
                     onEditListClick = {
                         showBottomSheetState.value = false
-                        openEditListScreen()
+                        showEditTitleDialogState.value = true
                     },
                     onShareListClick = {
                         showBottomSheetState.value = false
-                        shareListLink(listID)
+                        shareList()
                     },
                     onDeleteListClick = {
                         showBottomSheetState.value = false
                         showDeleteDialogState.value = true
                     },
-                    onDismissDeleteDialog = {
-                        showDeleteDialogState.value = false
-                    },
+                    onDismissDeleteDialog = { showDeleteDialogState.value = false },
                     onConfirmDeleteList = {
                         showDeleteDialogState.value = false
                         deleteList()
                     },
                     onAddMovieClick = {
-                        setupAddMovieFragment()
+                        val intent = Intent(this, SearchActivity::class.java).apply {
+                            putExtra("collection", MOVIE_LIST)
+                            putExtra("documentID", listID)
+                            putExtra("listName", listNameState.value)
+                            val moviesID = movieListState.value.map { it.id }.toIntArray()
+                            putExtra("moviesID", moviesID)
+                        }
+                        startActivity(intent)
                     },
                     onMovieClick = { movie, view ->
                         val intent = Intent(this@MovieListActivity, MovieDetailActivity::class.java).apply {
@@ -178,59 +175,42 @@ class MovieListActivity : AppCompatActivity() {
 
     private fun deleteMovieFromList(index: Int, movie: Movie) {
         val id = listID ?: return
-        firebaseManager.deleteMovieFromList(MOVIE_LIST, id, movie) { result, error ->
+        val current = movieListState.value.toMutableList()
+        if (index in current.indices) {
+            current.removeAt(index)
+            movieListState.value = current
+        }
+
+        firebaseManager.deleteMovieFromList(MOVIE_LIST, id, movie) { _, error ->
             if (error != null) {
                 showMessage(applicationContext, error.message)
-            } else if (result != null) {
-                val current = movieListState.value.toMutableList()
-                if (index in current.indices) {
-                    current.removeAt(index)
-                    movieListState.value = current
-                }
+                loadMoviesFromList(showLoading = false)
             }
         }
     }
 
     private fun deleteList() {
         val id = listID ?: return
-        firebaseManager.deleteList(id) { _, error ->
+        firebaseManager.deleteList(id) { result, error ->
             if (error != null) {
                 showMessage(applicationContext, error.message)
-            } else {
-                showMessage(applicationContext, getString(R.string.list_deleted_success))
+            } else if (result != null) {
                 finish()
             }
         }
     }
 
-    private fun openEditListScreen() {
-        val intent = Intent(this, EditListActivity::class.java).apply {
-            putExtra("listID", listID)
-            putExtra("listName", listName)
-        }
-        startActivity(intent)
-    }
-
-    private fun setupAddMovieFragment() {
-        val intent = Intent(this, SearchActivity::class.java).apply {
-            putExtra("collection", MOVIE_LIST)
-            putExtra("documentID", listID)
-            putExtra("listName", listName)
-            val moviesID = movieListState.value.map { it.id }.toIntArray()
-            putExtra("moviesID", moviesID)
-        }
-        startActivity(intent)
-    }
-
-    private fun shareListLink(listID: String?) {
-        val webLink = "https://shimmering-puffpuff-0e63fa.netlify.app/?listID=$listID&listName=$listName"
+    private fun shareList() {
+        val id = listID ?: return
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "Lista de películas compartida")
-            putExtra(Intent.EXTRA_TEXT, "¡Echa un vistazo a esta lista de películas! $webLink")
+            putExtra(Intent.EXTRA_SUBJECT, "Lista de películas: ${listNameState.value}")
+            putExtra(
+                Intent.EXTRA_TEXT,
+                "¡Echa un vistazo a mi lista de películas \"${listNameState.value}\" en DDFilms! Código de lista: $id"
+            )
         }
-        val chooser = Intent.createChooser(shareIntent, "Compartir lista mediante...")
-        startActivity(chooser)
+        startActivity(Intent.createChooser(shareIntent, "Compartir lista vía"))
     }
 }
 
@@ -268,7 +248,6 @@ fun MovieListScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                // Header Bar
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
@@ -335,7 +314,10 @@ fun MovieListScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        itemsIndexed(movies) { index, movie ->
+                        itemsIndexed(
+                            movies,
+                            key = { index, movie -> "${movie.id}_${movie.createdAt ?: ""}_${movie.title ?: ""}_$index" }
+                        ) { index, movie ->
                             val showDateHeader = movie.createdAt != null &&
                                     (index == 0 || movies[index - 1].createdAt != movie.createdAt)
 
@@ -369,7 +351,6 @@ fun MovieListScreen(
                 }
             }
 
-            // Floating Action Button to Add Movies
             FloatingActionButton(
                 onClick = onAddMovieClick,
                 containerColor = MaterialTheme.colorScheme.primary,

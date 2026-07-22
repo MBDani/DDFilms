@@ -51,9 +51,11 @@
     <string name="write_review">Escribir reseña</string>
     <string name="add_to_list">Añadir a lista</string>
     <string name="pending_to_watch">Pendientes</string>
-    <string name="watched">Vista</string>
-    <string name="mark_as_watched">Marcar como vista</string>
-    <string name="add_to_watchlist">Añadir a pendientes</string>
+    <string name="watched">Diario</string>
+    <string name="action_watchlist">Pendiente</string>
+    <string name="action_diary">Diario</string>
+    <string name="mark_as_watched">Añadir a Diario</string>
+    <string name="add_to_watchlist">Añadir a Pendientes</string>
 
     <!-- New extracted strings -->
     <string name="delete">Borrar</string>

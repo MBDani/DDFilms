@@ -51,9 +51,11 @@
     <string name="write_review">Write review</string>
     <string name="add_to_list">Add to list</string>
     <string name="pending_to_watch">Watchlist</string>
-    <string name="watched">Watched</string>
-    <string name="mark_as_watched">Mark as watched</string>
-    <string name="add_to_watchlist">Add to watchlist</string>
+    <string name="watched">Diary</string>
+    <string name="action_watchlist">Watchlist</string>
+    <string name="action_diary">Diary</string>
+    <string name="mark_as_watched">Add to Diary</string>
+    <string name="add_to_watchlist">Add to Watchlist</string>
 
     <!-- New extracted strings -->
     <string name="delete">Delete</string>
