@@ -19,9 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -54,7 +54,7 @@ class MovieListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         listID = intent.getStringExtra("listID") ?: intent.getStringExtra("documentID")
-        listNameState.value = intent.getStringExtra("listName") ?: "Lista"
+        listNameState.value = intent.getStringExtra("listName") ?: getString(R.string.unnamed_list)
         userID = firebaseManager.getCurrentUserUID()
 
         setContent {
@@ -228,13 +228,13 @@ class MovieListActivity : AppCompatActivity() {
         val id = listID ?: return
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "Lista de películas: ${listNameState.value}")
+            putExtra(Intent.EXTRA_SUBJECT, "${getString(R.string.menu_lists)}: ${listNameState.value}")
             putExtra(
                 Intent.EXTRA_TEXT,
-                "¡Echa un vistazo a mi lista de películas \"${listNameState.value}\" en DDFilms! Código de lista: $id"
+                "${listNameState.value} - DDFilms ID: $id"
             )
         }
-        startActivity(Intent.createChooser(shareIntent, "Compartir lista vía"))
+        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_list)))
     }
 }
 
@@ -291,7 +291,7 @@ fun MovieListScreen(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
-                            contentDescription = "Volver",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -307,7 +307,7 @@ fun MovieListScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = if (movies.isNotEmpty()) "${movies.size} películas" else "Lista vacía",
+                            text = if (movies.isNotEmpty()) stringResource(R.string.movies_count_plural, movies.size) else stringResource(R.string.no_movies_yet),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                         )
@@ -327,7 +327,7 @@ fun MovieListScreen(
                             painter = painterResource(
                                 id = if (isEditMode) R.drawable.ic_done else R.drawable.ic_edit
                             ),
-                            contentDescription = "Editar",
+                            contentDescription = stringResource(R.string.edit),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -343,7 +343,7 @@ fun MovieListScreen(
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_more_vert),
-                            contentDescription = "Opciones",
+                            contentDescription = stringResource(R.string.menu_options),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -370,7 +370,7 @@ fun MovieListScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "Esta lista aún no contiene películas.",
+                                text = stringResource(R.string.no_movies_yet),
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                                 fontSize = 16.sp
                             )
@@ -405,7 +405,7 @@ fun MovieListScreen(
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                         ) {
                                             Text(
-                                                text = "🗓️ Añadida el ${movie.createdAt}",
+                                                text = "🗓️ " + stringResource(R.string.added_on, movie.createdAt ?: ""),
                                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                                                 color = MaterialTheme.colorScheme.onBackground
                                             )
@@ -427,7 +427,7 @@ fun MovieListScreen(
                 }
             }
 
-            // Modern Centered Floating Action Pill (Replaces corner FAB)
+            // Modern Centered Floating Action Pill
             Surface(
                 onClick = onAddMovieClick,
                 shape = RoundedCornerShape(28.dp),
@@ -445,13 +445,13 @@ fun MovieListScreen(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_add),
-                        contentDescription = "Añadir películas",
+                        contentDescription = stringResource(R.string.add_movies_button),
                         tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Añadir películas",
+                        text = stringResource(R.string.add_movies_button),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -473,14 +473,14 @@ fun MovieListScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Opciones de la lista",
+                    text = stringResource(R.string.list_options_title),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 ListItem(
-                    headlineContent = { Text("Editar nombre de la lista") },
+                    headlineContent = { Text(stringResource(R.string.edit_list_name)) },
                     leadingContent = {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_edit),
@@ -492,7 +492,7 @@ fun MovieListScreen(
                 )
 
                 ListItem(
-                    headlineContent = { Text("Compartir lista") },
+                    headlineContent = { Text(stringResource(R.string.share_list)) },
                     leadingContent = {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_share),
@@ -504,7 +504,7 @@ fun MovieListScreen(
                 )
 
                 ListItem(
-                    headlineContent = { Text("Eliminar lista", color = Color(0xFFBA1A1A)) },
+                    headlineContent = { Text(stringResource(R.string.delete_list), color = Color(0xFFBA1A1A)) },
                     leadingContent = {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_delete),
@@ -523,24 +523,24 @@ fun MovieListScreen(
         var tempTitle by remember { mutableStateOf(listName) }
         AlertDialog(
             onDismissRequest = onDismissEditTitleDialog,
-            title = { Text("Editar nombre de la lista") },
+            title = { Text(stringResource(R.string.edit_list_name)) },
             text = {
                 OutlinedTextField(
                     value = tempTitle,
                     onValueChange = { tempTitle = it },
-                    label = { Text("Nombre de la lista") },
+                    label = { Text(stringResource(R.string.list_name_hint)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
                 TextButton(onClick = { onSaveNewListName(tempTitle) }) {
-                    Text("Guardar", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.update_review_button), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissEditTitleDialog) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -550,16 +550,16 @@ fun MovieListScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = onDismissDeleteDialog,
-            title = { Text("¿Eliminar lista?") },
-            text = { Text("¿Estás seguro de que deseas eliminar la lista '$listName'? Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(R.string.delete_list_confirm_title)) },
+            text = { Text(stringResource(R.string.delete_list_confirm_desc, listName)) },
             confirmButton = {
                 TextButton(onClick = onConfirmDeleteList) {
-                    Text("Eliminar", color = Color(0xFFBA1A1A), fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.delete), color = Color(0xFFBA1A1A), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissDeleteDialog) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -576,6 +576,7 @@ fun MovieListItemCard(
     onUpdateAddedBy: (String) -> Unit
 ) {
     var expandedUserMenu by remember { mutableStateOf(false) }
+    var posterViewRef by remember { mutableStateOf<View?>(null) }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -589,7 +590,7 @@ fun MovieListItemCard(
                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                 RoundedCornerShape(16.dp)
             )
-            .clickable { onMovieClick(movie, null) }
+            .clickable { onMovieClick(movie, posterViewRef) }
     ) {
         Row(
             modifier = Modifier
@@ -600,7 +601,11 @@ fun MovieListItemCard(
             // Poster Image (Contains AndroidView with transitionName="moviePosterTransition")
             MoviePosterCard(
                 movie = movie,
-                onClick = { view -> onMovieClick(movie, view) },
+                onViewCreated = { view -> posterViewRef = view },
+                onClick = { view ->
+                    posterViewRef = view
+                    onMovieClick(movie, view)
+                },
                 modifier = Modifier
                     .width(105.dp)
                     .height(155.dp)
@@ -665,12 +670,13 @@ fun MovieListItemCard(
 
                 // Added By Selector Dropdown / Chip
                 Box {
-                    val currentAddedBy = if (!movie.addedBy.isNullOrEmpty()) movie.addedBy else "Común"
+                    val commonLabel = stringResource(R.string.common_user)
+                    val currentAddedBy: String = if (!movie.addedBy.isNullOrEmpty()) movie.addedBy!! else commonLabel
                     AssistChip(
                         onClick = { expandedUserMenu = true },
                         label = {
                             Text(
-                                text = "👤 Añadida por: $currentAddedBy",
+                                text = stringResource(R.string.added_by_user, currentAddedBy),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -697,12 +703,12 @@ fun MovieListItemCard(
                         onDismissRequest = { expandedUserMenu = false },
                         modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                     ) {
-                        val options = remember(usersList) {
+                        val options = remember(usersList, commonLabel) {
                             val list = ArrayList<String>()
                             for (user in usersList) {
                                 if (!list.contains(user)) list.add(user)
                             }
-                            if (!list.contains("Común")) list.add("Común")
+                            if (!list.contains(commonLabel)) list.add(commonLabel)
                             list
                         }
 
@@ -732,7 +738,7 @@ fun MovieListItemCard(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_delete),
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(R.string.delete),
                         tint = Color(0xFFBA1A1A)
                     )
                 }

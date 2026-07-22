@@ -147,4 +147,30 @@
     <string name="menu_done">Hecho</string>
     <string name="menu_more">Más</string>
     <string name="menu_filter">Filtrar</string>
+
+    <!-- Additional UI Strings -->
+    <string name="synopsis_title">Sinopsis</string>
+    <string name="main_cast_title">Reparto Principal</string>
+    <string name="user_reviews_title">Reseñas de Usuarios</string>
+    <string name="write_review_btn">Escribir</string>
+    <string name="first_review_prompt">Sé el primero en escribir una reseña sobre esta película.</string>
+    <string name="director_label">Director: %s</string>
+    <string name="unknown_director">Desconocido</string>
+    <string name="my_movie_lists">Mis Listas de Cine</string>
+    <string name="shared_movie_collections">Colecciones de películas compartidas</string>
+    <string name="create_list_btn">Crear lista</string>
+    <string name="empty_lists_message">Aún no has creado listas. ¡Crea una nueva!</string>
+    <string name="unnamed_list">Lista sin nombre</string>
+    <string name="no_movies_yet">Sin películas todavía</string>
+    <string name="movies_count_plural">%d películas</string>
+    <string name="movies_count_singular">1 película</string>
+    <string name="added_by_user">Añadida por: %s</string>
+    <string name="common_user">Común</string>
+    <string name="add_movies_button">+ Añadir películas</string>
+    <string name="list_options_title">Opciones de la lista</string>
+    <string name="edit_list_name">Editar nombre de la lista</string>
+    <string name="share_list">Compartir lista</string>
+    <string name="delete_list">Eliminar lista</string>
+    <string name="delete_list_confirm_title">¿Eliminar lista?</string>
+    <string name="delete_list_confirm_desc">¿Estás seguro de que deseas eliminar la lista \'%s\'? Esta acción no se puede deshacer.</string>
 </resources>

@@ -147,4 +147,30 @@
     <string name="menu_done">Done</string>
     <string name="menu_more">More</string>
     <string name="menu_filter">Filter</string>
+
+    <!-- Additional UI Strings -->
+    <string name="synopsis_title">Synopsis</string>
+    <string name="main_cast_title">Main Cast</string>
+    <string name="user_reviews_title">User Reviews</string>
+    <string name="write_review_btn">Write</string>
+    <string name="first_review_prompt">Be the first to write a review for this movie.</string>
+    <string name="director_label">Director: %s</string>
+    <string name="unknown_director">Unknown</string>
+    <string name="my_movie_lists">My Movie Lists</string>
+    <string name="shared_movie_collections">Shared movie collections</string>
+    <string name="create_list_btn">Create list</string>
+    <string name="empty_lists_message">You haven\'t created any lists yet. Create a new one!</string>
+    <string name="unnamed_list">Unnamed list</string>
+    <string name="no_movies_yet">No movies yet</string>
+    <string name="movies_count_plural">%d movies</string>
+    <string name="movies_count_singular">1 movie</string>
+    <string name="added_by_user">Added by: %s</string>
+    <string name="common_user">Common</string>
+    <string name="add_movies_button">+ Add movies</string>
+    <string name="list_options_title">List options</string>
+    <string name="edit_list_name">Edit list name</string>
+    <string name="share_list">Share list</string>
+    <string name="delete_list">Delete list</string>
+    <string name="delete_list_confirm_title">Delete list?</string>
+    <string name="delete_list_confirm_desc">Are you sure you want to delete the list \'%s\'? This action cannot be undone.</string>
 </resources>

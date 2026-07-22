@@ -273,11 +273,18 @@ class MovieDetailActivity : AppCompatActivity() {
 
         titleTextView = TextView(this).apply {
             text = currentMovie?.title ?: ""
-            textSize = 22f
+            textSize = 20f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(textPrimaryColor)
-            maxLines = 2
+            maxLines = 4
             ellipsize = android.text.TextUtils.TruncateAt.END
+            androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+                this,
+                13,
+                20,
+                1,
+                android.util.TypedValue.COMPLEX_UNIT_SP
+            )
         }
 
         // Rating Badge Pill Container
@@ -661,10 +668,10 @@ fun MovieDetailBody(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // Action Buttons Row (Modern Glassmorphism & High-Contrast CTA)
+        // Action Buttons Row (Compact, Single-Line Responsive Fit)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Button(
                 onClick = onAddToListClick,
@@ -672,27 +679,32 @@ fun MovieDetailBody(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
-                    .weight(1.3f)
+                    .weight(1.1f)
                     .height(44.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_add),
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = stringResource(R.string.add_to_list),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
             OutlinedButton(
                 onClick = onWatchlistClick,
                 enabled = !isProcessingAction,
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
@@ -713,20 +725,24 @@ fun MovieDetailBody(
                     painter = painterResource(R.drawable.ic_bookmark),
                     contentDescription = null,
                     tint = Color(0xFF44B3FF),
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(15.dp)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(3.dp))
                 Text(
                     text = stringResource(R.string.action_watchlist),
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
             OutlinedButton(
                 onClick = onWatchedClick,
                 enabled = !isProcessingAction,
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
@@ -747,14 +763,17 @@ fun MovieDetailBody(
                     painter = painterResource(R.drawable.ic_visibility),
                     contentDescription = null,
                     tint = Color(0xFF66BB6A),
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(15.dp)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(3.dp))
                 Text(
                     text = stringResource(R.string.action_diary),
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -764,7 +783,7 @@ fun MovieDetailBody(
         // Overview / Synopsis Section
         val overview = details?.overview
         if (!overview.isNullOrEmpty()) {
-            SectionHeader(title = "Sinopsis")
+            SectionHeader(title = stringResource(R.string.synopsis_title))
             Spacer(modifier = Modifier.height(10.dp))
             Card(
                 shape = RoundedCornerShape(14.dp),
@@ -793,7 +812,7 @@ fun MovieDetailBody(
         // Cast Section
         val castList = credits?.cast
         if (!castList.isNullOrEmpty()) {
-            SectionHeader(title = "Reparto Principal")
+            SectionHeader(title = stringResource(R.string.main_cast_title))
             Spacer(modifier = Modifier.height(14.dp))
 
             LazyRow(
@@ -855,7 +874,7 @@ fun MovieDetailBody(
             modifier = Modifier.fillMaxWidth()
         ) {
             SectionHeader(
-                title = "Reseñas de Usuarios",
+                title = stringResource(R.string.user_reviews_title),
                 modifier = Modifier.weight(1f)
             )
 
@@ -874,7 +893,7 @@ fun MovieDetailBody(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Escribir",
+                    text = stringResource(R.string.write_review_btn),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -898,7 +917,7 @@ fun MovieDetailBody(
                     )
             ) {
                 Text(
-                    text = "Sé el primero en escribir una reseña sobre esta película.",
+                    text = stringResource(R.string.first_review_prompt),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(16.dp)

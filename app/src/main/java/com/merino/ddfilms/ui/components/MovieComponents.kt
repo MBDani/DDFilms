@@ -48,6 +48,7 @@ fun MoviePosterCard(
     movie: Movie,
     onClick: (View?) -> Unit,
     modifier: Modifier = Modifier,
+    onViewCreated: ((View) -> Unit)? = null,
     onResourceReady: (() -> Unit)? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -81,9 +82,11 @@ fun MoviePosterCard(
                         }
                     }
                     setOnClickListener { onClick(this) }
+                    onViewCreated?.invoke(this)
                 }
             },
             update = { imageView ->
+                onViewCreated?.invoke(imageView)
                 val ctx = imageView.context
                 if (!imageUrl.isNullOrEmpty()) {
                     if (imageView.tag != imageUrl) {

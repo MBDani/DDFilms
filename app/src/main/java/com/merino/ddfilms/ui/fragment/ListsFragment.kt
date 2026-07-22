@@ -18,12 +18,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -80,7 +81,6 @@ class ListsFragment : Fragment() {
     private fun resetPaginationAndLoad() {
         lastVisible = null
         isLastPageState.value = false
-        // Only show loading spinner if lists are currently empty (initial load)
         if (listsListState.value.isEmpty()) {
             isLoadingState.value = true
         }
@@ -182,89 +182,95 @@ fun ListsScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
         ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Mis Listas de Cine",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                modifier = Modifier.weight(1f)
-            )
-
-            Button(
-                onClick = onCreateListClick,
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "Crear", fontSize = 14.sp)
-            }
-        }
-
-        if (isLoading && listsList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
-        } else if (listsList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
                 Text(
-                    text = "Aún no has creado listas. ¡Crea una nueva!",
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                    fontSize = 16.sp
+                    text = stringResource(R.string.my_movie_lists),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f)
                 )
-            }
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                itemsIndexed(
-                    items = listsList,
-                    key = { _, list -> list.id ?: list.name ?: System.identityHashCode(list) }
-                ) { index, list ->
-                    if (index >= listsList.size - 1 && listsList.size >= pageSize) {
-                        LaunchedEffect(index) {
-                            onLoadMore()
-                        }
-                    }
 
-                    MovieListCard(
-                        list = list,
-                        onClick = { onListClick(list) }
+                Button(
+                    onClick = onCreateListClick,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.create_list_btn),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
+            }
 
-                if (isLoading) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            if (isLoading && listsList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
+            } else if (listsList.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.empty_lists_message),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        fontSize = 16.sp
+                    )
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    itemsIndexed(
+                        items = listsList,
+                        key = { _, list -> list.id ?: list.name ?: System.identityHashCode(list) }
+                    ) { index, list ->
+                        if (index >= listsList.size - 1 && listsList.size >= pageSize) {
+                            LaunchedEffect(index) {
+                                onLoadMore()
+                            }
+                        }
+
+                        MovieListCard(
+                            list = list,
+                            onClick = { onListClick(list) }
+                        )
+                    }
+
+                    if (isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
             }
         }
     }
-}
 }
 
 @Composable
@@ -274,7 +280,7 @@ fun MovieListCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
         modifier = modifier
@@ -284,23 +290,23 @@ fun MovieListCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             Text(
-                text = list.name ?: "Lista sin nombre",
+                text = list.name ?: stringResource(R.string.unnamed_list),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Stack of movie covers
+                // Stack of movie cover circles
                 val covers = list.coverPreviews ?: emptyList()
                 val count = list.moviesCount
 
@@ -340,15 +346,16 @@ fun MovieListCard(
                                 modifier = Modifier
                                     .padding(start = (3 * 34).dp)
                                     .size(58.dp)
-                                    .background(MaterialTheme.colorScheme.secondary, CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape)
                             ) {
                                 Text(
                                     text = "+${if (extra > 99) 99 else extra}",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 11.sp
+                                        fontSize = 12.sp
                                     ),
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
@@ -357,7 +364,7 @@ fun MovieListCard(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Stack of user avatars
+                // Stack of user profile avatars with Primary accent border stroke
                 val userIDs = list.userID ?: emptyList()
                 val denormalizedAvatars = list.memberAvatarsPreview ?: emptyList()
 
@@ -394,10 +401,10 @@ fun MovieListCard(
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(34.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.surface)
-                                .border(1.5.dp, Color(0xFFD97706), CircleShape)
+                                .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
                         )
                     }
 
@@ -405,7 +412,7 @@ fun MovieListCard(
                         Text(
                             text = "+${userIDs.size - 4}",
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFFD97706),
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(start = 12.dp)
                         )
                     }
