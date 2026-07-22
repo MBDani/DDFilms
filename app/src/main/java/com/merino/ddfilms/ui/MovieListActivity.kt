@@ -5,7 +5,9 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +18,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +33,7 @@ import com.merino.ddfilms.ui.components.MoviePosterCard
 import com.merino.ddfilms.ui.theme.CinematicTheme
 import com.merino.ddfilms.utils.StringUtils.MOVIE_LIST
 import com.merino.ddfilms.utils.Utils.showMessage
+import java.util.Locale
 
 class MovieListActivity : AppCompatActivity() {
 
@@ -62,6 +67,7 @@ class MovieListActivity : AppCompatActivity() {
                     isEditMode = isEditModeState.value,
                     showBottomSheet = showBottomSheetState.value,
                     showDeleteDialog = showDeleteDialogState.value,
+                    showEditTitleDialog = showEditTitleDialogState.value,
                     onBackClick = { finish() },
                     onEditModeToggle = { isEditModeState.value = !isEditModeState.value },
                     onMoreClick = { showBottomSheetState.value = true },
@@ -69,6 +75,11 @@ class MovieListActivity : AppCompatActivity() {
                     onEditListClick = {
                         showBottomSheetState.value = false
                         showEditTitleDialogState.value = true
+                    },
+                    onDismissEditTitleDialog = { showEditTitleDialogState.value = false },
+                    onSaveNewListName = { newName ->
+                        showEditTitleDialogState.value = false
+                        updateListName(newName)
                     },
                     onShareListClick = {
                         showBottomSheetState.value = false
@@ -173,6 +184,19 @@ class MovieListActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateListName(newName: String) {
+        val id = listID ?: return
+        if (newName.isBlank()) return
+        firebaseManager.updateListName(id, newName) { result, error ->
+            if (error != null) {
+                showMessage(applicationContext, error.message)
+            } else if (result != null) {
+                listNameState.value = newName
+                showMessage(applicationContext, getString(R.string.movie_updated_success))
+            }
+        }
+    }
+
     private fun deleteMovieFromList(index: Int, movie: Movie) {
         val id = listID ?: return
         val current = movieListState.value.toMutableList()
@@ -224,11 +248,14 @@ fun MovieListScreen(
     isEditMode: Boolean,
     showBottomSheet: Boolean,
     showDeleteDialog: Boolean,
+    showEditTitleDialog: Boolean,
     onBackClick: () -> Unit,
     onEditModeToggle: () -> Unit,
     onMoreClick: () -> Unit,
     onDismissBottomSheet: () -> Unit,
     onEditListClick: () -> Unit,
+    onDismissEditTitleDialog: () -> Unit,
+    onSaveNewListName: (String) -> Unit,
     onShareListClick: () -> Unit,
     onDeleteListClick: () -> Unit,
     onDismissDeleteDialog: () -> Unit,
@@ -248,13 +275,20 @@ fun MovieListScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
+                // Top App Bar
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_arrow_back),
                             contentDescription = "Volver",
@@ -262,16 +296,33 @@ fun MovieListScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                    Text(
-                        text = listName,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.weight(1f)
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = listName,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onBackground,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = if (movies.isNotEmpty()) "${movies.size} películas" else "Lista vacía",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                        )
+                    }
 
-                    IconButton(onClick = onEditModeToggle) {
+                    IconButton(
+                        onClick = onEditModeToggle,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isEditMode) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            )
+                    ) {
                         Icon(
                             painter = painterResource(
                                 id = if (isEditMode) R.drawable.ic_done else R.drawable.ic_edit
@@ -281,7 +332,15 @@ fun MovieListScreen(
                         )
                     }
 
-                    IconButton(onClick = onMoreClick) {
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    IconButton(
+                        onClick = onMoreClick,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_more_vert),
                             contentDescription = "Opciones",
@@ -302,15 +361,24 @@ fun MovieListScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Esta lista aún no contiene películas.",
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                            fontSize = 16.sp
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_empty_list_placeholder),
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "Esta lista aún no contiene películas.",
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                fontSize = 16.sp
+                            )
+                        }
                     }
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -324,16 +392,24 @@ fun MovieListScreen(
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 if (showDateHeader) {
                                     Surface(
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                        shape = RoundedCornerShape(8.dp),
-                                        modifier = Modifier.padding(vertical = 8.dp)
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                        ),
+                                        modifier = Modifier.padding(vertical = 10.dp)
                                     ) {
-                                        Text(
-                                            text = "🗓️ Añadida el ${movie.createdAt}",
-                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                        )
+                                        ) {
+                                            Text(
+                                                text = "🗓️ Añadida el ${movie.createdAt}",
+                                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
+                                        }
                                     }
                                 }
 
@@ -351,19 +427,36 @@ fun MovieListScreen(
                 }
             }
 
-            FloatingActionButton(
+            // Modern Centered Floating Action Pill (Replaces corner FAB)
+            Surface(
                 onClick = onAddMovieClick,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
-                shape = CircleShape,
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.primary,
+                shadowElevation = 8.dp,
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(24.dp)
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 24.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Añadir película"
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 14.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_add),
+                        contentDescription = "Añadir películas",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Añadir películas",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
         }
     }
@@ -425,6 +518,34 @@ fun MovieListScreen(
         }
     }
 
+    // Edit List Name Dialog
+    if (showEditTitleDialog) {
+        var tempTitle by remember { mutableStateOf(listName) }
+        AlertDialog(
+            onDismissRequest = onDismissEditTitleDialog,
+            title = { Text("Editar nombre de la lista") },
+            text = {
+                OutlinedTextField(
+                    value = tempTitle,
+                    onValueChange = { tempTitle = it },
+                    label = { Text("Nombre de la lista") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { onSaveNewListName(tempTitle) }) {
+                    Text("Guardar", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismissEditTitleDialog) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
     // Delete Confirmation Dialog
     if (showDeleteDialog) {
         AlertDialog(
@@ -459,10 +580,15 @@ fun MovieListItemCard(
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         modifier = Modifier
             .fillMaxWidth()
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                RoundedCornerShape(16.dp)
+            )
             .clickable { onMovieClick(movie, null) }
     ) {
         Row(
@@ -471,16 +597,16 @@ fun MovieListItemCard(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Poster Image
+            // Poster Image (Contains AndroidView with transitionName="moviePosterTransition")
             MoviePosterCard(
                 movie = movie,
                 onClick = { view -> onMovieClick(movie, view) },
                 modifier = Modifier
-                    .width(100.dp)
-                    .height(150.dp)
+                    .width(105.dp)
+                    .height(155.dp)
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
             // Movie Info Details
             Column(
@@ -498,8 +624,9 @@ fun MovieListItemCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (!movie.releaseDate.isNullOrEmpty()) {
+                        val year = if (movie.releaseDate!!.length >= 4) movie.releaseDate!!.substring(0, 4) else movie.releaseDate
                         Text(
-                            text = "(${movie.releaseDate})",
+                            text = "($year)",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -512,7 +639,7 @@ fun MovieListItemCard(
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
-                                text = "⭐ ${String.format("%.1f", movie.voteAverage)}",
+                                text = "⭐ ${String.format(Locale.getDefault(), "%.1f", movie.voteAverage)}",
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -521,7 +648,7 @@ fun MovieListItemCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 val overview = movie.overview
                 if (!overview.isNullOrEmpty()) {
@@ -530,9 +657,10 @@ fun MovieListItemCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 18.sp
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
 
                 // Added By Selector Dropdown / Chip
@@ -543,7 +671,7 @@ fun MovieListItemCard(
                         label = {
                             Text(
                                 text = "👤 Añadida por: $currentAddedBy",
-                                style = MaterialTheme.typography.labelSmall,
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
                                 color = MaterialTheme.colorScheme.primary
                             )
                         },
@@ -554,7 +682,14 @@ fun MovieListItemCard(
                                 modifier = Modifier.size(12.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
-                        }
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        ),
+                        border = AssistChipDefaults.assistChipBorder(
+                            enabled = true,
+                            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        )
                     )
 
                     DropdownMenu(
@@ -593,7 +728,7 @@ fun MovieListItemCard(
             if (isEditMode) {
                 IconButton(
                     onClick = onDeleteClick,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 4.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_delete),
