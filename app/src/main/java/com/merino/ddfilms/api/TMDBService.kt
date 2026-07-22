@@ -36,4 +36,16 @@ interface TMDBService {
         @Query("api_key") apiKey: String,
         @Query("language") language: String
     ): Call<SearchResponse>
+
+    @GET("discover/movie")
+    fun discoverMovies(
+        @Query("api_key") apiKey: String,
+        @Query("language") language: String,
+        @Query("sort_by") sortBy: String? = null,
+        @Query("with_genres") withGenres: String? = null,
+        @Query("primary_release_year") primaryReleaseYear: Int? = null,
+        @Query("vote_average.gte") voteAverageGte: Float? = null,
+        @Query("page") page: Int = 1
+    ): Call<SearchResponse>
 }
+
