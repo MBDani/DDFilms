@@ -98,9 +98,11 @@ class DiaryFragment : Fragment(), FabHost, ShowsFab {
         }
     }
 
-    private fun loadMoviesFromList() {
+    private fun loadMoviesFromList(showLoading: Boolean = true) {
         val uid = userID ?: return
-        isLoadingState.value = true
+        if (showLoading && movieListState.value.isEmpty()) {
+            isLoadingState.value = true
+        }
         firebaseManager.getMoviesFromList(uid, DIARY_LIST) { movies, error ->
             isLoadingState.value = false
             if (error != null) {

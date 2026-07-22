@@ -98,9 +98,13 @@ class WatchlistFragment : Fragment(), FabHost, ShowsFab {
         }
     }
 
-    private fun loadMoviesFromList() {
+    private fun loadMoviesFromList(showLoading: Boolean = true) {
         val uid = userID ?: return
-        isLoadingState.value = true
+        // Only show loading spinner if list is currently empty (initial load)
+        // Otherwise do a silent refresh to avoid destroying the grid (prevents flicker)
+        if (showLoading && movieListState.value.isEmpty()) {
+            isLoadingState.value = true
+        }
         firebaseManager.getMoviesFromList(uid, WATCH_LIST) { movies, error ->
             isLoadingState.value = false
             if (error != null) {

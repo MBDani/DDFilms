@@ -63,6 +63,7 @@ class ListsFragment : Fragment() {
                     ListsScreen(
                         listsList = listsListState.value,
                         isLoading = isLoadingState.value,
+                        pageSize = PAGE_SIZE,
                         onCreateListClick = { showCreateListDialog() },
                         onListClick = { list -> navigateToListMoviesActivity(list) },
                         onLoadMore = {
@@ -79,7 +80,10 @@ class ListsFragment : Fragment() {
     private fun resetPaginationAndLoad() {
         lastVisible = null
         isLastPageState.value = false
-        isLoadingState.value = true
+        // Only show loading spinner if lists are currently empty (initial load)
+        if (listsListState.value.isEmpty()) {
+            isLoadingState.value = true
+        }
 
         firebaseManager.getMovieListsPaginated(
             firebaseManager.getCurrentUserUID(),
@@ -101,6 +105,7 @@ class ListsFragment : Fragment() {
     }
 
     private fun loadNextPage() {
+        if (isLoadingState.value || isLastPageState.value) return
         isLoadingState.value = true
         firebaseManager.getMovieListsPaginated(
             firebaseManager.getCurrentUserUID(),
@@ -116,9 +121,13 @@ class ListsFragment : Fragment() {
                 if (newLists.isEmpty() || newLists.size < PAGE_SIZE) {
                     isLastPageState.value = true
                 }
-                val current = listsListState.value.toMutableList()
-                current.addAll(newLists)
-                listsListState.value = current
+                val existingIds = listsListState.value.mapNotNull { it.id }.toSet()
+                val uniqueNewLists = newLists.filter { it.id != null && !existingIds.contains(it.id) }
+                if (uniqueNewLists.isNotEmpty()) {
+                    val current = listsListState.value.toMutableList()
+                    current.addAll(uniqueNewLists)
+                    listsListState.value = current
+                }
             }
         }
     }
@@ -159,6 +168,7 @@ class ListsFragment : Fragment() {
 fun ListsScreen(
     listsList: List<MovieLists>,
     isLoading: Boolean,
+    pageSize: Int = 10,
     onCreateListClick: () -> Unit,
     onListClick: (MovieLists) -> Unit,
     onLoadMore: () -> Unit
@@ -223,9 +233,14 @@ fun ListsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                itemsIndexed(listsList) { index, list ->
-                    if (index >= listsList.size - 2) {
-                        onLoadMore()
+                itemsIndexed(
+                    items = listsList,
+                    key = { _, list -> list.id ?: list.name ?: System.identityHashCode(list) }
+                ) { index, list ->
+                    if (index >= listsList.size - 1 && listsList.size >= pageSize) {
+                        LaunchedEffect(index) {
+                            onLoadMore()
+                        }
                     }
 
                     MovieListCard(

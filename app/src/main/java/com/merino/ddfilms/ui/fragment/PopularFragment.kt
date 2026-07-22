@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
 import androidx.fragment.app.Fragment
+import android.widget.ImageView
+import androidx.compose.ui.viewinterop.AndroidView
+import com.bumptech.glide.Glide
 import coil.compose.AsyncImage
 import com.merino.ddfilms.R
 import com.merino.ddfilms.api.TMDBClient
@@ -78,7 +81,7 @@ class PopularFragment : Fragment() {
                     PopularScreen(
                         popularMovies = popularMoviesState.value,
                         isLoading = isLoadingState.value,
-                        onMovieClick = { movie, view ->
+                        onMovieClick = { movie, view, transitionName ->
                             val intent = Intent(requireContext(), MovieDetailActivity::class.java).apply {
                                 putExtra("movie", movie)
                             }
@@ -86,7 +89,7 @@ class PopularFragment : Fragment() {
                                 val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                                     requireActivity(),
                                     view,
-                                    "moviePosterTransition"
+                                    transitionName
                                 )
                                 ActivityCompat.startActivity(requireContext(), intent, options.toBundle())
                             } else {
@@ -124,7 +127,7 @@ class PopularFragment : Fragment() {
 fun PopularScreen(
     popularMovies: List<Movie>,
     isLoading: Boolean,
-    onMovieClick: (Movie, View?) -> Unit
+    onMovieClick: (Movie, View?, String) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -162,11 +165,11 @@ fun PopularScreen(
                         .height(340.dp)
                 ) { page ->
                     val movie = carouselMovies[page]
-                    val localView = LocalView.current
+                    var backdropViewRef by remember { mutableStateOf<View?>(null) }
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable { onMovieClick(movie, localView) }
+                            .clickable { onMovieClick(movie, backdropViewRef, "movieBackdropTransition") }
                     ) {
                         val backdropUrl = if (!movie.backdropPath.isNullOrEmpty()) {
                             "https://image.tmdb.org/t/p/w780${movie.backdropPath}"
@@ -174,13 +177,27 @@ fun PopularScreen(
                             "https://image.tmdb.org/t/p/w500${movie.posterPath}"
                         } else null
 
-                        AsyncImage(
-                            model = backdropUrl,
-                            contentDescription = movie.title,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize(),
-                            placeholder = painterResource(R.drawable.placeholder_poster),
-                            error = painterResource(R.drawable.placeholder_poster)
+                        AndroidView(
+                            factory = { ctx ->
+                                ImageView(ctx).apply {
+                                    scaleType = ImageView.ScaleType.CENTER_CROP
+                                    transitionName = "movieBackdropTransition"
+                                    backdropViewRef = this
+                                }
+                            },
+                            update = { imageView ->
+                                backdropViewRef = imageView
+                                if (!backdropUrl.isNullOrEmpty()) {
+                                    Glide.with(imageView.context)
+                                        .load(backdropUrl)
+                                        .placeholder(R.drawable.placeholder_poster)
+                                        .error(R.drawable.placeholder_poster)
+                                        .into(imageView)
+                                } else {
+                                    imageView.setImageResource(R.drawable.placeholder_poster)
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
                         )
 
                         // Backdrop dynamic gradient
@@ -249,7 +266,7 @@ fun PopularScreen(
                         items(rail1Movies) { movie ->
                             MoviePosterCard(
                                 movie = movie,
-                                onClick = { view -> onMovieClick(movie, view) },
+                                onClick = { view -> onMovieClick(movie, view, "moviePosterTransition") },
                                 modifier = Modifier.width(120.dp)
                             )
                         }
@@ -278,7 +295,7 @@ fun PopularScreen(
                         items(rail2Movies) { movie ->
                             MoviePosterCard(
                                 movie = movie,
-                                onClick = { view -> onMovieClick(movie, view) },
+                                onClick = { view -> onMovieClick(movie, view, "moviePosterTransition") },
                                 modifier = Modifier.width(120.dp)
                             )
                         }

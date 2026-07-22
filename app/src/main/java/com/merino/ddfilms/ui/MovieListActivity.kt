@@ -126,12 +126,14 @@ class MovieListActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        loadMoviesFromList()
+        loadMoviesFromList(showLoading = false)
     }
 
-    private fun loadMoviesFromList() {
+    private fun loadMoviesFromList(showLoading: Boolean = true) {
         val id = listID ?: return
-        isLoadingState.value = true
+        if (showLoading && movieListState.value.isEmpty()) {
+            isLoadingState.value = true
+        }
         firebaseManager.getMoviesFromList(id, MOVIE_LIST) { movies, error ->
             isLoadingState.value = false
             if (error != null) {

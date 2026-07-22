@@ -14,45 +14,36 @@ class DateFormatter {
     private val SDF_PATTERN = "EEE MMM dd HH:mm:ss z yyyy"
 
     fun getFormattedDate(reviewDate: String?): String {
-        if (reviewDate == null) return ""
-        val inputFormat = SimpleDateFormat(SDF_PATTERN, SDF_LOCALE)
-        try {
-            val date = inputFormat.parse(reviewDate) ?: return reviewDate
-            var diffMillis = Date().time - date.time
-            if (diffMillis < 0) {
-                diffMillis = 0
-            }
+        if (reviewDate.isNullOrEmpty()) return ""
 
-            val diffSeconds = diffMillis / 1000
-            if (diffSeconds < 10) {
-                return "Ahora mismo"
-            } else if (diffSeconds < 60) {
-                return "Hace unos segundos"
-            }
-
-            val diffMinutes = diffSeconds / 60
-            if (diffMinutes < 60) {
-                return if (diffMinutes == 1L) "Hace 1 minuto" else "Hace $diffMinutes minutos"
-            }
-
-            val diffHours = diffMinutes / 60
-            if (diffHours < 24) {
-                return if (diffHours == 1L) "Hace 1 hora" else "Hace $diffHours horas"
-            }
-
-            val diffDays = diffHours / 24
-            if (diffDays == 1L) {
-                return "Ayer"
-            } else if (diffDays < 7) {
-                return "Hace $diffDays días"
-            } else {
-                val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.ENGLISH)
-                return outputFormat.format(date)
-            }
-        } catch (e: ParseException) {
-            e.printStackTrace()
+        // If already formatted as dd/MM/yyyy, return directly
+        if (reviewDate.matches(Regex("""\d{2}/\d{2}/\d{4}"""))) {
             return reviewDate
         }
+
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+        try {
+            val inputFormat = SimpleDateFormat(SDF_PATTERN, SDF_LOCALE)
+            val date = inputFormat.parse(reviewDate)
+            if (date != null) {
+                return outputFormat.format(date)
+            }
+        } catch (ignored: Exception) {}
+
+        try {
+            val timestamp = reviewDate.toLongOrNull()
+            if (timestamp != null) {
+                return outputFormat.format(Date(timestamp))
+            }
+        } catch (ignored: Exception) {}
+
+        try {
+            val date = Date(reviewDate)
+            return outputFormat.format(date)
+        } catch (ignored: Exception) {}
+
+        return reviewDate
     }
 
     fun reviewDateDescComparator(): Comparator<Review> {

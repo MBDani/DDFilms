@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,6 +24,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.viewinterop.AndroidView
+import com.bumptech.glide.Glide
+import com.merino.ddfilms.utils.DateFormatter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,7 +41,6 @@ import com.merino.ddfilms.model.Review
 import com.merino.ddfilms.ui.MovieDetailActivity
 import com.merino.ddfilms.ui.components.CinematicRatingBar
 import com.merino.ddfilms.ui.theme.CinematicTheme
-import com.merino.ddfilms.utils.DateFormatter
 import com.merino.ddfilms.utils.ReviewUtil
 
 class ReviewsFragment : Fragment() {
@@ -220,12 +223,11 @@ fun ReviewsScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 itemsIndexed(reviews) { index, review ->
-                    val localView = LocalView.current
                     ReviewsItemCard(
                         review = review,
                         onLikeClick = onLikeClick,
                         onDislikeClick = onDislikeClick,
-                        onCardClick = { onReviewClick(review, localView) }
+                        onCardClick = { view -> onReviewClick(review, view) }
                     )
                 }
             }
@@ -251,15 +253,17 @@ fun ReviewsItemCard(
     review: Review,
     onLikeClick: (Review) -> Unit,
     onDislikeClick: (Review) -> Unit,
-    onCardClick: () -> Unit,
+    onCardClick: (View?) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var posterViewRef by remember { mutableStateOf<View?>(null) }
+
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onCardClick() }
+            .clickable { onCardClick(posterViewRef) }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // User Header
@@ -279,8 +283,11 @@ fun ReviewsItemCard(
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    val formattedDate = remember(review.reviewDate) {
+                        DateFormatter().getFormattedDate(review.reviewDate)
+                    }
                     Text(
-                        text = review.reviewDate ?: "",
+                        text = formattedDate,
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
@@ -310,14 +317,36 @@ fun ReviewsItemCard(
                     "https://image.tmdb.org/t/p/w200${review.posterPath}"
                 } else null
 
-                AsyncImage(
-                    model = posterUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                AndroidView(
+                    factory = { ctx ->
+                        ImageView(ctx).apply {
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                            transitionName = "moviePosterTransition"
+                            clipToOutline = true
+                            outlineProvider = object : android.view.ViewOutlineProvider() {
+                                override fun getOutline(v: View, outline: android.graphics.Outline) {
+                                    val radius = 4f * ctx.resources.displayMetrics.density
+                                    outline.setRoundRect(0, 0, v.width, v.height, radius)
+                                }
+                            }
+                            posterViewRef = this
+                        }
+                    },
+                    update = { imageView ->
+                        posterViewRef = imageView
+                        if (!posterUrl.isNullOrEmpty()) {
+                            Glide.with(imageView.context)
+                                .load(posterUrl)
+                                .placeholder(R.drawable.placeholder_poster)
+                                .error(R.drawable.placeholder_poster)
+                                .into(imageView)
+                        } else {
+                            imageView.setImageResource(R.drawable.placeholder_poster)
+                        }
+                    },
                     modifier = Modifier
                         .width(40.dp)
                         .height(60.dp)
-                        .clip(RoundedCornerShape(4.dp))
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
