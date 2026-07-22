@@ -80,8 +80,6 @@ class SearchFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        loadPopularMovies()
-
         return ComposeView(requireContext()).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
@@ -90,8 +88,10 @@ class SearchFragment : Fragment() {
                         searchQuery = searchQueryState.value,
                         onSearchQueryChange = { query ->
                             searchQueryState.value = query
-                            if (query.trim().isNotEmpty()) {
-                                searchMovies(query.trim())
+                        },
+                        onPerformSearch = { query ->
+                            if (query.isNotEmpty()) {
+                                searchMovies(query)
                             } else {
                                 loadPopularMovies()
                             }
@@ -207,6 +207,7 @@ class SearchFragment : Fragment() {
 fun SearchScreen(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    onPerformSearch: (String) -> Unit,
     moviesList: List<Movie>,
     isLoading: Boolean,
     isAddMode: Boolean,
@@ -215,6 +216,16 @@ fun SearchScreen(
     onRemoveClick: (Movie) -> Unit,
     onMovieClick: (Movie, View?) -> Unit
 ) {
+    LaunchedEffect(searchQuery) {
+        val trimmed = searchQuery.trim()
+        if (trimmed.isEmpty()) {
+            onPerformSearch("")
+        } else {
+            kotlinx.coroutines.delay(350)
+            onPerformSearch(trimmed)
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -270,7 +281,7 @@ fun SearchScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(moviesList) { movie ->
+                items(moviesList, key = { it.id }) { movie ->
                     Box(modifier = Modifier.fillMaxWidth()) {
                         MoviePosterCard(
                             movie = movie,

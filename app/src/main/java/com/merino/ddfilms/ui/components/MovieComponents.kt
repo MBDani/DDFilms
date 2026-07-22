@@ -56,7 +56,7 @@ fun MoviePosterCard(
 
     val posterPath = movie.posterPath
     val imageUrl = if (!posterPath.isNullOrEmpty()) {
-        "https://image.tmdb.org/t/p/w500$posterPath"
+        "https://image.tmdb.org/t/p/w342$posterPath"
     } else null
 
     Card(
@@ -86,34 +86,40 @@ fun MoviePosterCard(
             update = { imageView ->
                 val ctx = imageView.context
                 if (!imageUrl.isNullOrEmpty()) {
-                    Glide.with(ctx)
-                        .load(imageUrl)
-                        .placeholder(R.drawable.placeholder_poster)
-                        .error(R.drawable.placeholder_poster)
-                        .listener(object : com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
-                            override fun onLoadFailed(
-                                e: com.bumptech.glide.load.engine.GlideException?,
-                                model: Any?,
-                                target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                onResourceReady?.invoke()
-                                return false
-                            }
+                    if (imageView.tag != imageUrl) {
+                        imageView.tag = imageUrl
+                        Glide.with(ctx)
+                            .load(imageUrl)
+                            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+                            .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                            .placeholder(R.drawable.placeholder_poster)
+                            .error(R.drawable.placeholder_poster)
+                            .listener(object : com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
+                                override fun onLoadFailed(
+                                    e: com.bumptech.glide.load.engine.GlideException?,
+                                    model: Any?,
+                                    target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>,
+                                    isFirstResource: Boolean
+                                ): Boolean {
+                                    onResourceReady?.invoke()
+                                    return false
+                                }
 
-                            override fun onResourceReady(
-                                resource: android.graphics.drawable.Drawable,
-                                model: Any,
-                                target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>,
-                                dataSource: com.bumptech.glide.load.DataSource,
-                                isFirstResource: Boolean
-                            ): Boolean {
-                                onResourceReady?.invoke()
-                                return false
-                            }
-                        })
-                        .into(imageView)
+                                override fun onResourceReady(
+                                    resource: android.graphics.drawable.Drawable,
+                                    model: Any,
+                                    target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>,
+                                    dataSource: com.bumptech.glide.load.DataSource,
+                                    isFirstResource: Boolean
+                                ): Boolean {
+                                    onResourceReady?.invoke()
+                                    return false
+                                }
+                            })
+                            .into(imageView)
+                    }
                 } else {
+                    imageView.tag = null
                     imageView.setImageResource(R.drawable.placeholder_poster)
                     onResourceReady?.invoke()
                 }

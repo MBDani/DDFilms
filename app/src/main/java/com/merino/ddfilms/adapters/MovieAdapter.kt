@@ -269,7 +269,12 @@ class MovieAdapter : RecyclerView.Adapter<MovieAdapter.MovieViewHolder>() {
 
         @SuppressLint("DefaultLocale")
         fun bind(movie: Movie) {
-            Glide.with(itemView.context).load("https://image.tmdb.org/t/p/w500" + movie.posterPath).into(posterImageView)
+            Glide.with(itemView.context)
+                .load("https://image.tmdb.org/t/p/w342" + movie.posterPath)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+                .placeholder(R.drawable.placeholder_poster)
+                .error(R.drawable.placeholder_poster)
+                .into(posterImageView)
             titleTextView.text = movie.title
             yearTextView.text = "(${movie.releaseDate})"
             overviewTextView.text = movie.overview
