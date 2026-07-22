@@ -8,23 +8,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 val CinematicDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFFB4AB),       // Soft cinematic red (Primary accent)
-    secondary = Color(0xFFE2C4C0),     // Subtle bronze/champagne
-    background = Color(0xFF090A0F),    // Ultra-deep cinematic black
-    surface = Color(0xFF12131C),       // Dark charcoal for cards/panels
-    onPrimary = Color(0xFF690005),
+    primary = Color(0xFFE50914),       // Crimson Noir Accent
+    secondary = Color(0xFFFF6575),     // Glowing Coral Rose
+    background = Color(0xFF0F0E13),    // Obsidian Deep Dark Base
+    surface = Color(0xFF191822),       // Glass Charcoal Surface
+    surfaceVariant = Color(0xFF242230),// Elevated Surface
+    onPrimary = Color(0xFFFFFFFF),
     onBackground = Color(0xFFE6E1E5),  // Light text
-    onSurface = Color(0xFFE6E1E5)
+    onSurface = Color(0xFFE6E1E5),
+    onSurfaceVariant = Color(0xFFC4C2CF)
 )
 
 val CinematicLightColorScheme = lightColorScheme(
-    primary = Color(0xFFBA1A1A),       // Vibrant cinematic red
-    secondary = Color(0xFF4A4D55),     // Dark charcoal
-    background = Color(0xFFF5F6FA),    // Premium light background (off-white)
-    surface = Color(0xFFFFFFFF),       // Pure white for cards
+    primary = Color(0xFFD32F2F),       // Deep Velvet Red
+    secondary = Color(0xFF99000D),     // Dark Crimson Accent
+    background = Color(0xFFF5F6FA),    // Premium off-white
+    surface = Color(0xFFFFFFFF),       // Pure white cards
+    surfaceVariant = Color(0xFFECEEF4),
     onPrimary = Color(0xFFFFFFFF),
-    onBackground = Color(0xFF111215),  // Readable dark text
-    onSurface = Color(0xFF111215)
+    onBackground = Color(0xFF111215),  // Dark text
+    onSurface = Color(0xFF111215),
+    onSurfaceVariant = Color(0xFF5A5D66)
 )
 
 @Composable

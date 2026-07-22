@@ -6,9 +6,9 @@
     <color name="primary_dark_light">@color/purple_850</color>
     <color name="primary_light">@color/gray_100</color>
 
-    <!-- Acentos Dorados del Tema Oscuro (Cambiados a Rojo Cinemático) -->
-    <color name="gold_dark">#FFB4AB</color>
-    <color name="gold_light">#E2C4C0</color>
+    <!-- Acentos Cinemáticos del Tema Oscuro -->
+    <color name="gold_dark">#E50914</color>
+    <color name="gold_light">#FF6575</color>
 
     <!-- Secundarios -->
     <color name="secondary_dark">@color/gray_900</color>

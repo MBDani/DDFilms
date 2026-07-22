@@ -15,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -31,10 +32,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import coil.compose.AsyncImage
 import com.bumptech.glide.Glide
@@ -51,8 +54,6 @@ import com.merino.ddfilms.ui.components.CinematicRatingBar
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment
 import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment
 import com.merino.ddfilms.ui.theme.CinematicTheme
-import androidx.compose.ui.res.stringResource
-import androidx.core.content.ContextCompat
 import com.merino.ddfilms.utils.ReviewUtil
 import com.merino.ddfilms.utils.StringUtils.DIARY_LIST
 import com.merino.ddfilms.utils.StringUtils.WATCH_LIST
@@ -60,6 +61,7 @@ import com.merino.ddfilms.utils.Utils.showMessage
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.Locale
 
 class MovieDetailActivity : AppCompatActivity() {
 
@@ -71,12 +73,13 @@ class MovieDetailActivity : AppCompatActivity() {
     private var userId: String? = null
     private var userName: String? = null
 
-    // Native Views for Header (outside Compose to prevent recomposition disposal during transitions)
+    // Native Views for Header (outside Compose to preserve shared element enter/exit transitions)
     private lateinit var backdropImageView: ImageView
     private lateinit var posterImageView: ImageView
     private lateinit var titleTextView: TextView
     private lateinit var metaTextView: TextView
     private lateinit var directorTextView: TextView
+    private lateinit var ratingTextView: TextView
 
     // Compose states for body content
     private val movieState = mutableStateOf<Movie?>(null)
@@ -159,8 +162,8 @@ class MovieDetailActivity : AppCompatActivity() {
             )
         }
 
-        // 1. Header FrameLayout (Backdrop)
-        val headerHeight = (260 * density).toInt()
+        // 1. Header FrameLayout (Backdrop with smooth multi-stop gradient)
+        val headerHeight = (280 * density).toInt()
         val headerFrameLayout = FrameLayout(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
@@ -177,7 +180,8 @@ class MovieDetailActivity : AppCompatActivity() {
             )
         }
 
-        val midBgColor = AndroidColor.argb(128, AndroidColor.red(bgColor), AndroidColor.green(bgColor), AndroidColor.blue(bgColor))
+        val midBgColor1 = AndroidColor.argb(80, AndroidColor.red(bgColor), AndroidColor.green(bgColor), AndroidColor.blue(bgColor))
+        val midBgColor2 = AndroidColor.argb(200, AndroidColor.red(bgColor), AndroidColor.green(bgColor), AndroidColor.blue(bgColor))
         val endBgColor = AndroidColor.argb(255, AndroidColor.red(bgColor), AndroidColor.green(bgColor), AndroidColor.blue(bgColor))
 
         val gradientView = View(this).apply {
@@ -185,7 +189,8 @@ class MovieDetailActivity : AppCompatActivity() {
                 GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(
                     AndroidColor.TRANSPARENT,
-                    midBgColor,
+                    midBgColor1,
+                    midBgColor2,
                     endBgColor
                 )
             )
@@ -195,19 +200,21 @@ class MovieDetailActivity : AppCompatActivity() {
             )
         }
 
+        // Modern Glassmorphism Back Button
         val backButton = ImageButton(this).apply {
             setImageResource(R.drawable.ic_arrow_back)
             setColorFilter(AndroidColor.WHITE)
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(AndroidColor.argb(128, 0, 0, 0))
+                setColor(AndroidColor.argb(140, 15, 14, 19))
+                setStroke((1 * density).toInt(), AndroidColor.argb(60, 255, 255, 255))
             }
             elevation = 16f * density
             val p = (10 * density).toInt()
             setPadding(p, p, p, p)
             setOnClickListener { supportFinishAfterTransition() }
 
-            val size = (40 * density).toInt()
+            val size = (42 * density).toInt()
             val margin = (16 * density).toInt()
             val statusBarPadding = (24 * density).toInt()
             val params = FrameLayout.LayoutParams(size, size).apply {
@@ -220,7 +227,7 @@ class MovieDetailActivity : AppCompatActivity() {
         headerFrameLayout.addView(backdropImageView)
         headerFrameLayout.addView(gradientView)
 
-        // 2. Poster & Info Header Row (LinearLayout Horizontal)
+        // 2. Poster & Info Header Row (LinearLayout Horizontal with Glass Elevation)
         val posterRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             val margin = (16 * density).toInt()
@@ -230,21 +237,21 @@ class MovieDetailActivity : AppCompatActivity() {
             ).apply {
                 leftMargin = margin
                 rightMargin = margin
-                topMargin = (-40 * density).toInt()
+                topMargin = (-60 * density).toInt()
             }
             layoutParams = params
         }
 
-        val posterW = (110 * density).toInt()
-        val posterH = (165 * density).toInt()
+        val posterW = (120 * density).toInt()
+        val posterH = (180 * density).toInt()
         posterImageView = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
             transitionName = "moviePosterTransition"
-            elevation = 8f * density
+            elevation = 12f * density
             clipToOutline = true
             outlineProvider = object : android.view.ViewOutlineProvider() {
                 override fun getOutline(v: View, outline: android.graphics.Outline) {
-                    val radius = 12f * density
+                    val radius = 14f * density
                     outline.setRoundRect(0, 0, v.width, v.height, radius)
                 }
             }
@@ -269,22 +276,66 @@ class MovieDetailActivity : AppCompatActivity() {
             textSize = 22f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(textPrimaryColor)
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
         }
+
+        // Rating Badge Pill Container
+        val ratingContainer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = (6 * density).toInt()
+                bottomMargin = (4 * density).toInt()
+            }
+            layoutParams = params
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 8f * density
+                setColor(AndroidColor.argb(40, 229, 9, 20))
+                setStroke((1 * density).toInt(), AndroidColor.argb(100, 229, 9, 20))
+            }
+            setPadding((8 * density).toInt(), (4 * density).toInt(), (8 * density).toInt(), (4 * density).toInt())
+        }
+
+        val starIcon = ImageView(this).apply {
+            setImageResource(R.drawable.ic_star_filled)
+            setColorFilter(AndroidColor.rgb(255, 193, 7)) // Amber Gold Star
+            val size = (14 * density).toInt()
+            layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                rightMargin = (4 * density).toInt()
+            }
+        }
+
+        ratingTextView = TextView(this).apply {
+            val vote = currentMovie?.voteAverage ?: 0.0
+            text = if (vote > 0) String.format(Locale.getDefault(), "%.1f", vote) else "N/A"
+            textSize = 13f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(textPrimaryColor)
+        }
+
+        ratingContainer.addView(starIcon)
+        ratingContainer.addView(ratingTextView)
 
         metaTextView = TextView(this).apply {
             text = ""
-            textSize = 14f
+            textSize = 13f
             setTextColor(textSecondaryColor)
         }
 
         directorTextView = TextView(this).apply {
             text = "Director: Cargando..."
-            textSize = 14f
+            textSize = 13f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(accentColor)
         }
 
         infoContainer.addView(titleTextView)
+        infoContainer.addView(ratingContainer)
         infoContainer.addView(metaTextView)
         infoContainer.addView(directorTextView)
 
@@ -441,6 +492,9 @@ class MovieDetailActivity : AppCompatActivity() {
                     reviewUtil.currentMovie = movieState.value
 
                     titleTextView.text = details.title ?: currentMovie?.title ?: ""
+                    val vote = details.voteAverage
+                    ratingTextView.text = if (vote > 0) String.format(Locale.getDefault(), "%.1f", vote) else "N/A"
+
                     val relDate = details.releaseDate
                     val year = if (!relDate.isNullOrEmpty() && relDate.length >= 4) {
                         relDate.substring(0, 4)
@@ -530,6 +584,28 @@ class MovieDetailActivity : AppCompatActivity() {
 }
 
 @Composable
+fun SectionHeader(title: String, modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(18.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
 fun MovieDetailBody(
     details: MovieDetails?,
     credits: Credits?,
@@ -551,7 +627,7 @@ fun MovieDetailBody(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Genres Chips
+        // Genres Chips Carrousel
         val genres = details?.genres
         if (!genres.isNullOrEmpty()) {
             Spacer(modifier = Modifier.height(12.dp))
@@ -566,126 +642,196 @@ fun MovieDetailBody(
                             Text(
                                 text = genre.name ?: "",
                                 fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
+                        shape = RoundedCornerShape(16.dp),
                         colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                        ),
+                        border = SuggestionChipDefaults.suggestionChipBorder(
+                            enabled = true,
+                            borderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
                         )
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
-        // Action Buttons Row
+        // Action Buttons Row (Modern Glassmorphism & High-Contrast CTA)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Button(
                 onClick = onAddToListClick,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(8.dp)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .weight(1.3f)
+                    .height(44.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_add),
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(text = stringResource(R.string.add_to_list), fontSize = 13.sp)
+                Text(
+                    text = stringResource(R.string.add_to_list),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             OutlinedButton(
                 onClick = onWatchlistClick,
                 enabled = !isProcessingAction,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFF2196F3).copy(alpha = 0.6f),
+                            Color(0xFF2196F3).copy(alpha = 0.3f)
+                        )
+                    )
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_bookmark),
                     contentDescription = null,
-                    tint = Color(0xFF2196F3),
+                    tint = Color(0xFF44B3FF),
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = stringResource(R.string.action_watchlist), fontSize = 13.sp)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = stringResource(R.string.action_watchlist),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
 
             OutlinedButton(
                 onClick = onWatchedClick,
                 enabled = !isProcessingAction,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                ),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFF4CAF50).copy(alpha = 0.6f),
+                            Color(0xFF4CAF50).copy(alpha = 0.3f)
+                        )
+                    )
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_visibility),
                     contentDescription = null,
-                    tint = Color(0xFF4CAF50),
+                    tint = Color(0xFF66BB6A),
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = stringResource(R.string.action_diary), fontSize = 13.sp)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = stringResource(R.string.action_diary),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // Overview / Synopsis
+        // Overview / Synopsis Section
         val overview = details?.overview
         if (!overview.isNullOrEmpty()) {
-            Text(
-                text = "Sinopsis",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = overview,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
-                lineHeight = 22.sp
-            )
-            Spacer(modifier = Modifier.height(20.dp))
+            SectionHeader(title = "Sinopsis")
+            Spacer(modifier = Modifier.height(10.dp))
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        RoundedCornerShape(14.dp)
+                    )
+            ) {
+                Text(
+                    text = overview,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                    lineHeight = 22.sp,
+                    modifier = Modifier.padding(14.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         // Cast Section
         val castList = credits?.cast
         if (!castList.isNullOrEmpty()) {
-            Text(
-                text = "Reparto Principal",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            SectionHeader(title = "Reparto Principal")
+            Spacer(modifier = Modifier.height(14.dp))
 
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(castList.take(10)) { actor ->
+                items(castList.take(12)) { actor ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.width(80.dp)
+                        modifier = Modifier.width(84.dp)
                     ) {
                         val profileUrl = if (!actor.profilePath.isNullOrEmpty()) {
                             "https://image.tmdb.org/t/p/w185${actor.profilePath}"
                         } else null
 
-                        AsyncImage(
-                            model = profileUrl,
-                            contentDescription = actor.name,
-                            contentScale = ContentScale.Crop,
+                        Box(
                             modifier = Modifier
-                                .size(70.dp)
-                                .clip(CircleShape),
-                            placeholder = painterResource(R.drawable.ic_default_profile),
-                            error = painterResource(R.drawable.ic_default_profile)
-                        )
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    1.5.dp,
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                    CircleShape
+                                )
+                        ) {
+                            AsyncImage(
+                                model = profileUrl,
+                                contentDescription = actor.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                                placeholder = painterResource(R.drawable.ic_default_profile),
+                                error = painterResource(R.drawable.ic_default_profile)
+                            )
+                        }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = actor.name ?: "",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -693,55 +839,74 @@ fun MovieDetailBody(
                         Text(
                             text = actor.character ?: "",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
 
-        // Reviews Section Header
+        // Reviews Section Header & List
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Reseñas de Usuarios",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground,
+            SectionHeader(
+                title = "Reseñas de Usuarios",
                 modifier = Modifier.weight(1f)
             )
 
             Button(
                 onClick = onWriteReviewClick,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                shape = RoundedCornerShape(8.dp)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(10.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_edit),
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(15.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(text = "Escribir", fontSize = 13.sp)
+                Text(
+                    text = "Escribir",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         if (reviews.isEmpty()) {
-            Text(
-                text = "Sé el primero en escribir una reseña sobre esta película.",
-                color = Color.Gray,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
+            Card(
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        RoundedCornerShape(14.dp)
+                    )
+            ) {
+                Text(
+                    text = "Sé el primero en escribir una reseña sobre esta película.",
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         } else {
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 reviews.forEach { review ->
@@ -757,7 +922,7 @@ fun MovieDetailBody(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(36.dp))
     }
 }
 
@@ -772,21 +937,35 @@ fun ReviewItemCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = modifier.clickable { onReviewClick(review) }
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                RoundedCornerShape(16.dp)
+            )
+            .clickable { onReviewClick(review) }
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(
                     model = review.userProfileImageUrl ?: R.drawable.ic_default_profile,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(42.dp)
                         .clip(CircleShape)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                            CircleShape
+                        )
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = review.userName ?: "Usuario",
@@ -799,7 +978,7 @@ fun ReviewItemCard(
                     Text(
                         text = formattedDate,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                 }
 
@@ -812,16 +991,17 @@ fun ReviewItemCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = review.reviewText ?: "",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
                 maxLines = 4,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 20.sp
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -839,17 +1019,18 @@ fun ReviewItemCard(
                     Icon(
                         painter = painterResource(R.drawable.ic_thumb_up),
                         contentDescription = "Me gusta",
-                        tint = if (isLiked) MaterialTheme.colorScheme.primary else Color.Gray,
+                        tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
                 }
                 Text(
                     text = "$likeCount",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    fontWeight = if (isLiked) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(14.dp))
 
                 IconButton(
                     onClick = { onDislikeClick(review) },
@@ -858,14 +1039,15 @@ fun ReviewItemCard(
                     Icon(
                         painter = painterResource(R.drawable.ic_thumb_down),
                         contentDescription = "No me gusta",
-                        tint = if (isDisliked) MaterialTheme.colorScheme.error else Color.Gray,
+                        tint = if (isDisliked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
                 }
                 Text(
                     text = "$dislikeCount",
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    fontWeight = if (isDisliked) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isDisliked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -878,7 +1060,7 @@ fun ReviewItemCard(
                         Icon(
                             painter = painterResource(R.drawable.ic_delete),
                             contentDescription = "Eliminar",
-                            tint = Color.Gray,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                             modifier = Modifier.size(16.dp)
                         )
                     }
