@@ -90,13 +90,51 @@ class MovieDetailActivity : AppCompatActivity() {
     private val isLoadingState = mutableStateOf(true)
     private val isProcessingActionState = mutableStateOf(false)
 
+    private var transitionStarted = false
+    private var hasLoadedData = false
+    private var transitionFinished = false
+    private var pendingCredits: Credits? = null
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     companion object {
         private val API_KEY = ApiKeyManager.getInstance().apiKey ?: ""
+    }
+
+    private fun startPostponedTransitionSafely() {
+        if (!transitionStarted) {
+            transitionStarted = true
+            supportStartPostponedEnterTransition()
+        }
+    }
+
+    private fun applyCreditsIfReady() {
+        if (transitionFinished && pendingCredits != null) {
+            creditsState.value = pendingCredits
+        }
+    }
+
+    private fun scheduleDataFetch(movie: Movie) {
+        if (hasLoadedData) return
+        hasLoadedData = true
+        getMovieDetails(movie.id)
+        getMovieCredits(movie.id)
+        initReviews(movie)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportPostponeEnterTransition()
+
+        // 200ms Safety Timeout: Never freeze UI on uncached network images
+        mainHandler.postDelayed({
+            startPostponedTransitionSafely()
+        }, 200)
+
+        // 450ms Safety Timeout: Transition complete fallback
+        mainHandler.postDelayed({
+            transitionFinished = true
+            applyCreditsIfReady()
+        }, 450)
 
         window.sharedElementEnterTransition = com.merino.ddfilms.transitions.DetailsTransition()
         window.sharedElementReturnTransition = com.merino.ddfilms.transitions.DetailsTransition()
@@ -111,6 +149,9 @@ class MovieDetailActivity : AppCompatActivity() {
                     view.visibility = View.VISIBLE
                     view.alpha = 1f
                 }
+                transitionFinished = true
+                applyCreditsIfReady()
+                currentMovie?.let { scheduleDataFetch(it) }
             }
         })
 
@@ -335,8 +376,11 @@ class MovieDetailActivity : AppCompatActivity() {
         }
 
         directorTextView = TextView(this).apply {
-            text = "Director: Cargando..."
+            text = getString(R.string.director_label, "...")
             textSize = 13f
+            minLines = 1
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(accentColor)
         }
@@ -360,6 +404,7 @@ class MovieDetailActivity : AppCompatActivity() {
                     MovieDetailBody(
                         details = detailsState.value,
                         credits = creditsState.value,
+                        movie = movieState.value,
                         reviews = reviewsListState.value,
                         isLoading = isLoadingState.value,
                         isProcessingAction = isProcessingActionState.value,
@@ -402,12 +447,14 @@ class MovieDetailActivity : AppCompatActivity() {
 
         setContentView(rootFrameLayout)
 
-        // Load images with Glide and start postponed transition when poster is ready
+        // Load images with Glide using thumbnail cache fallback and smooth postponed transition
         val posterPath = currentMovie?.posterPath
         if (!posterPath.isNullOrEmpty()) {
             val posterUrl = "https://image.tmdb.org/t/p/w500$posterPath"
+            val thumbUrl = "https://image.tmdb.org/t/p/w342$posterPath"
             Glide.with(this)
                 .load(posterUrl)
+                .thumbnail(Glide.with(this).load(thumbUrl))
                 .placeholder(R.drawable.placeholder_poster)
                 .error(R.drawable.placeholder_poster)
                 .listener(object : com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable> {
@@ -417,7 +464,7 @@ class MovieDetailActivity : AppCompatActivity() {
                         target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>,
                         isFirstResource: Boolean
                     ): Boolean {
-                        supportStartPostponedEnterTransition()
+                        startPostponedTransitionSafely()
                         return false
                     }
 
@@ -428,14 +475,14 @@ class MovieDetailActivity : AppCompatActivity() {
                         dataSource: com.bumptech.glide.load.DataSource,
                         isFirstResource: Boolean
                     ): Boolean {
-                        supportStartPostponedEnterTransition()
+                        startPostponedTransitionSafely()
                         return false
                     }
                 })
                 .into(posterImageView)
         } else {
             posterImageView.setImageResource(R.drawable.placeholder_poster)
-            supportStartPostponedEnterTransition()
+            startPostponedTransitionSafely()
         }
 
         val backdropPath = currentMovie?.backdropPath ?: currentMovie?.posterPath
@@ -443,18 +490,19 @@ class MovieDetailActivity : AppCompatActivity() {
             val backdropUrl = "https://image.tmdb.org/t/p/w780$backdropPath"
             Glide.with(this)
                 .load(backdropUrl)
-                .placeholder(R.drawable.placeholder_poster)
-                .error(R.drawable.placeholder_poster)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+                .transition(com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade(300))
                 .into(backdropImageView)
         } else {
-            backdropImageView.setImageResource(R.drawable.placeholder_poster)
+            backdropImageView.setBackgroundColor(bgColor)
         }
 
+        // Deferred Data Fetching: Trigger API & Firebase calls 350ms after transition ends to guarantee 60/120 FPS
         val movie = currentMovie
         if (movie != null) {
-            getMovieDetails(movie.id)
-            getMovieCredits(movie.id)
-            initReviews(movie)
+            mainHandler.postDelayed({
+                scheduleDataFetch(movie)
+            }, 350)
         }
     }
 
@@ -523,10 +571,11 @@ class MovieDetailActivity : AppCompatActivity() {
             override fun onResponse(call: Call<Credits>, response: Response<Credits>) {
                 if (response.isSuccessful && response.body() != null) {
                     val resCredits = response.body()!!
-                    creditsState.value = resCredits
+                    pendingCredits = resCredits
                     val dir = Credits.Crew.getDirector(resCredits.crew)
                     directorState.value = dir
-                    directorTextView.text = "Director: ${dir ?: "Desconocido"}"
+                    directorTextView.text = getString(R.string.director_label, dir ?: getString(R.string.unknown_director))
+                    applyCreditsIfReady()
                 }
                 checkLoadingState()
             }
@@ -616,6 +665,7 @@ fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 fun MovieDetailBody(
     details: MovieDetails?,
     credits: Credits?,
+    movie: Movie? = null,
     reviews: List<Review>,
     isLoading: Boolean,
     isProcessingAction: Boolean = false,
@@ -781,7 +831,7 @@ fun MovieDetailBody(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Overview / Synopsis Section
-        val overview = details?.overview
+        val overview = if (!details?.overview.isNullOrEmpty()) details?.overview else movie?.overview
         if (!overview.isNullOrEmpty()) {
             SectionHeader(title = stringResource(R.string.synopsis_title))
             Spacer(modifier = Modifier.height(10.dp))
@@ -809,12 +859,55 @@ fun MovieDetailBody(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Cast Section
-        val castList = credits?.cast
-        if (!castList.isNullOrEmpty()) {
-            SectionHeader(title = stringResource(R.string.main_cast_title))
-            Spacer(modifier = Modifier.height(14.dp))
+        // Cast Section (Always reserved height & Shimmer Skeleton to eliminate 140dp layout shift)
+        SectionHeader(title = stringResource(R.string.main_cast_title))
+        Spacer(modifier = Modifier.height(14.dp))
 
+        val castList = credits?.cast
+        if (castList.isNullOrEmpty()) {
+            // Skeleton Loading State (0px layout shift when real cast loads)
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(6) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.width(84.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                .border(
+                                    1.5.dp,
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f),
+                                    CircleShape
+                                )
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(64.dp)
+                                .height(12.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(48.dp)
+                                .height(10.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(28.dp))
+        } else {
+            // Real Cast Data
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.fillMaxWidth()
