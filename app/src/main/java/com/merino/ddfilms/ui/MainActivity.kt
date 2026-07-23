@@ -22,6 +22,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.merino.ddfilms.R
 import com.merino.ddfilms.api.FirebaseManager
+import com.merino.ddfilms.notifications.NotificationHelper
 import com.merino.ddfilms.ui.components.Fab.ActivityFabController
 import com.merino.ddfilms.ui.components.Fab.FabHost
 import com.merino.ddfilms.ui.components.Fab.ShowsFab
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity(), ActivityFabController {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
                 Log.d("MainActivity", "Notification permission granted")
+                NotificationHelper.subscribeToGeneralTopics()
             } else {
                 Log.d("MainActivity", "Notification permission denied")
                 getSharedPreferences("Preferences", MODE_PRIVATE).edit()
@@ -51,6 +53,9 @@ class MainActivity : AppCompatActivity(), ActivityFabController {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        NotificationHelper.createNotificationChannel(this)
+        NotificationHelper.subscribeToGeneralTopics()
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)

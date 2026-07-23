@@ -46,6 +46,21 @@
                     android:scheme="myapp" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".notifications.DDFilmsMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/accent_red" />
     </application>
 
 

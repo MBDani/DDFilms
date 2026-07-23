@@ -173,4 +173,10 @@
     <string name="delete_list">Delete list</string>
     <string name="delete_list_confirm_title">Delete list?</string>
     <string name="delete_list_confirm_desc">Are you sure you want to delete the list \'%s\'? This action cannot be undone.</string>
+
+    <!-- Notification Strings -->
+    <string name="notification_movie_added_title">New movie in %s!</string>
+    <string name="notification_movie_added_body">%1$s added \"%2$s\" to %3$s</string>
+    <string name="notification_new_review_title">New review on DDFilms!</string>
+    <string name="notification_new_review_body">%1$s posted a review of \"%2$s\"</string>
 </resources>

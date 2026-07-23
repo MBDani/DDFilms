@@ -225,7 +225,10 @@ class FirebaseManager {
                     transaction.update(docRef, "lastUpdated", formattedDate)
                     null
                 }
-                .addOnSuccessListener { callback.onComplete(successMessage, null) }
+                .addOnSuccessListener {
+                    notifyMovieAddedToSharedList(documentSnapshot, movie, userID, userName)
+                    callback.onComplete(successMessage, null)
+                }
                 .addOnFailureListener { e -> callback.onComplete(null, Exception("$errorMessage: ${e.message}")) }
             }
         }
@@ -439,8 +442,62 @@ class FirebaseManager {
         review.id = docRef.id
 
         docRef.set(review)
-            .addOnSuccessListener { callback.onComplete(review, null) }
+            .addOnSuccessListener {
+                notifyNewReviewCreated(review)
+                callback.onComplete(review, null)
+            }
             .addOnFailureListener { e -> callback.onComplete(null, Exception("Error al añadir la reseña", e)) }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun notifyMovieAddedToSharedList(documentSnapshot: DocumentSnapshot, movie: Movie, senderUid: String, senderName: String?) {
+        val users = documentSnapshot.get("userID") as? List<String> ?: return
+        if (users.size > 1) {
+            val otherUsers = users.filter { it != senderUid }
+            val listName = documentSnapshot.getString("name") ?: "Lista"
+            val movieTitle = movie.title ?: movie.originalTitle ?: "una película"
+            val author = senderName ?: "Un usuario"
+
+            val notifData = HashMap<String, Any?>()
+            notifData["type"] = "MOVIE_ADDED"
+            notifData["title"] = "¡Nueva película en $listName!"
+            notifData["body"] = "$author ha añadido \"$movieTitle\" a la lista $listName"
+            notifData["titleEs"] = "¡Nueva película en $listName!"
+            notifData["titleEn"] = "New movie in $listName!"
+            notifData["bodyEs"] = "$author ha añadido \"$movieTitle\" a la lista $listName"
+            notifData["bodyEn"] = "$author added \"$movieTitle\" to $listName"
+            notifData["senderUid"] = senderUid
+            notifData["senderName"] = author
+            notifData["targetUserIds"] = otherUsers
+            notifData["isGlobal"] = false
+            notifData["listId"] = documentSnapshot.id
+            notifData["createdAt"] = System.currentTimeMillis()
+
+            firebaseFirestore.collection("notifications").add(notifData)
+        }
+    }
+
+    private fun notifyNewReviewCreated(review: Review) {
+        val movieTitle = review.movieTitle ?: "una película"
+        val authorName = review.userName ?: "Un usuario"
+        val senderUid = review.userId ?: getCurrentUserUID()
+
+        val notifData = HashMap<String, Any?>()
+        notifData["type"] = "NEW_REVIEW"
+        notifData["title"] = "¡Nueva reseña en DDFilms!"
+        notifData["body"] = "$authorName ha publicado una reseña de \"$movieTitle\""
+        notifData["titleEs"] = "¡Nueva reseña en DDFilms!"
+        notifData["titleEn"] = "New review on DDFilms!"
+        notifData["bodyEs"] = "$authorName ha publicado una reseña de \"$movieTitle\""
+        notifData["bodyEn"] = "$authorName posted a review of \"$movieTitle\""
+        notifData["senderUid"] = senderUid
+        notifData["senderName"] = authorName
+        notifData["targetUserIds"] = emptyList<String>()
+        notifData["isGlobal"] = true
+        notifData["movieId"] = review.movieId
+        notifData["createdAt"] = System.currentTimeMillis()
+
+        firebaseFirestore.collection("notifications").add(notifData)
     }
 
     fun updateReview(review: Review, callback: TaskCompletionCallback<Review>) {
