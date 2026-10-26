@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.merino.ddfilms.utils.DateFormatter
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -401,6 +402,11 @@ fun ReviewsItemCard(
             // Likes/Dislikes Row
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 val liked = review.isLikedByCurrentUser
+                val disliked = review.isDislikedByCurrentUser
+
+                val likeActiveColor = colorResource(id = R.color.accent_green_dark)
+                val dislikeActiveColor = colorResource(id = R.color.accent_red)
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable { onLikeClick(review) }
@@ -408,18 +414,17 @@ fun ReviewsItemCard(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_thumb_up),
                         contentDescription = stringResource(R.string.like_review),
-                        tint = if (liked) MaterialTheme.colorScheme.primary else Color.Gray,
+                        tint = if (liked) likeActiveColor else Color.Gray,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = (review.likeCount?.size ?: 0).toString(),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (liked) MaterialTheme.colorScheme.primary else Color.Gray
+                        color = if (liked) likeActiveColor else Color.Gray
                     )
                 }
 
-                val disliked = review.isDislikedByCurrentUser
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable { onDislikeClick(review) }
@@ -427,14 +432,14 @@ fun ReviewsItemCard(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_thumb_down),
                         contentDescription = stringResource(R.string.dislike_review),
-                        tint = if (disliked) MaterialTheme.colorScheme.secondary else Color.Gray,
+                        tint = if (disliked) dislikeActiveColor else Color.Gray,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = (review.dislikeCount?.size ?: 0).toString(),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (disliked) MaterialTheme.colorScheme.secondary else Color.Gray
+                        color = if (disliked) dislikeActiveColor else Color.Gray
                     )
                 }
             }

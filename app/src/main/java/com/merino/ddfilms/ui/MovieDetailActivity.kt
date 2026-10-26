@@ -1,6 +1,7 @@
 package com.merino.ddfilms.ui
 
 import android.content.Intent
+import android.net.Uri
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -14,6 +15,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,11 +28,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +55,10 @@ import com.merino.ddfilms.configuration.ApiKeyManager
 import com.merino.ddfilms.model.Credits
 import com.merino.ddfilms.model.Movie
 import com.merino.ddfilms.model.MovieDetails
+import com.merino.ddfilms.model.PlatformAvailability
 import com.merino.ddfilms.model.Review
+import com.merino.ddfilms.model.TargetPlatform
+import com.merino.ddfilms.model.WatchProvidersResponse
 import com.merino.ddfilms.ui.components.CinematicRatingBar
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment
 import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment
@@ -89,6 +98,16 @@ class MovieDetailActivity : AppCompatActivity() {
     private val reviewsListState = mutableStateOf<List<Review>>(emptyList())
     private val isLoadingState = mutableStateOf(true)
     private val isProcessingActionState = mutableStateOf(false)
+    private val platformsState = mutableStateOf<List<PlatformAvailability>>(
+        TargetPlatform.entries.map { platform ->
+            PlatformAvailability(
+                platform = platform,
+                isAvailable = false,
+                logoUrl = "https://image.tmdb.org/t/p/w154${platform.defaultLogoPath}"
+            )
+        }
+    )
+    private val watchProvidersLinkState = mutableStateOf<String?>(null)
 
     private var transitionStarted = false
     private var hasLoadedData = false
@@ -118,6 +137,7 @@ class MovieDetailActivity : AppCompatActivity() {
         hasLoadedData = true
         getMovieDetails(movie.id)
         getMovieCredits(movie.id)
+        getWatchProviders(movie.id)
         initReviews(movie)
     }
 
@@ -327,8 +347,9 @@ class MovieDetailActivity : AppCompatActivity() {
             layoutParams = params
         }
 
+        val currentLanguage = getString(R.string.tmdb_api_language)
         titleTextView = TextView(this).apply {
-            text = currentMovie?.title ?: ""
+            text = currentMovie?.getDisplayTitle(currentLanguage) ?: ""
             textSize = 20f
             setTypeface(null, android.graphics.Typeface.BOLD)
             setTextColor(textPrimaryColor)
@@ -423,11 +444,15 @@ class MovieDetailActivity : AppCompatActivity() {
                         reviews = reviewsListState.value,
                         isLoading = isLoadingState.value,
                         isProcessingAction = isProcessingActionState.value,
+                        platforms = platformsState.value,
                         currentUserId = userId,
                         onWriteReviewClick = { openWriteReviewActivity() },
                         onAddToListClick = { showAddToListDialog() },
                         onWatchlistClick = { addToWatchlist() },
                         onWatchedClick = { markAsWatched() },
+                        onPlatformClick = { platformAvailability ->
+                            openPlatform(platformAvailability)
+                        },
                         onLikeClick = { review ->
                             val index = reviewUtil.reviewsList.indexOfFirst { it.id == review.id }
                             if (index != -1) {
@@ -571,11 +596,42 @@ class MovieDetailActivity : AppCompatActivity() {
                 if (response.isSuccessful && response.body() != null) {
                     val details = response.body()!!
                     detailsState.value = details
+                    val curLang = getString(R.string.tmdb_api_language)
                     movieState.value?.apply {
                         title = details.title
                         overview = details.overview
                         releaseDate = details.releaseDate
                         backdropPath = details.backdropPath
+                        if (curLang.startsWith("es")) {
+                            titleEs = details.title
+                            overviewEs = details.overview
+                        } else {
+                            titleEn = details.title
+                            overviewEn = details.overview
+                        }
+                    }
+                    val altLang = if (curLang.startsWith("es")) "en-US" else "es-ES"
+                    val needsAlt = if (curLang.startsWith("es")) {
+                        movieState.value?.titleEn.isNullOrBlank()
+                    } else {
+                        movieState.value?.titleEs.isNullOrBlank()
+                    }
+                    if (needsAlt) {
+                        tmdbService.getMovieDetails(id, API_KEY, altLang).enqueue(object : Callback<MovieDetails> {
+                            override fun onResponse(call: Call<MovieDetails>, res: Response<MovieDetails>) {
+                                if (res.isSuccessful && res.body() != null) {
+                                    val altDetails = res.body()!!
+                                    if (altLang.startsWith("es")) {
+                                        movieState.value?.titleEs = altDetails.title
+                                        movieState.value?.overviewEs = altDetails.overview
+                                    } else {
+                                        movieState.value?.titleEn = altDetails.title
+                                        movieState.value?.overviewEn = altDetails.overview
+                                    }
+                                }
+                            }
+                            override fun onFailure(call: Call<MovieDetails>, t: Throwable) {}
+                        })
                     }
                     reviewUtil.currentMovie = movieState.value
 
@@ -617,6 +673,70 @@ class MovieDetailActivity : AppCompatActivity() {
                 checkLoadingState()
             }
         })
+    }
+
+    private fun getWatchProviders(id: Int) {
+        tmdbService.getMovieWatchProviders(id, API_KEY).enqueue(object : Callback<WatchProvidersResponse> {
+            override fun onResponse(call: Call<WatchProvidersResponse>, response: Response<WatchProvidersResponse>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val countryData = response.body()?.results?.get("ES")
+                    val flatrate = countryData?.flatrate.orEmpty()
+                    val link = countryData?.link
+                    watchProvidersLinkState.value = link
+
+                    val updatedPlatforms = TargetPlatform.entries.map { target ->
+                        val matchingProvider = flatrate.firstOrNull { target.matches(it.providerName) }
+                        if (matchingProvider != null) {
+                            val logo = if (!matchingProvider.logoPath.isNullOrEmpty()) {
+                                "https://image.tmdb.org/t/p/w154${matchingProvider.logoPath}"
+                            } else {
+                                "https://image.tmdb.org/t/p/w154${target.defaultLogoPath}"
+                            }
+                            PlatformAvailability(
+                                platform = target,
+                                isAvailable = true,
+                                logoUrl = logo,
+                                watchLink = link
+                            )
+                        } else {
+                            PlatformAvailability(
+                                platform = target,
+                                isAvailable = false,
+                                logoUrl = "https://image.tmdb.org/t/p/w154${target.defaultLogoPath}",
+                                watchLink = link
+                            )
+                        }
+                    }
+                    platformsState.value = updatedPlatforms
+                }
+            }
+
+            override fun onFailure(call: Call<WatchProvidersResponse>, t: Throwable) {
+                // Keep default state gracefully
+            }
+        })
+    }
+
+    private fun openPlatform(availability: PlatformAvailability) {
+        val watchLink = availability.watchLink
+        if (!watchLink.isNullOrEmpty()) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(watchLink))
+                startActivity(intent)
+                return
+            } catch (e: Exception) {
+                Log.e("MovieDetailActivity", "Error opening watch link", e)
+            }
+        }
+
+        try {
+            val title = movieState.value?.title ?: ""
+            val query = "ver $title en ${availability.platform.displayName}"
+            val searchIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=${Uri.encode(query)}"))
+            startActivity(searchIntent)
+        } catch (e: Exception) {
+            Log.e("MovieDetailActivity", "Error opening search", e)
+        }
     }
 
     private fun openWriteReviewActivity() {
@@ -695,6 +815,164 @@ fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun StreamingPlatformsSection(
+    platforms: List<PlatformAvailability>,
+    onPlatformClick: (PlatformAvailability) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        SectionHeader(title = stringResource(R.string.where_to_watch_title))
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            platforms.forEach { item ->
+                StreamingPlatformCard(
+                    item = item,
+                    onPlatformClick = onPlatformClick,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StreamingPlatformCard(
+    item: PlatformAvailability,
+    onPlatformClick: (PlatformAvailability) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isAvailable = item.isAvailable
+    val brandColor = Color(item.platform.brandColorHex)
+
+    val cardBorder = if (isAvailable) {
+        BorderStroke(1.dp, brandColor.copy(alpha = 0.5f))
+    } else {
+        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+    }
+
+    val containerColor = if (isAvailable) {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+    }
+
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        border = cardBorder,
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        modifier = modifier
+            .alpha(if (isAvailable) 1f else 0.38f)
+            .then(
+                if (isAvailable) {
+                    Modifier.clickable { onPlatformClick(item) }
+                } else Modifier
+            )
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 6.dp)
+        ) {
+            // Status Indicator Dot
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isAvailable) Color(0xFF4CAF50)
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                        )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Platform Logo
+            Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.Black.copy(alpha = 0.35f))
+                    .border(
+                        1.dp,
+                        if (isAvailable) brandColor.copy(alpha = 0.35f)
+                        else Color.Transparent,
+                        RoundedCornerShape(10.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                AsyncImage(
+                    model = item.logoUrl,
+                    contentDescription = item.platform.displayName,
+                    contentScale = ContentScale.Crop,
+                    colorFilter = if (isAvailable) null else ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(10.dp))
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Platform Name
+            Text(
+                text = item.platform.displayName,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = if (isAvailable) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Availability Badge
+            if (isAvailable) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF4CAF50).copy(alpha = 0.15f))
+                        .border(0.5.dp, Color(0xFF4CAF50).copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 7.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.platform_available),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF81C784)
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+                        .padding(horizontal = 7.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.platform_unavailable),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun MovieDetailBody(
     details: MovieDetails?,
     credits: Credits?,
@@ -702,11 +980,13 @@ fun MovieDetailBody(
     reviews: List<Review>,
     isLoading: Boolean,
     isProcessingAction: Boolean = false,
+    platforms: List<PlatformAvailability> = emptyList(),
     currentUserId: String?,
     onWriteReviewClick: () -> Unit,
     onAddToListClick: () -> Unit,
     onWatchlistClick: () -> Unit,
     onWatchedClick: () -> Unit,
+    onPlatformClick: (PlatformAvailability) -> Unit = {},
     onLikeClick: (Review) -> Unit,
     onDislikeClick: (Review) -> Unit,
     onDeleteClick: (Review) -> Unit,
@@ -863,8 +1143,18 @@ fun MovieDetailBody(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Streaming Platforms Availability (Spain)
+        if (platforms.isNotEmpty()) {
+            StreamingPlatformsSection(
+                platforms = platforms,
+                onPlatformClick = onPlatformClick
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
         // Overview / Synopsis Section
-        val overview = if (!details?.overview.isNullOrEmpty()) details?.overview else movie?.overview
+        val currentLang = stringResource(R.string.tmdb_api_language)
+        val overview = if (!details?.overview.isNullOrEmpty()) details?.overview else movie?.getDisplayOverview(currentLang)
         if (!overview.isNullOrEmpty()) {
             SectionHeader(title = stringResource(R.string.synopsis_title))
             Spacer(modifier = Modifier.height(10.dp))
@@ -1157,6 +1447,9 @@ fun ReviewItemCard(
                 val isLiked = review.isLikedByCurrentUser || (currentUserId != null && review.likeCount?.contains(currentUserId) == true)
                 val isDisliked = review.isDislikedByCurrentUser || (currentUserId != null && review.dislikeCount?.contains(currentUserId) == true)
 
+                val likeActiveColor = colorResource(R.color.accent_green_dark)
+                val dislikeActiveColor = colorResource(R.color.accent_red)
+
                 IconButton(
                     onClick = { onLikeClick(review) },
                     modifier = Modifier.size(32.dp)
@@ -1164,7 +1457,7 @@ fun ReviewItemCard(
                     Icon(
                         painter = painterResource(R.drawable.ic_thumb_up),
                         contentDescription = stringResource(R.string.like_review),
-                        tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        tint = if (isLiked) likeActiveColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -1172,7 +1465,7 @@ fun ReviewItemCard(
                     text = "$likeCount",
                     fontSize = 12.sp,
                     fontWeight = if (isLiked) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = if (isLiked) likeActiveColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
 
                 Spacer(modifier = Modifier.width(14.dp))
@@ -1184,7 +1477,7 @@ fun ReviewItemCard(
                     Icon(
                         painter = painterResource(R.drawable.ic_thumb_down),
                         contentDescription = stringResource(R.string.dislike_review),
-                        tint = if (isDisliked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        tint = if (isDisliked) dislikeActiveColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -1192,7 +1485,7 @@ fun ReviewItemCard(
                     text = "$dislikeCount",
                     fontSize = 12.sp,
                     fontWeight = if (isDisliked) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isDisliked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = if (isDisliked) dislikeActiveColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
