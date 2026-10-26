@@ -3,6 +3,7 @@ package com.merino.ddfilms.api
 import com.merino.ddfilms.model.Credits
 import com.merino.ddfilms.model.MovieDetails
 import com.merino.ddfilms.model.SearchResponse
+import com.merino.ddfilms.model.WatchProvidersResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -47,5 +48,11 @@ interface TMDBService {
         @Query("vote_average.gte") voteAverageGte: Float? = null,
         @Query("page") page: Int = 1
     ): Call<SearchResponse>
+
+    @GET("movie/{movie_id}/watch/providers")
+    fun getMovieWatchProviders(
+        @Path("movie_id") movieId: Int,
+        @Query("api_key") apiKey: String
+    ): Call<WatchProvidersResponse>
 }
 

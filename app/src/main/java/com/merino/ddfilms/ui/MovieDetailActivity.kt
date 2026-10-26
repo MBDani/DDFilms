@@ -830,160 +830,61 @@ fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun StreamingPlatformsSection(
+fun StreamingMiniRow(
     platforms: List<PlatformAvailability>,
     onPlatformClick: (PlatformAvailability) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        SectionHeader(title = stringResource(R.string.where_to_watch_title))
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            platforms.forEach { item ->
-                StreamingPlatformCard(
-                    item = item,
-                    onPlatformClick = onPlatformClick,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        platforms.forEach { item ->
+            StreamingMiniIcon(
+                item = item,
+                onClick = { onPlatformClick(item) }
+            )
         }
     }
 }
 
 @Composable
-fun StreamingPlatformCard(
+fun StreamingMiniIcon(
     item: PlatformAvailability,
-    onPlatformClick: (PlatformAvailability) -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isAvailable = item.isAvailable
     val brandColor = Color(item.platform.brandColorHex)
 
-    val cardBorder = if (isAvailable) {
-        BorderStroke(1.dp, brandColor.copy(alpha = 0.5f))
-    } else {
-        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-    }
-
-    val containerColor = if (isAvailable) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
-    }
-
-    Card(
-        shape = RoundedCornerShape(14.dp),
-        border = cardBorder,
-        colors = CardDefaults.cardColors(containerColor = containerColor),
+    Box(
         modifier = modifier
-            .alpha(if (isAvailable) 1f else 0.38f)
+            .size(30.dp)
+            .clip(RoundedCornerShape(7.dp))
+            .background(Color.Black.copy(alpha = if (isAvailable) 0.5f else 0.25f))
+            .border(
+                width = 1.dp,
+                color = if (isAvailable) brandColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(7.dp)
+            )
+            .alpha(if (isAvailable) 1f else 0.28f)
             .then(
                 if (isAvailable) {
-                    Modifier.clickable { onPlatformClick(item) }
+                    Modifier.clickable(onClick = onClick)
                 } else Modifier
-            )
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        AsyncImage(
+            model = item.logoUrl,
+            contentDescription = item.platform.displayName,
+            contentScale = ContentScale.Crop,
+            colorFilter = if (isAvailable) null else ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }),
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 6.dp)
-        ) {
-            // Status Indicator Dot
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isAvailable) Color(0xFF4CAF50)
-                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                        )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Platform Logo
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color.Black.copy(alpha = 0.35f))
-                    .border(
-                        1.dp,
-                        if (isAvailable) brandColor.copy(alpha = 0.35f)
-                        else Color.Transparent,
-                        RoundedCornerShape(10.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = item.logoUrl,
-                    contentDescription = item.platform.displayName,
-                    contentScale = ContentScale.Crop,
-                    colorFilter = if (isAvailable) null else ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(10.dp))
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Platform Name
-            Text(
-                text = item.platform.displayName,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = if (isAvailable) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Availability Badge
-            if (isAvailable) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFF4CAF50).copy(alpha = 0.15f))
-                        .border(0.5.dp, Color(0xFF4CAF50).copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 7.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.platform_available),
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF81C784)
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
-                        .padding(horizontal = 7.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.platform_unavailable),
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
-                    )
-                }
-            }
-        }
+                .fillMaxSize()
+                .clip(RoundedCornerShape(7.dp))
+        )
     }
 }
 
@@ -995,13 +896,11 @@ fun MovieDetailBody(
     reviews: List<Review>,
     isLoading: Boolean,
     isProcessingAction: Boolean = false,
-    platforms: List<PlatformAvailability> = emptyList(),
     currentUserId: String?,
     onWriteReviewClick: () -> Unit,
     onAddToListClick: () -> Unit,
     onWatchlistClick: () -> Unit,
     onWatchedClick: () -> Unit,
-    onPlatformClick: (PlatformAvailability) -> Unit = {},
     onLikeClick: (Review) -> Unit,
     onDislikeClick: (Review) -> Unit,
     onDeleteClick: (Review) -> Unit,
@@ -1157,15 +1056,6 @@ fun MovieDetailBody(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Streaming Platforms Availability (Spain)
-        if (platforms.isNotEmpty()) {
-            StreamingPlatformsSection(
-                platforms = platforms,
-                onPlatformClick = onPlatformClick
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-        }
 
         // Overview / Synopsis Section
         val currentLang = stringResource(R.string.tmdb_api_language)
