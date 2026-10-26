@@ -134,8 +134,6 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_default_profile"
                 app:shapeAppearanceOverlay="@style/CircularImageView"
-                app:strokeColor="@color/gold_light"
-                app:strokeWidth="1.5dp"
                 android:visibility="gone"/>
 
             <com.google.android.material.imageview.ShapeableImageView
@@ -146,8 +144,6 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_default_profile"
                 app:shapeAppearanceOverlay="@style/CircularImageView"
-                app:strokeColor="@color/gold_light"
-                app:strokeWidth="1.5dp"
                 android:visibility="gone"/>
 
             <com.google.android.material.imageview.ShapeableImageView
@@ -158,8 +154,6 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_default_profile"
                 app:shapeAppearanceOverlay="@style/CircularImageView"
-                app:strokeColor="@color/gold_light"
-                app:strokeWidth="1.5dp"
                 android:visibility="gone"/>
 
             <com.google.android.material.imageview.ShapeableImageView
@@ -170,8 +164,6 @@
                 android:scaleType="centerCrop"
                 android:src="@drawable/ic_default_profile"
                 app:shapeAppearanceOverlay="@style/CircularImageView"
-                app:strokeColor="@color/gold_light"
-                app:strokeWidth="1.5dp"
                 android:visibility="gone"/>
 
             <TextView

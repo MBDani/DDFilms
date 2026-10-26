@@ -426,6 +426,24 @@ class MovieDetailActivity : AppCompatActivity() {
         infoContainer.addView(metaTextView)
         infoContainer.addView(directorTextView)
 
+        val platformsComposeView = ComposeView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = (8 * density).toInt()
+            }
+            setContent {
+                CinematicTheme {
+                    StreamingMiniRow(
+                        platforms = platformsState.value,
+                        onPlatformClick = { openPlatform(it) }
+                    )
+                }
+            }
+        }
+        infoContainer.addView(platformsComposeView)
+
         posterRow.addView(posterImageView)
         posterRow.addView(infoContainer)
 
@@ -444,15 +462,11 @@ class MovieDetailActivity : AppCompatActivity() {
                         reviews = reviewsListState.value,
                         isLoading = isLoadingState.value,
                         isProcessingAction = isProcessingActionState.value,
-                        platforms = platformsState.value,
                         currentUserId = userId,
                         onWriteReviewClick = { openWriteReviewActivity() },
                         onAddToListClick = { showAddToListDialog() },
                         onWatchlistClick = { addToWatchlist() },
                         onWatchedClick = { markAsWatched() },
-                        onPlatformClick = { platformAvailability ->
-                            openPlatform(platformAvailability)
-                        },
                         onLikeClick = { review ->
                             val index = reviewUtil.reviewsList.indexOfFirst { it.id == review.id }
                             if (index != -1) {
@@ -730,7 +744,8 @@ class MovieDetailActivity : AppCompatActivity() {
         }
 
         try {
-            val title = movieState.value?.title ?: ""
+            val lang = getString(R.string.tmdb_api_language)
+            val title = movieState.value?.getDisplayTitle(lang) ?: movieState.value?.title ?: ""
             val query = "ver $title en ${availability.platform.displayName}"
             val searchIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=${Uri.encode(query)}"))
             startActivity(searchIntent)
@@ -1394,11 +1409,6 @@ fun ReviewItemCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .border(
-                            1.dp,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                            CircleShape
-                        )
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Column(modifier = Modifier.weight(1f)) {

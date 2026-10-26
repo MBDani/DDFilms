@@ -364,7 +364,7 @@ fun MovieListCard(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Stack of user profile avatars with Primary accent border stroke
+                // Stack of user profile avatars
                 val userIDs = list.userID ?: emptyList()
                 val denormalizedAvatars = list.memberAvatarsPreview ?: emptyList()
 
@@ -403,8 +403,6 @@ fun MovieListCard(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
                         )
                     }
 
