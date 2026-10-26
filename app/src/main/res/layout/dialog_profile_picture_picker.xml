@@ -35,7 +35,7 @@
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:src="@drawable/ic_close"
-                android:contentDescription="Cerrar modal"
+                android:contentDescription="@string/close_modal"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:focusable="true"

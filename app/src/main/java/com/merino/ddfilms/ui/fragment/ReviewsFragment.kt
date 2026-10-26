@@ -28,6 +28,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.bumptech.glide.Glide
 import com.merino.ddfilms.utils.DateFormatter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -89,14 +90,17 @@ class ReviewsFragment : Fragment() {
                                     posterPath = review.posterPath
                                     backdropPath = review.backdropPath
                                 }
+                                val tName = view?.transitionName ?: if (movie.id != 0) "moviePoster_${movie.id}" else "moviePosterTransition"
                                 putExtra("movie", movie)
                                 putExtra("highlight_review_id", review.id)
+                                putExtra("transition_name", tName)
                             }
                             if (view != null) {
+                                val tName = view.transitionName ?: "moviePosterTransition"
                                 val options = androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation(
                                     requireActivity(),
                                     view,
-                                    "moviePosterTransition"
+                                    tName
                                 )
                                 androidx.core.app.ActivityCompat.startActivity(requireContext(), intent, options.toBundle())
                             } else {
@@ -120,11 +124,29 @@ class ReviewsFragment : Fragment() {
         reviewUtil.setOnReviewsLoadedListener {
             reviewsState.value = reviewUtil.reviewsList.toList()
         }
+        reviewUtil.setOnReviewsUpdatedListener { updatedList ->
+            reviewsState.value = updatedList
+        }
         reviewUtil.loadAllReviews()
 
         reviewUtil.reviewAdapter.registerAdapterDataObserver(object : androidx.recyclerview.widget.RecyclerView.AdapterDataObserver() {
             override fun onChanged() {
                 super.onChanged()
+                reviewsState.value = reviewUtil.reviewsList.toList()
+            }
+
+            override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
+                super.onItemRangeChanged(positionStart, itemCount)
+                reviewsState.value = reviewUtil.reviewsList.toList()
+            }
+
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                reviewsState.value = reviewUtil.reviewsList.toList()
+            }
+
+            override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+                super.onItemRangeRemoved(positionStart, itemCount)
                 reviewsState.value = reviewUtil.reviewsList.toList()
             }
         })
@@ -171,13 +193,13 @@ fun ReviewsScreen(
                 IconButton(onClick = onBackClick) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_back),
-                        contentDescription = "Volver",
+                        contentDescription = stringResource(R.string.back_arrow_desc),
                         tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Reseñas de la Comunidad",
+                    text = stringResource(R.string.community_reviews_title),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.weight(1f)
                 )
@@ -191,18 +213,18 @@ fun ReviewsScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             val filters = listOf(
-                "recientes" to "Más Recientes",
-                "antiguas" to "Más Antiguas",
-                "likes" to "Likes",
-                "dislikes" to "Dislikes",
-                "mejor_valoracion" to "Mejor Valoración",
-                "peor_valoracion" to "Peor Valoración"
+                "recientes" to R.string.tab_recent,
+                "antiguas" to R.string.tab_oldest,
+                "likes" to R.string.tab_likes,
+                "dislikes" to R.string.tab_dislikes,
+                "mejor_valoracion" to R.string.tab_highest_rating,
+                "peor_valoracion" to R.string.tab_lowest_rating
             )
-            filters.forEachIndexed { index, (id, label) ->
+            filters.forEachIndexed { index, (id, labelRes) ->
                 Tab(
                     selected = currentFilter == id,
                     onClick = { onFilterChange(id) },
-                    text = { Text(label, fontSize = 13.sp) }
+                    text = { Text(stringResource(labelRes), fontSize = 13.sp) }
                 )
             }
         }
@@ -214,7 +236,7 @@ fun ReviewsScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No hay reseñas disponibles.", color = Color.Gray)
+                Text(stringResource(R.string.no_reviews_available), color = Color.Gray)
             }
         } else {
             LazyColumn(
@@ -279,7 +301,7 @@ fun ReviewsItemCard(
                 Spacer(modifier = Modifier.width(8.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = review.userName ?: "Usuario",
+                        text = review.userName ?: stringResource(R.string.default_user_name),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -317,11 +339,13 @@ fun ReviewsItemCard(
                     "https://image.tmdb.org/t/p/w200${review.posterPath}"
                 } else null
 
+                val tName = if (review.movieId != 0) "moviePoster_${review.movieId}" else "moviePosterTransition"
+
                 AndroidView(
                     factory = { ctx ->
                         ImageView(ctx).apply {
                             scaleType = ImageView.ScaleType.CENTER_CROP
-                            transitionName = "moviePosterTransition"
+                            this.transitionName = tName
                             clipToOutline = true
                             outlineProvider = object : android.view.ViewOutlineProvider() {
                                 override fun getOutline(v: View, outline: android.graphics.Outline) {
@@ -333,6 +357,9 @@ fun ReviewsItemCard(
                         }
                     },
                     update = { imageView ->
+                        imageView.transitionName = tName
+                        imageView.visibility = View.VISIBLE
+                        imageView.alpha = 1f
                         posterViewRef = imageView
                         if (!posterUrl.isNullOrEmpty()) {
                             Glide.with(imageView.context)
@@ -350,7 +377,7 @@ fun ReviewsItemCard(
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = review.movieTitle ?: "Película",
+                    text = review.movieTitle ?: stringResource(R.string.default_movie_title),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
@@ -380,7 +407,7 @@ fun ReviewsItemCard(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_thumb_up),
-                        contentDescription = "Me gusta",
+                        contentDescription = stringResource(R.string.like_review),
                         tint = if (liked) MaterialTheme.colorScheme.primary else Color.Gray,
                         modifier = Modifier.size(16.dp)
                     )
@@ -399,15 +426,15 @@ fun ReviewsItemCard(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_thumb_down),
-                        contentDescription = "No me gusta",
-                        tint = if (disliked) MaterialTheme.colorScheme.primary else Color.Gray,
+                        contentDescription = stringResource(R.string.dislike_review),
+                        tint = if (disliked) MaterialTheme.colorScheme.secondary else Color.Gray,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = (review.dislikeCount?.size ?: 0).toString(),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (disliked) MaterialTheme.colorScheme.primary else Color.Gray
+                        color = if (disliked) MaterialTheme.colorScheme.secondary else Color.Gray
                     )
                 }
             }

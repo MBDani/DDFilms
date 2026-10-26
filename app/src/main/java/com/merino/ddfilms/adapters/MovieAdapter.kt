@@ -287,19 +287,20 @@ class MovieAdapter : RecyclerView.Adapter<MovieAdapter.MovieViewHolder>() {
 
                 val options = ArrayList<String>()
 
+                val commonLabel = itemView.context.getString(R.string.common_user)
                 if (usersList.isNotEmpty()) {
                     for (user in usersList) {
                         if (!options.contains(user)) {
                             options.add(user)
                         }
                     }
-                    options.add("Común")
+                    options.add(commonLabel)
                 } else {
                     val movieAddedBy = movie.addedBy
                     if (!movieAddedBy.isNullOrEmpty()) {
                         options.add(movieAddedBy)
                     }
-                    options.add("Común")
+                    options.add(commonLabel)
                 }
 
                 spinnerAdapter.clear()

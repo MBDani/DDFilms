@@ -16,15 +16,10 @@ data class Review(
     var reviewText: String? = null,
     var reviewDate: String? = null,
     var likeCount: List<String>? = null,
-    var dislikeCount: List<String>? = null
+    var dislikeCount: List<String>? = null,
+    @get:Exclude @set:Exclude var isLikedByCurrentUser: Boolean = false,
+    @get:Exclude @set:Exclude var isDislikedByCurrentUser: Boolean = false
 ) {
-    @get:Exclude
-    @set:Exclude
-    var isLikedByCurrentUser: Boolean = false
-
-    @get:Exclude
-    @set:Exclude
-    var isDislikedByCurrentUser: Boolean = false
 
     @get:Exclude
     val formattedDate: String

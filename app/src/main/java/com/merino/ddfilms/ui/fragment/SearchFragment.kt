@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -57,9 +58,9 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-data class GenreItem(val id: Int?, val name: String)
+data class GenreItem(val id: Int?, val nameRes: Int)
 
-data class SortOption(val key: String, val label: String)
+data class SortOption(val key: String, val labelRes: Int)
 
 class SearchFragment : Fragment() {
 
@@ -85,23 +86,23 @@ class SearchFragment : Fragment() {
     private var listName: String? = null
 
     private val genresList = listOf(
-        GenreItem(null, "Todas"),
-        GenreItem(28, "Acción"),
-        GenreItem(35, "Comedia"),
-        GenreItem(18, "Drama"),
-        GenreItem(878, "Sci-Fi"),
-        GenreItem(27, "Terror"),
-        GenreItem(16, "Animación"),
-        GenreItem(53, "Thriller"),
-        GenreItem(12, "Aventura"),
-        GenreItem(10749, "Romance"),
-        GenreItem(99, "Documental")
+        GenreItem(null, R.string.genre_all),
+        GenreItem(28, R.string.genre_action),
+        GenreItem(35, R.string.genre_comedy),
+        GenreItem(18, R.string.genre_drama),
+        GenreItem(878, R.string.genre_scifi),
+        GenreItem(27, R.string.genre_horror),
+        GenreItem(16, R.string.genre_animation),
+        GenreItem(53, R.string.genre_thriller),
+        GenreItem(12, R.string.genre_adventure),
+        GenreItem(10749, R.string.genre_romance),
+        GenreItem(99, R.string.genre_documentary)
     )
 
     private val sortOptions = listOf(
-        SortOption("popularity.desc", "Más Populares"),
-        SortOption("vote_average.desc", "Mejor Valoradas"),
-        SortOption("primary_release_date.desc", "Más Recientes")
+        SortOption("popularity.desc", R.string.sort_popularity_desc),
+        SortOption("vote_average.desc", R.string.sort_vote_average_desc),
+        SortOption("primary_release_date.desc", R.string.sort_primary_release_date_desc)
     )
 
     private val yearOptions = listOf<Int?>(null, 2026, 2025, 2024, 2023, 2020, 2010)
@@ -190,23 +191,41 @@ class SearchFragment : Fragment() {
                         onAddClick = { movie -> addMovie(movie) },
                         onRemoveClick = { movie -> deleteMovie(movie) },
                         onMovieClick = { movie, view ->
-                            if (!isAddMode) {
-                                val intent = Intent(requireContext(), MovieDetailActivity::class.java).apply {
-                                    putExtra("movie", movie)
-                                }
-                                if (view != null) {
-                                    val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                                        requireActivity(),
-                                        view,
-                                        "moviePosterTransition"
-                                    )
-                                    ActivityCompat.startActivity(requireContext(), intent, options.toBundle())
-                                } else {
-                                    startActivity(intent)
-                                }
+                            val currentContext = context ?: return@SearchScreen
+                            val currentActivity = activity
+                            val tName = view?.transitionName ?: if (movie.id != 0) "moviePoster_${movie.id}" else "moviePosterTransition"
+                            val intent = Intent(currentContext, MovieDetailActivity::class.java).apply {
+                                putExtra("movie", movie)
+                                putExtra("transition_name", tName)
+                            }
+                            if (view != null && currentActivity != null) {
+                                val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                    currentActivity,
+                                    view,
+                                    tName
+                                )
+                                ActivityCompat.startActivity(currentContext, intent, options.toBundle())
+                            } else {
+                                currentContext.startActivity(intent)
                             }
                         }
                     )
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isAddMode) {
+            val col = collection ?: return
+            val doc = documentID ?: return
+            firebaseManager.getMoviesFromList(doc, col) { movies, _ ->
+                if (movies != null) {
+                    val newIds = movies.map { it.id }
+                    if (moviesIdListState.value != newIds) {
+                        moviesIdListState.value = newIds
+                    }
                 }
             }
         }
@@ -217,11 +236,11 @@ class SearchFragment : Fragment() {
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE, getString(R.string.tmdb_api_language))
-                putExtra(RecognizerIntent.EXTRA_PROMPT, "Habla para buscar películas...")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_search_prompt))
             }
             voiceSearchLauncher.launch(intent)
         } catch (e: Exception) {
-            showMessage(context, "El servicio de voz no está disponible")
+            showMessage(context, getString(R.string.voice_search_unavailable))
         }
     }
 
@@ -396,9 +415,16 @@ fun SearchScreen(
 
             // Active Filters Summary Bar
             AnimatedVisibility(visible = hasActiveFilters) {
+                val selectedGenre = genres.find { it.id == selectedGenreId }
+                val selectedGenreName = selectedGenre?.let { stringResource(it.nameRes) }
+                val selectedSort = sortOptions.find { it.key == selectedSortBy }
+                val selectedSortLabel = selectedSort?.let { stringResource(it.labelRes) }
+
                 ActiveFiltersSummary(
-                    selectedGenreName = genres.find { it.id == selectedGenreId }?.name,
-                    selectedSortLabel = sortOptions.find { it.key == selectedSortBy }?.label,
+                    selectedGenreName = selectedGenreName,
+                    selectedSortLabel = selectedSortLabel,
+                    selectedGenreId = selectedGenreId,
+                    selectedSortBy = selectedSortBy,
                     selectedYear = selectedYear,
                     minRating = minRating,
                     onResetFilters = onResetFilters
@@ -408,7 +434,7 @@ fun SearchScreen(
             // Results count or status
             if (!isLoading && moviesList.isNotEmpty()) {
                 Text(
-                    text = "${moviesList.size} películas encontradas",
+                    text = stringResource(R.string.movies_found_count, moviesList.size),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
@@ -433,7 +459,7 @@ fun SearchScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "Buscando las mejores películas...",
+                                text = stringResource(R.string.searching_movies),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                             )
@@ -458,14 +484,14 @@ fun SearchScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "Sin resultados cinematográficos",
+                                text = stringResource(R.string.no_cinematic_results),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = if (hasActiveFilters) "Prueba a cambiar o reiniciar los filtros aplicados." else "Prueba a escribir otra búsqueda.",
+                                text = if (hasActiveFilters) stringResource(R.string.filter_empty_hint_active) else stringResource(R.string.filter_empty_hint_query),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                                 textAlign = TextAlign.Center
@@ -476,7 +502,7 @@ fun SearchScreen(
                                     onClick = onResetFilters,
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                 ) {
-                                    Text("Limpiar Filtros", color = MaterialTheme.colorScheme.onPrimary)
+                                    Text(stringResource(R.string.clear_filters), color = MaterialTheme.colorScheme.onPrimary)
                                 }
                             }
                         }
@@ -540,7 +566,7 @@ fun SearchHeader(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = onSearchQueryChange,
-            placeholder = { Text("Buscar películas...", color = Color.Gray) },
+            placeholder = { Text(stringResource(R.string.search_movies_hint), color = Color.Gray) },
             singleLine = true,
             leadingIcon = {
                 Icon(
@@ -555,7 +581,7 @@ fun SearchHeader(
                         IconButton(onClick = { onSearchQueryChange("") }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Limpiar texto",
+                                contentDescription = stringResource(R.string.clear_text),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -563,7 +589,7 @@ fun SearchHeader(
                     IconButton(onClick = onVoiceSearchClick) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_mic),
-                            contentDescription = "Búsqueda por Voz",
+                            contentDescription = stringResource(R.string.voice_search_desc),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(22.dp)
                         )
@@ -601,7 +627,7 @@ fun SearchHeader(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_filter_list),
-                    contentDescription = "Filtros",
+                    contentDescription = stringResource(R.string.filters_desc),
                     tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(22.dp)
                 )
@@ -656,7 +682,7 @@ fun GenreChipRow(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = genre.name,
+                    text = stringResource(genre.nameRes),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = textColor
@@ -670,6 +696,8 @@ fun GenreChipRow(
 fun ActiveFiltersSummary(
     selectedGenreName: String?,
     selectedSortLabel: String?,
+    selectedGenreId: Int?,
+    selectedSortBy: String,
     selectedYear: Int?,
     minRating: Float?,
     onResetFilters: () -> Unit
@@ -681,7 +709,7 @@ fun ActiveFiltersSummary(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Filtros:",
+            text = stringResource(R.string.filter_summary_label),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(end = 6.dp)
@@ -690,21 +718,21 @@ fun ActiveFiltersSummary(
             modifier = Modifier.weight(1f),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            if (selectedGenreName != null && selectedGenreName != "Todas") {
-                item { ActiveBadge("Género: $selectedGenreName") }
+            if (selectedGenreId != null && selectedGenreName != null) {
+                item { ActiveBadge(stringResource(R.string.filter_badge_genre, selectedGenreName)) }
             }
-            if (selectedSortLabel != null && selectedSortLabel != "Más Populares") {
-                item { ActiveBadge("Orden: $selectedSortLabel") }
+            if (selectedSortBy != "popularity.desc" && selectedSortLabel != null) {
+                item { ActiveBadge(stringResource(R.string.filter_badge_order, selectedSortLabel)) }
             }
             if (selectedYear != null) {
-                item { ActiveBadge("Año: $selectedYear") }
+                item { ActiveBadge(stringResource(R.string.filter_badge_year, selectedYear.toString())) }
             }
             if (minRating != null) {
-                item { ActiveBadge("Nota: $minRating+") }
+                item { ActiveBadge(stringResource(R.string.filter_badge_rating, minRating.toString())) }
             }
         }
         Text(
-            text = "Borrar",
+            text = stringResource(R.string.clear),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
@@ -862,13 +890,13 @@ fun FilterBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Filtros y Ordenación",
+                    text = stringResource(R.string.filters_and_sorting),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 TextButton(onClick = onResetFilters) {
-                    Text("Restablecer", color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.reset), color = MaterialTheme.colorScheme.primary)
                 }
             }
 
@@ -879,7 +907,7 @@ fun FilterBottomSheet(
 
             // 1. Sort Section
             Text(
-                text = "Ordenar por",
+                text = stringResource(R.string.order_by),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -894,7 +922,7 @@ fun FilterBottomSheet(
                     FilterChip(
                         selected = isSelected,
                         onClick = { onSortBySelected(option.key) },
-                        label = { Text(option.label) },
+                        label = { Text(stringResource(option.labelRes)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -907,7 +935,7 @@ fun FilterBottomSheet(
 
             // 2. Release Year Section
             Text(
-                text = "Año de Estreno",
+                text = stringResource(R.string.release_year),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -915,7 +943,7 @@ fun FilterBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(yearOptions) { year ->
-                    val label = year?.toString() ?: "Todos"
+                    val label = year?.toString() ?: stringResource(R.string.year_all)
                     val isSelected = selectedYear == year
                     FilterChip(
                         selected = isSelected,
@@ -933,7 +961,7 @@ fun FilterBottomSheet(
 
             // 3. Minimum Rating Section
             Text(
-                text = "Puntuación Mínima",
+                text = stringResource(R.string.min_rating),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -941,7 +969,7 @@ fun FilterBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ratingOptions.forEach { rating ->
-                    val label = if (rating != null) "⭐ $rating+" else "Todas"
+                    val label = if (rating != null) "⭐ $rating+" else stringResource(R.string.rating_all)
                     val isSelected = minRating == rating
                     FilterChip(
                         selected = isSelected,
@@ -966,7 +994,7 @@ fun FilterBottomSheet(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(
-                    text = "Aplicar Filtros",
+                    text = stringResource(R.string.apply_filters),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimary
                 )

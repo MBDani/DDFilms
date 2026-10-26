@@ -60,6 +60,8 @@ fun MoviePosterCard(
         "https://image.tmdb.org/t/p/w342$posterPath"
     } else null
 
+    val transitionName = if (movie.id != 0) "moviePoster_${movie.id}" else "moviePosterTransition"
+
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -73,7 +75,7 @@ fun MoviePosterCard(
             factory = { ctx ->
                 ImageView(ctx).apply {
                     scaleType = ImageView.ScaleType.CENTER_CROP
-                    transitionName = "moviePosterTransition"
+                    this.transitionName = transitionName
                     clipToOutline = true
                     outlineProvider = object : android.view.ViewOutlineProvider() {
                         override fun getOutline(v: View, outline: android.graphics.Outline) {
@@ -86,10 +88,13 @@ fun MoviePosterCard(
                 }
             },
             update = { imageView ->
+                imageView.transitionName = transitionName
+                imageView.visibility = View.VISIBLE
+                imageView.alpha = 1f
                 onViewCreated?.invoke(imageView)
                 val ctx = imageView.context
                 if (!imageUrl.isNullOrEmpty()) {
-                    if (imageView.tag != imageUrl) {
+                    if (imageView.tag != imageUrl || imageView.drawable == null) {
                         imageView.tag = imageUrl
                         Glide.with(ctx)
                             .load(imageUrl)
@@ -104,6 +109,8 @@ fun MoviePosterCard(
                                     target: com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable>,
                                     isFirstResource: Boolean
                                 ): Boolean {
+                                    imageView.visibility = View.VISIBLE
+                                    imageView.alpha = 1f
                                     onResourceReady?.invoke()
                                     return false
                                 }
@@ -115,6 +122,8 @@ fun MoviePosterCard(
                                     dataSource: com.bumptech.glide.load.DataSource,
                                     isFirstResource: Boolean
                                 ): Boolean {
+                                    imageView.visibility = View.VISIBLE
+                                    imageView.alpha = 1f
                                     onResourceReady?.invoke()
                                     return false
                                 }

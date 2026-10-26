@@ -27,7 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,9 +50,10 @@ class ProfileFragment : Fragment() {
     private lateinit var preferences: SharedPreferences
 
     private val currentProfileImageUrlState = mutableStateOf<String?>(null)
-    private val profileNameState = mutableStateOf("Cargando...")
+    private val profileNameState = mutableStateOf("")
     private val profileEmailState = mutableStateOf("")
     private val themeModeState = mutableStateOf("system")
+    private val languageModeState = mutableStateOf("system")
     private val notificationsEnabledState = mutableStateOf(false)
 
     private val watchlistCountState = mutableIntStateOf(0)
@@ -61,8 +64,21 @@ class ProfileFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        profileNameState.value = getString(R.string.loading)
         preferences = requireContext().getSharedPreferences("Preferences", Context.MODE_PRIVATE)
         themeModeState.value = preferences.getString("theme_mode", "system") ?: "system"
+
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        val savedLang = preferences.getString("language_mode", null)
+        languageModeState.value = when {
+            savedLang != null -> savedLang
+            !currentLocales.isEmpty -> {
+                val tag = currentLocales.toLanguageTags()
+                if (tag.startsWith("es")) "es" else if (tag.startsWith("en")) "en" else "system"
+            }
+            else -> "system"
+        }
+
         notificationsEnabledState.value = preferences.getBoolean("notifications_enabled", false)
 
         requestPermissionLauncher = registerForActivityResult(
@@ -88,6 +104,7 @@ class ProfileFragment : Fragment() {
                         profileEmail = profileEmailState.value,
                         profileImageUrl = currentProfileImageUrlState.value,
                         themeMode = themeModeState.value,
+                        languageMode = languageModeState.value,
                         notificationsEnabled = notificationsEnabledState.value,
                         watchlistCount = watchlistCountState.intValue,
                         diaryCount = diaryCountState.intValue,
@@ -103,6 +120,11 @@ class ProfileFragment : Fragment() {
                             themeModeState.value = mode
                             preferences.edit().putString("theme_mode", mode).apply()
                             DDFilmsApplication.applyTheme(mode)
+                        },
+                        onLanguageChange = { mode ->
+                            languageModeState.value = mode
+                            preferences.edit().putString("language_mode", mode).apply()
+                            DDFilmsApplication.applyLanguage(mode)
                         },
                         onNotificationsChange = { isChecked ->
                             if (isChecked) {
@@ -191,12 +213,14 @@ fun ProfileScreen(
     profileEmail: String,
     profileImageUrl: String?,
     themeMode: String,
+    languageMode: String,
     notificationsEnabled: Boolean,
     watchlistCount: Int,
     diaryCount: Int,
     reviewsCount: Int,
     onEditAvatarClick: () -> Unit,
     onThemeChange: (String) -> Unit,
+    onLanguageChange: (String) -> Unit,
     onNotificationsChange: (Boolean) -> Unit,
     onWatchlistClick: () -> Unit,
     onDiaryClick: () -> Unit,
@@ -223,7 +247,7 @@ fun ProfileScreen(
         ) {
             AsyncImage(
                 model = profileImageUrl ?: R.drawable.ic_default_profile,
-                contentDescription = "Avatar de Perfil",
+                contentDescription = stringResource(R.string.choose_avatar),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
@@ -239,7 +263,7 @@ fun ProfileScreen(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_edit),
-                    contentDescription = "Editar avatar",
+                    contentDescription = stringResource(R.string.edit),
                     tint = Color.White,
                     modifier = Modifier.size(16.dp)
                 )
@@ -265,21 +289,21 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             StatCard(
-                title = "Watchlist",
+                title = stringResource(R.string.menu_watchlist),
                 count = watchlistCount,
                 iconRes = R.drawable.ic_watchlist,
                 onClick = onWatchlistClick,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
-                title = "Diario",
+                title = stringResource(R.string.menu_diary),
                 count = diaryCount,
                 iconRes = R.drawable.ic_diary,
                 onClick = onDiaryClick,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
-                title = "Reseñas",
+                title = stringResource(R.string.menu_reviews),
                 count = reviewsCount,
                 iconRes = R.drawable.ic_review,
                 onClick = onReviewsClick,
@@ -298,7 +322,7 @@ fun ProfileScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 // Tema selector
                 Text(
-                    text = "Apariencia de la aplicación",
+                    text = stringResource(R.string.theme_section_title),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
@@ -307,7 +331,11 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    val modes = listOf("light" to "Claro", "dark" to "Oscuro", "system" to "Sistema")
+                    val modes = listOf(
+                        "light" to stringResource(R.string.theme_light),
+                        "dark" to stringResource(R.string.theme_dark),
+                        "system" to stringResource(R.string.theme_system)
+                    )
                     modes.forEach { (mode, label) ->
                         val selected = themeMode == mode
                         FilterChip(
@@ -327,7 +355,44 @@ fun ProfileScreen(
                     }
                 }
 
-                Divider(modifier = Modifier.padding(vertical = 16.dp), color = Color.Gray.copy(alpha = 0.2f))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color.Gray.copy(alpha = 0.2f))
+
+                // Idioma selector
+                Text(
+                    text = stringResource(R.string.language_section_title),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val languages = listOf(
+                        "es" to stringResource(R.string.language_es),
+                        "en" to stringResource(R.string.language_en),
+                        "system" to stringResource(R.string.language_system)
+                    )
+                    languages.forEach { (lang, label) ->
+                        val selected = languageMode == lang
+                        FilterChip(
+                            selected = selected,
+                            onClick = { onLanguageChange(lang) },
+                            label = { Text(label) },
+                            leadingIcon = if (selected) {
+                                {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_done),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            } else null
+                        )
+                    }
+                }
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = Color.Gray.copy(alpha = 0.2f))
 
                 // Notificaciones switch
                 Row(
@@ -336,11 +401,11 @@ fun ProfileScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Notificaciones",
+                            text = stringResource(R.string.notifications_card_title),
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = "Recibir alertas sobre listas compartidas o novedades",
+                            text = stringResource(R.string.notifications_card_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -371,7 +436,7 @@ fun ProfileScreen(
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Cerrar sesión", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = stringResource(R.string.bt_logout), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
 
         Spacer(modifier = Modifier.height(24.dp))

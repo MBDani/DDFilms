@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="176dp"
     android:background="@drawable/nav_header_background"
@@ -35,7 +36,7 @@
             android:background="@drawable/bg_circle_edit_btn"
             android:clickable="true"
             android:focusable="true"
-            android:contentDescription="Editar foto de perfil"
+            android:contentDescription="@string/edit_profile_pic_desc"
             app:tint="@color/gold_light"/>
     </FrameLayout>
 
@@ -44,7 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/montserrat_bold"
-        android:text="Nombre Usuario"
+        tools:text="Nombre Usuario"
         android:textColor="@color/text_primary"
         android:textSize="20sp"/>
 
@@ -55,6 +56,6 @@
         android:layout_marginTop="4dp"
         android:fontFamily="@font/montserrat"
         android:textColor="@color/text_secondary"
-        android:text="usuario@email.com"
+        tools:text="usuario@email.com"
         android:textSize="14sp"/>
 </LinearLayout>

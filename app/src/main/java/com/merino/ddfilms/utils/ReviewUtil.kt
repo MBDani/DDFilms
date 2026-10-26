@@ -59,8 +59,29 @@ class ReviewUtil(private val context: Context) :
         this.reviewsLoadedListener = listener
     }
 
+    fun interface OnReviewsUpdatedListener {
+        fun onReviewsUpdated(reviews: List<Review>)
+    }
+
+    private var reviewsUpdatedListener: OnReviewsUpdatedListener? = null
+
+    fun setOnReviewsUpdatedListener(listener: OnReviewsUpdatedListener?) {
+        this.reviewsUpdatedListener = listener
+    }
+
+    fun notifyReviewsChanged() {
+        runOnMain {
+            reviewAdapter.notifyDataSetChanged()
+            reviewsUpdatedListener?.onReviewsUpdated(reviewsList.toList())
+        }
+    }
+
     init {
-        userId = firebaseManager.getCurrentUserUID()
+        try {
+            userId = firebaseManager.getCurrentUserUID()
+        } catch (e: Exception) {
+            userId = null
+        }
         reviewAdapter = ReviewAdapter(reviewsList, this)
         currentComparator = dateFormatter.reviewDateDescComparator()
     }
@@ -105,7 +126,7 @@ class ReviewUtil(private val context: Context) :
                 val end = Math.min(PAGE_SIZE, allReviewsList.size)
                 reviewsList.addAll(allReviewsList.subList(0, end))
 
-                runOnMain { reviewAdapter.notifyDataSetChanged() }
+                notifyReviewsChanged()
             }
         }
     }
@@ -123,6 +144,7 @@ class ReviewUtil(private val context: Context) :
             currentPage++
             runOnMain {
                 reviewAdapter.notifyItemRangeInserted(start, nextPageItems.size)
+                reviewsUpdatedListener?.onReviewsUpdated(reviewsList.toList())
                 Handler(Looper.getMainLooper()).post { isPageLoading = false }
             }
         }
@@ -152,6 +174,7 @@ class ReviewUtil(private val context: Context) :
                 runOnMain {
                     reviewAdapter.notifyDataSetChanged()
                     reviewsLoadedListener?.onReviewsLoaded()
+                    reviewsUpdatedListener?.onReviewsUpdated(reviewsList.toList())
                 }
             } else {
                 reviewsLoadedListener?.let { runOnMain { it.onReviewsLoaded() } }
@@ -169,7 +192,7 @@ class ReviewUtil(private val context: Context) :
             reviewsList.clear()
             val end = Math.min(PAGE_SIZE, allReviewsList.size)
             reviewsList.addAll(allReviewsList.subList(0, end))
-            runOnMain { reviewAdapter.notifyDataSetChanged() }
+            notifyReviewsChanged()
         }
     }
 
@@ -178,7 +201,7 @@ class ReviewUtil(private val context: Context) :
 
         if (userName == null) {
             firebaseManager.getUserName(userId!!) { name, _ ->
-                userName = name ?: "Usuario"
+                userName = name ?: context.getString(R.string.default_user_name)
                 review.userName = userName
                 proceedToPost(review)
             }
@@ -235,7 +258,7 @@ class ReviewUtil(private val context: Context) :
         val end = Math.min(PAGE_SIZE, allReviewsList.size)
         reviewsList.addAll(allReviewsList.subList(0, end))
 
-        runOnMain { reviewAdapter.notifyDataSetChanged() }
+        notifyReviewsChanged()
 
         userReview = review
     }
@@ -262,6 +285,7 @@ class ReviewUtil(private val context: Context) :
                         userReview = null
                     }
                     reviewAdapter.notifyDataSetChanged()
+                    reviewsUpdatedListener?.onReviewsUpdated(reviewsList.toList())
                     showMessage(context, context.getString(R.string.review_deleted_success))
                 }
             }
@@ -406,19 +430,139 @@ class ReviewUtil(private val context: Context) :
     // --------------------- Likes / dislikes  ------------------------------------------
 
     override fun onLikeClicked(review: Review, position: Int) {
-        if (review.likeCount?.contains(userId) == true) {
-            removeLike(review, position)
+        val uid = userId ?: try {
+            firebaseManager.getCurrentUserUID()
+        } catch (e: Exception) {
+            null
+        }
+        if (uid == null) {
+            showMessage(context, context.getString(R.string.login_to_interact_reviews))
+            return
+        }
+        userId = uid
+
+        val reviewId = review.id ?: return
+        val currentReview = reviewsList.find { it.id == reviewId }
+            ?: allReviewsList.find { it.id == reviewId }
+            ?: review
+
+        val isCurrentlyLiked = currentReview.isLikedByCurrentUser || (currentReview.likeCount?.contains(uid) == true)
+        val isCurrentlyDisliked = currentReview.isDislikedByCurrentUser || (currentReview.dislikeCount?.contains(uid) == true)
+        val previousReview = currentReview.copy()
+
+        if (isCurrentlyLiked) {
+            val newLikes = (currentReview.likeCount ?: emptyList()).filter { it != uid }
+            val updated = currentReview.copy(
+                likeCount = newLikes,
+                isLikedByCurrentUser = false
+            )
+            updateReviewInLists(reviewId, updated)
+
+            firebaseManager.reviewRemoveLike(reviewId, uid) { _, error ->
+                if (error != null) {
+                    showMessage(context, error.message)
+                    updateReviewInLists(reviewId, previousReview)
+                }
+            }
         } else {
-            addLike(review, position)
+            val currentLikes = currentReview.likeCount ?: emptyList()
+            val newLikes = if (currentLikes.contains(uid)) currentLikes else currentLikes + uid
+            val currentDislikes = currentReview.dislikeCount ?: emptyList()
+            val newDislikes = currentDislikes.filter { it != uid }
+
+            val updated = currentReview.copy(
+                likeCount = newLikes,
+                dislikeCount = newDislikes,
+                isLikedByCurrentUser = true,
+                isDislikedByCurrentUser = false
+            )
+            updateReviewInLists(reviewId, updated)
+
+            firebaseManager.reviewAddLike(reviewId, uid) { _, error ->
+                if (error != null) {
+                    showMessage(context, error.message)
+                    updateReviewInLists(reviewId, previousReview)
+                } else if (isCurrentlyDisliked) {
+                    firebaseManager.reviewRemoveDislike(reviewId, uid) { _, _ -> }
+                }
+            }
         }
     }
 
     override fun onDislikeClicked(review: Review, position: Int) {
-        if (review.dislikeCount?.contains(userId) == true) {
-            removeDislike(review, position)
-        } else {
-            addDislike(review, position)
+        val uid = userId ?: try {
+            firebaseManager.getCurrentUserUID()
+        } catch (e: Exception) {
+            null
         }
+        if (uid == null) {
+            showMessage(context, context.getString(R.string.login_to_interact_reviews))
+            return
+        }
+        userId = uid
+
+        val reviewId = review.id ?: return
+        val currentReview = reviewsList.find { it.id == reviewId }
+            ?: allReviewsList.find { it.id == reviewId }
+            ?: review
+
+        val isCurrentlyLiked = currentReview.isLikedByCurrentUser || (currentReview.likeCount?.contains(uid) == true)
+        val isCurrentlyDisliked = currentReview.isDislikedByCurrentUser || (currentReview.dislikeCount?.contains(uid) == true)
+        val previousReview = currentReview.copy()
+
+        if (isCurrentlyDisliked) {
+            val newDislikes = (currentReview.dislikeCount ?: emptyList()).filter { it != uid }
+            val updated = currentReview.copy(
+                dislikeCount = newDislikes,
+                isDislikedByCurrentUser = false
+            )
+            updateReviewInLists(reviewId, updated)
+
+            firebaseManager.reviewRemoveDislike(reviewId, uid) { _, error ->
+                if (error != null) {
+                    showMessage(context, error.message)
+                    updateReviewInLists(reviewId, previousReview)
+                }
+            }
+        } else {
+            val currentDislikes = currentReview.dislikeCount ?: emptyList()
+            val newDislikes = if (currentDislikes.contains(uid)) currentDislikes else currentDislikes + uid
+            val currentLikes = currentReview.likeCount ?: emptyList()
+            val newLikes = currentLikes.filter { it != uid }
+
+            val updated = currentReview.copy(
+                likeCount = newLikes,
+                dislikeCount = newDislikes,
+                isLikedByCurrentUser = false,
+                isDislikedByCurrentUser = true
+            )
+            updateReviewInLists(reviewId, updated)
+
+            firebaseManager.reviewAddDislike(reviewId, uid) { _, error ->
+                if (error != null) {
+                    showMessage(context, error.message)
+                    updateReviewInLists(reviewId, previousReview)
+                } else if (isCurrentlyLiked) {
+                    firebaseManager.reviewRemoveLike(reviewId, uid) { _, _ -> }
+                }
+            }
+        }
+    }
+
+    private fun updateReviewInLists(reviewId: String, updatedReview: Review) {
+        val idx1 = reviewsList.indexOfFirst { it.id == reviewId }
+        if (idx1 != -1) {
+            reviewsList[idx1] = updatedReview
+            reviewAdapter.updateReview(idx1, updatedReview)
+        }
+        val idx2 = allReviewsList.indexOfFirst { it.id == reviewId }
+        if (idx2 != -1) {
+            allReviewsList[idx2] = updatedReview
+        }
+        if (userReview?.id == reviewId) {
+            userReview = updatedReview
+        }
+        notifyReviewsChanged()
     }
 
     override fun onReviewClicked(review: Review, sharedElement: View) {
@@ -444,82 +588,14 @@ class ReviewUtil(private val context: Context) :
     }
 
     private fun setUpLikeAndDislikeReviews(reviews: List<Review>) {
+        val uid = userId ?: try {
+            firebaseManager.getCurrentUserUID()
+        } catch (e: Exception) {
+            null
+        }
         for (review in reviews) {
-            review.isLikedByCurrentUser = review.likeCount?.contains(userId) == true
-            review.isDislikedByCurrentUser = review.dislikeCount?.contains(userId) == true
-        }
-    }
-
-    private fun addDislike(review: Review, position: Int) {
-        firebaseManager.reviewAddDislike(review.id!!, userId!!) { _, error ->
-            if (error != null) {
-                showMessage(context, error.message)
-                return@reviewAddDislike
-            }
-            val dislikes = review.dislikeCount?.toMutableList() ?: ArrayList()
-            dislikes.add(userId!!)
-            review.dislikeCount = dislikes
-            review.isDislikedByCurrentUser = true
-
-            if (review.likeCount?.contains(userId) == true) {
-                removeLike(review, position)
-            } else {
-                reviewAdapter.updateReview(position, review)
-                reviewAdapter.notifyItemChanged(position)
-            }
-        }
-    }
-
-    private fun addLike(review: Review, position: Int) {
-        firebaseManager.reviewAddLike(review.id!!, userId!!) { _, error ->
-            if (error != null) {
-                showMessage(context, error.message)
-                return@reviewAddLike
-            }
-            val likes = review.likeCount?.toMutableList() ?: ArrayList()
-            likes.add(userId!!)
-            review.likeCount = likes
-            review.isLikedByCurrentUser = true
-
-            if (review.dislikeCount?.contains(userId) == true) {
-                removeDislike(review, position)
-            } else {
-                runOnMain {
-                    reviewAdapter.updateReview(position, review)
-                    reviewAdapter.notifyItemChanged(position)
-                }
-            }
-        }
-    }
-
-    private fun removeDislike(review: Review, position: Int) {
-        firebaseManager.reviewRemoveDislike(review.id!!, userId!!) { _, error ->
-            if (error != null) {
-                showMessage(context, error.message)
-                return@reviewRemoveDislike
-            }
-            val dislikes = review.dislikeCount?.toMutableList() ?: ArrayList()
-            dislikes.remove(userId)
-            review.dislikeCount = dislikes
-            review.isDislikedByCurrentUser = false
-            runOnMain {
-                reviewAdapter.updateReview(position, review)
-                reviewAdapter.notifyItemChanged(position)
-            }
-        }
-    }
-
-    private fun removeLike(review: Review, position: Int) {
-        firebaseManager.reviewRemoveLike(review.id!!, userId!!) { _, error ->
-            if (error != null) {
-                showMessage(context, error.message)
-                return@reviewRemoveLike
-            }
-            val likes = review.likeCount?.toMutableList() ?: ArrayList()
-            likes.remove(userId)
-            review.likeCount = likes
-            review.isLikedByCurrentUser = false
-            runOnMain { reviewAdapter.notifyItemChanged(position) }
+            review.isLikedByCurrentUser = uid != null && review.likeCount?.contains(uid) == true
+            review.isDislikedByCurrentUser = uid != null && review.dislikeCount?.contains(uid) == true
         }
     }
 

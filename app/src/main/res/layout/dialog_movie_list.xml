@@ -30,7 +30,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_close"
-            android:contentDescription="Cerrar"
+            android:contentDescription="@string/close"
             android:layout_gravity="end"
             app:tint="@color/text_primary" />
     </LinearLayout>

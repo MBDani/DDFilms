@@ -455,19 +455,21 @@ class FirebaseManager {
         if (users.size > 1) {
             val otherUsers = users.filter { it != senderUid }
             val listName = documentSnapshot.getString("name") ?: "Lista"
-            val movieTitle = movie.title ?: movie.originalTitle ?: "una película"
-            val author = senderName ?: "Un usuario"
+            val movieTitleEs = movie.title ?: movie.originalTitle ?: "una película"
+            val movieTitleEn = movie.title ?: movie.originalTitle ?: "a movie"
+            val authorEs = senderName ?: "Un usuario"
+            val authorEn = senderName ?: "A user"
 
             val notifData = HashMap<String, Any?>()
             notifData["type"] = "MOVIE_ADDED"
             notifData["title"] = "¡Nueva película en $listName!"
-            notifData["body"] = "$author ha añadido \"$movieTitle\" a la lista $listName"
+            notifData["body"] = "$authorEs ha añadido \"$movieTitleEs\" a la lista $listName"
             notifData["titleEs"] = "¡Nueva película en $listName!"
             notifData["titleEn"] = "New movie in $listName!"
-            notifData["bodyEs"] = "$author ha añadido \"$movieTitle\" a la lista $listName"
-            notifData["bodyEn"] = "$author added \"$movieTitle\" to $listName"
+            notifData["bodyEs"] = "$authorEs ha añadido \"$movieTitleEs\" a la lista $listName"
+            notifData["bodyEn"] = "$authorEn added \"$movieTitleEn\" to $listName"
             notifData["senderUid"] = senderUid
-            notifData["senderName"] = author
+            notifData["senderName"] = authorEs
             notifData["targetUserIds"] = otherUsers
             notifData["isGlobal"] = false
             notifData["listId"] = documentSnapshot.id
@@ -478,20 +480,22 @@ class FirebaseManager {
     }
 
     private fun notifyNewReviewCreated(review: Review) {
-        val movieTitle = review.movieTitle ?: "una película"
-        val authorName = review.userName ?: "Un usuario"
+        val movieTitleEs = review.movieTitle ?: "una película"
+        val movieTitleEn = review.movieTitle ?: "a movie"
+        val authorNameEs = review.userName ?: "Un usuario"
+        val authorNameEn = review.userName ?: "A user"
         val senderUid = review.userId ?: getCurrentUserUID()
 
         val notifData = HashMap<String, Any?>()
         notifData["type"] = "NEW_REVIEW"
         notifData["title"] = "¡Nueva reseña en DDFilms!"
-        notifData["body"] = "$authorName ha publicado una reseña de \"$movieTitle\""
+        notifData["body"] = "$authorNameEs ha publicado una reseña de \"$movieTitleEs\""
         notifData["titleEs"] = "¡Nueva reseña en DDFilms!"
         notifData["titleEn"] = "New review on DDFilms!"
-        notifData["bodyEs"] = "$authorName ha publicado una reseña de \"$movieTitle\""
-        notifData["bodyEn"] = "$authorName posted a review of \"$movieTitle\""
+        notifData["bodyEs"] = "$authorNameEs ha publicado una reseña de \"$movieTitleEs\""
+        notifData["bodyEn"] = "$authorNameEn posted a review of \"$movieTitleEn\""
         notifData["senderUid"] = senderUid
-        notifData["senderName"] = authorName
+        notifData["senderName"] = authorNameEs
         notifData["targetUserIds"] = emptyList<String>()
         notifData["isGlobal"] = true
         notifData["movieId"] = review.movieId
@@ -519,7 +523,10 @@ class FirebaseManager {
             .addOnSuccessListener { querySnapshot ->
                 val reviews = ArrayList<Review>()
                 for (document in querySnapshot.documents) {
-                    document.toObject(Review::class.java)?.let { reviews.add(it) }
+                    document.toObject(Review::class.java)?.let {
+                        if (it.id == null) it.id = document.id
+                        reviews.add(it)
+                    }
                 }
                 callback.onComplete(reviews, null)
             }
@@ -531,7 +538,10 @@ class FirebaseManager {
             .addOnSuccessListener { querySnapshot ->
                 val reviews = ArrayList<Review>()
                 for (document in querySnapshot.documents) {
-                    document.toObject(Review::class.java)?.let { reviews.add(it) }
+                    document.toObject(Review::class.java)?.let {
+                        if (it.id == null) it.id = document.id
+                        reviews.add(it)
+                    }
                 }
                 callback.onComplete(reviews, null)
             }

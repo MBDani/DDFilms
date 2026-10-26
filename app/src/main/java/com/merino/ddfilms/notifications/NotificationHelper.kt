@@ -17,14 +17,14 @@ import com.merino.ddfilms.ui.MainActivity
 object NotificationHelper {
 
     private const val CHANNEL_ID = "ddfilms_notifications_channel"
-    private const val CHANNEL_NAME = "DDFilms Notificaciones"
-    private const val CHANNEL_DESC = "Notificaciones de listas compartidas y reseñas"
 
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, importance).apply {
-                description = CHANNEL_DESC
+            val channelName = context.getString(R.string.notification_channel_name)
+            val channelDesc = context.getString(R.string.notification_channel_desc)
+            val channel = NotificationChannel(CHANNEL_ID, channelName, importance).apply {
+                description = channelDesc
                 enableVibration(true)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }

@@ -253,7 +253,12 @@ class MovieDetailActivity : AppCompatActivity() {
             elevation = 16f * density
             val p = (10 * density).toInt()
             setPadding(p, p, p, p)
-            setOnClickListener { supportFinishAfterTransition() }
+            setOnClickListener {
+                if (nestedScrollView.scrollY > 0) {
+                    nestedScrollView.scrollTo(0, 0)
+                }
+                supportFinishAfterTransition()
+            }
 
             val size = (42 * density).toInt()
             val margin = (16 * density).toInt()
@@ -264,6 +269,15 @@ class MovieDetailActivity : AppCompatActivity() {
             }
             layoutParams = params
         }
+
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (nestedScrollView.scrollY > 0) {
+                    nestedScrollView.scrollTo(0, 0)
+                }
+                supportFinishAfterTransition()
+            }
+        })
 
         headerFrameLayout.addView(backdropImageView)
         headerFrameLayout.addView(gradientView)
@@ -283,11 +297,12 @@ class MovieDetailActivity : AppCompatActivity() {
             layoutParams = params
         }
 
+        val targetTransitionName = intent.getStringExtra("transition_name") ?: "moviePosterTransition"
         val posterW = (120 * density).toInt()
         val posterH = (180 * density).toInt()
         posterImageView = ImageView(this).apply {
             scaleType = ImageView.ScaleType.CENTER_CROP
-            transitionName = "moviePosterTransition"
+            this.transitionName = targetTransitionName
             elevation = 12f * density
             clipToOutline = true
             outlineProvider = object : android.view.ViewOutlineProvider() {
@@ -516,11 +531,29 @@ class MovieDetailActivity : AppCompatActivity() {
             reviewsListState.value = reviewUtil.reviewsList.toList()
             checkLoadingState()
         }
+        reviewUtil.setOnReviewsUpdatedListener { updatedList ->
+            reviewsListState.value = updatedList
+        }
         reviewUtil.loadMovieReviews(movie.id)
 
         reviewUtil.reviewAdapter.registerAdapterDataObserver(object : androidx.recyclerview.widget.RecyclerView.AdapterDataObserver() {
             override fun onChanged() {
                 super.onChanged()
+                reviewsListState.value = reviewUtil.reviewsList.toList()
+            }
+
+            override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
+                super.onItemRangeChanged(positionStart, itemCount)
+                reviewsListState.value = reviewUtil.reviewsList.toList()
+            }
+
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                reviewsListState.value = reviewUtil.reviewsList.toList()
+            }
+
+            override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+                super.onItemRangeRemoved(positionStart, itemCount)
                 reviewsListState.value = reviewUtil.reviewsList.toList()
             }
         })
@@ -1121,8 +1154,8 @@ fun ReviewItemCard(
                 val likeCount = review.likeCount?.size ?: 0
                 val dislikeCount = review.dislikeCount?.size ?: 0
 
-                val isLiked = currentUserId != null && review.likeCount?.contains(currentUserId) == true
-                val isDisliked = currentUserId != null && review.dislikeCount?.contains(currentUserId) == true
+                val isLiked = review.isLikedByCurrentUser || (currentUserId != null && review.likeCount?.contains(currentUserId) == true)
+                val isDisliked = review.isDislikedByCurrentUser || (currentUserId != null && review.dislikeCount?.contains(currentUserId) == true)
 
                 IconButton(
                     onClick = { onLikeClick(review) },
@@ -1130,7 +1163,7 @@ fun ReviewItemCard(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_thumb_up),
-                        contentDescription = "Me gusta",
+                        contentDescription = stringResource(R.string.like_review),
                         tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
@@ -1150,7 +1183,7 @@ fun ReviewItemCard(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_thumb_down),
-                        contentDescription = "No me gusta",
+                        contentDescription = stringResource(R.string.dislike_review),
                         tint = if (isDisliked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         modifier = Modifier.size(16.dp)
                     )
@@ -1171,7 +1204,7 @@ fun ReviewItemCard(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_delete),
-                            contentDescription = "Eliminar",
+                            contentDescription = stringResource(R.string.delete),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                             modifier = Modifier.size(16.dp)
                         )

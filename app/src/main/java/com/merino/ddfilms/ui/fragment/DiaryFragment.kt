@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,14 +69,16 @@ class DiaryFragment : Fragment(), FabHost, ShowsFab {
                             isEditModeState.value = !isEditModeState.value
                         },
                         onMovieClick = { movie, view ->
+                            val tName = view?.transitionName ?: if (movie.id != 0) "moviePoster_${movie.id}" else "moviePosterTransition"
                             val intent = Intent(requireContext(), MovieDetailActivity::class.java).apply {
                                 putExtra("movie", movie)
+                                putExtra("transition_name", tName)
                             }
                             if (view != null) {
                                 val options = androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation(
                                     requireActivity(),
                                     view,
-                                    "moviePosterTransition"
+                                    tName
                                 )
                                 androidx.core.app.ActivityCompat.startActivity(requireContext(), intent, options.toBundle())
                             } else {
@@ -135,7 +138,7 @@ class DiaryFragment : Fragment(), FabHost, ShowsFab {
         val intent = Intent(context, SearchActivity::class.java).apply {
             putExtra("collection", DIARY_LIST)
             putExtra("documentID", userID)
-            putExtra("listName", "Diario")
+            putExtra("listName", getString(R.string.menu_diary))
             val moviesID = movieListState.value.map { it.id }.toIntArray()
             putExtra("moviesID", moviesID)
         }
@@ -180,13 +183,13 @@ fun DiaryScreen(
                 IconButton(onClick = onBackClick) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_arrow_back),
-                        contentDescription = "Volver",
+                        contentDescription = stringResource(R.string.back_arrow_desc),
                         tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Mi Diario de Películas",
+                    text = stringResource(R.string.my_movie_diary),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.weight(1f)
                 )
@@ -196,7 +199,7 @@ fun DiaryScreen(
                         painter = painterResource(
                             id = if (isEditMode) R.drawable.ic_done else R.drawable.ic_edit
                         ),
-                        contentDescription = "Editar",
+                        contentDescription = stringResource(R.string.edit),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -215,7 +218,7 @@ fun DiaryScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No has registrado visionados en tu diario aún.",
+                        text = stringResource(R.string.empty_diary_message),
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                         fontSize = 16.sp
                     )
@@ -253,7 +256,7 @@ fun DiaryScreen(
                                 ) {
                                     Icon(
                                         painter = painterResource(id = R.drawable.ic_remove),
-                                        contentDescription = "Eliminar",
+                                        contentDescription = stringResource(R.string.delete),
                                         tint = Color.White,
                                         modifier = Modifier.size(16.dp)
                                     )

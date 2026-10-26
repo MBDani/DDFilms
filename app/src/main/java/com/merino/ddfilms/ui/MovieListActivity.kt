@@ -57,6 +57,19 @@ class MovieListActivity : AppCompatActivity() {
         listNameState.value = intent.getStringExtra("listName") ?: getString(R.string.unnamed_list)
         userID = firebaseManager.getCurrentUserUID()
 
+        setExitSharedElementCallback(object : androidx.core.app.SharedElementCallback() {
+            override fun onSharedElementEnd(
+                sharedElementNames: MutableList<String>?,
+                sharedElements: MutableList<View>?,
+                sharedElementSnapshots: MutableList<View>?
+            ) {
+                sharedElements?.forEach { view ->
+                    view.visibility = View.VISIBLE
+                    view.alpha = 1f
+                }
+            }
+        })
+
         setContent {
             CinematicTheme {
                 MovieListScreen(
@@ -105,14 +118,16 @@ class MovieListActivity : AppCompatActivity() {
                         startActivity(intent)
                     },
                     onMovieClick = { movie, view ->
+                        val tName = view?.transitionName ?: if (movie.id != 0) "moviePoster_${movie.id}" else "moviePosterTransition"
                         val intent = Intent(this@MovieListActivity, MovieDetailActivity::class.java).apply {
                             putExtra("movie", movie)
+                            putExtra("transition_name", tName)
                         }
                         if (view != null) {
                             val options = androidx.core.app.ActivityOptionsCompat.makeSceneTransitionAnimation(
                                 this@MovieListActivity,
                                 view,
-                                "moviePosterTransition"
+                                tName
                             )
                             androidx.core.app.ActivityCompat.startActivity(this@MovieListActivity, intent, options.toBundle())
                         } else {

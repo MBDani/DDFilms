@@ -1,6 +1,7 @@
 package com.merino.ddfilms.ui
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.merino.ddfilms.R
@@ -16,6 +17,19 @@ class SearchActivity : AppCompatActivity() {
         setContentView(R.layout.activity_search)
         toolbar = findViewById(R.id.toolbar)
         setupToolbar()
+
+        setExitSharedElementCallback(object : androidx.core.app.SharedElementCallback() {
+            override fun onSharedElementEnd(
+                sharedElementNames: MutableList<String>?,
+                sharedElements: MutableList<View>?,
+                sharedElementSnapshots: MutableList<View>?
+            ) {
+                sharedElements?.forEach { view ->
+                    view.visibility = View.VISIBLE
+                    view.alpha = 1f
+                }
+            }
+        })
 
         EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.appbar_layout), true, false)
         EdgeToEdgeHelper.applyWindowInsetsPending(findViewById(R.id.fragment_container), false, true)
@@ -36,7 +50,7 @@ class SearchActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         val listName = intent.getStringExtra("listName") ?: ""
-        supportActionBar?.title = "Añadiendo películas a $listName"
+        supportActionBar?.title = getString(R.string.adding_movies_to_list, listName)
         toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
 }

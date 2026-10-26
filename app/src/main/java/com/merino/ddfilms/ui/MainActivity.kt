@@ -61,6 +61,19 @@ class MainActivity : AppCompatActivity(), ActivityFabController {
         setSupportActionBar(toolbar)
         supportActionBar?.title = getString(R.string.app_name)
 
+        setExitSharedElementCallback(object : androidx.core.app.SharedElementCallback() {
+            override fun onSharedElementEnd(
+                sharedElementNames: MutableList<String>?,
+                sharedElements: MutableList<View>?,
+                sharedElementSnapshots: MutableList<View>?
+            ) {
+                sharedElements?.forEach { view ->
+                    view.visibility = View.VISIBLE
+                    view.alpha = 1f
+                }
+            }
+        })
+
         bottomNavigation = findViewById(R.id.bottom_navigation)
         bottomNavigation.setOnItemSelectedListener { item ->
             supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)

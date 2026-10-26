@@ -34,7 +34,7 @@
             android:layout_gravity="end"
             android:layout_marginStart="15dp"
             android:layout_marginBottom="15dp"
-            android:contentDescription="Cerrar"
+            android:contentDescription="@string/close"
             android:src="@drawable/ic_close"
             app:tint="@color/text_primary" />
     </LinearLayout>

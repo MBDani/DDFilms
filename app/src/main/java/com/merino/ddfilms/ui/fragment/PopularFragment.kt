@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -82,14 +83,16 @@ class PopularFragment : Fragment() {
                         popularMovies = popularMoviesState.value,
                         isLoading = isLoadingState.value,
                         onMovieClick = { movie, view, transitionName ->
+                            val tName = view?.transitionName ?: transitionName
                             val intent = Intent(requireContext(), MovieDetailActivity::class.java).apply {
                                 putExtra("movie", movie)
+                                putExtra("transition_name", tName)
                             }
                             if (view != null) {
                                 val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                                     requireActivity(),
                                     view,
-                                    transitionName
+                                    tName
                                 )
                                 ActivityCompat.startActivity(requireContext(), intent, options.toBundle())
                             } else {
@@ -142,7 +145,7 @@ fun PopularScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "No se encontraron películas populares",
+                    text = stringResource(R.string.no_popular_movies),
                     color = MaterialTheme.colorScheme.onBackground
                 )
             }
@@ -249,7 +252,7 @@ fun PopularScreen(
             if (rail1Movies.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Tendencias de la Semana",
+                        text = stringResource(R.string.trending_this_week),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -266,7 +269,10 @@ fun PopularScreen(
                         items(rail1Movies) { movie ->
                             MoviePosterCard(
                                 movie = movie,
-                                onClick = { view -> onMovieClick(movie, view, "moviePosterTransition") },
+                                onClick = { view ->
+                                    val tName = view?.transitionName ?: if (movie.id != 0) "moviePoster_${movie.id}" else "moviePosterTransition"
+                                    onMovieClick(movie, view, tName)
+                                },
                                 modifier = Modifier.width(120.dp)
                             )
                         }
@@ -278,7 +284,7 @@ fun PopularScreen(
             if (rail2Movies.isNotEmpty()) {
                 item {
                     Text(
-                        text = "Favoritas del Público",
+                        text = stringResource(R.string.audience_favorites),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary,
@@ -295,7 +301,10 @@ fun PopularScreen(
                         items(rail2Movies) { movie ->
                             MoviePosterCard(
                                 movie = movie,
-                                onClick = { view -> onMovieClick(movie, view, "moviePosterTransition") },
+                                onClick = { view ->
+                                    val tName = view?.transitionName ?: if (movie.id != 0) "moviePoster_${movie.id}" else "moviePosterTransition"
+                                    onMovieClick(movie, view, tName)
+                                },
                                 modifier = Modifier.width(120.dp)
                             )
                         }

@@ -35,7 +35,7 @@ class EditListActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Editar lista"
+        supportActionBar?.title = getString(R.string.edit_list)
 
         listNameInput.setText(currentListName)
         loadListUsers()

@@ -150,7 +150,7 @@ class WriteReviewDialogFragment(
             if (currentRating > 0) {
                 submitReview()
             } else {
-                showMessage(context, "Es obligatoria la puntucación")
+                showMessage(context, getString(R.string.rating_required))
             }
         }
 
