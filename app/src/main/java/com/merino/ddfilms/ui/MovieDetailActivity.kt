@@ -1,7 +1,5 @@
 package com.merino.ddfilms.ui
 
-import android.content.Intent
-import android.net.Uri
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
@@ -438,8 +436,7 @@ class MovieDetailActivity : AppCompatActivity() {
             setContent {
                 CinematicTheme {
                     StreamingMiniRow(
-                        platforms = platformsState.value,
-                        onPlatformClick = { openPlatform(it) }
+                        platforms = platformsState.value
                     )
                 }
             }
@@ -741,29 +738,6 @@ class MovieDetailActivity : AppCompatActivity() {
         })
     }
 
-    private fun openPlatform(availability: PlatformAvailability) {
-        val watchLink = availability.watchLink
-        if (!watchLink.isNullOrEmpty()) {
-            try {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(watchLink))
-                startActivity(intent)
-                return
-            } catch (e: Exception) {
-                Log.e("MovieDetailActivity", "Error opening watch link", e)
-            }
-        }
-
-        try {
-            val lang = LanguageManager.getLanguage(this)
-            val title = movieState.value?.getDisplayTitle(lang) ?: movieState.value?.title ?: ""
-            val query = "ver $title en ${availability.platform.displayName}"
-            val searchIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=${Uri.encode(query)}"))
-            startActivity(searchIntent)
-        } catch (e: Exception) {
-            Log.e("MovieDetailActivity", "Error opening search", e)
-        }
-    }
-
     private fun openWriteReviewActivity() {
         val dialog = WriteReviewDialogFragment(movieState.value, reviewUtil.userReview)
         dialog.setOnReviewSubmittedListener(reviewUtil)
@@ -842,7 +816,6 @@ fun SectionHeader(title: String, modifier: Modifier = Modifier) {
 @Composable
 fun StreamingMiniRow(
     platforms: List<PlatformAvailability>,
-    onPlatformClick: (PlatformAvailability) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -852,8 +825,7 @@ fun StreamingMiniRow(
     ) {
         platforms.forEach { item ->
             StreamingMiniIcon(
-                item = item,
-                onClick = { onPlatformClick(item) }
+                item = item
             )
         }
     }
@@ -862,7 +834,6 @@ fun StreamingMiniRow(
 @Composable
 fun StreamingMiniIcon(
     item: PlatformAvailability,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isAvailable = item.isAvailable
@@ -878,12 +849,7 @@ fun StreamingMiniIcon(
                 color = if (isAvailable) brandColor.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.08f),
                 shape = RoundedCornerShape(7.dp)
             )
-            .alpha(if (isAvailable) 1f else 0.28f)
-            .then(
-                if (isAvailable) {
-                    Modifier.clickable(onClick = onClick)
-                } else Modifier
-            ),
+            .alpha(if (isAvailable) 1f else 0.28f),
         contentAlignment = Alignment.Center
     ) {
         AsyncImage(
