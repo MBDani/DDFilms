@@ -170,7 +170,7 @@
     <string name="movies_count_singular">1 película</string>
     <string name="added_by_user">Añadida por: %s</string>
     <string name="common_user">Común</string>
-    <string name="add_movies_button">+ Añadir películas</string>
+    <string name="add_movies_button">Añadir películas</string>
     <string name="list_options_title">Opciones de la lista</string>
     <string name="edit_list_name">Editar nombre de la lista</string>
     <string name="share_list">Compartir lista</string>

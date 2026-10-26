@@ -49,10 +49,13 @@ import com.merino.ddfilms.api.TMDBClient
 import com.merino.ddfilms.api.TMDBService
 import com.merino.ddfilms.configuration.ApiKeyManager
 import com.merino.ddfilms.model.Movie
+import com.merino.ddfilms.model.MovieDetails
 import com.merino.ddfilms.model.SearchResponse
 import com.merino.ddfilms.ui.MovieDetailActivity
 import com.merino.ddfilms.ui.components.MoviePosterCard
 import com.merino.ddfilms.ui.theme.CinematicTheme
+import androidx.compose.ui.platform.LocalContext
+import com.merino.ddfilms.utils.LanguageManager
 import com.merino.ddfilms.utils.Utils.showMessage
 import retrofit2.Call
 import retrofit2.Callback
@@ -235,7 +238,7 @@ class SearchFragment : Fragment() {
         try {
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                putExtra(RecognizerIntent.EXTRA_LANGUAGE, getString(R.string.tmdb_api_language))
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, LanguageManager.getTmdbLanguage(requireContext()))
                 putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.voice_search_prompt))
             }
             voiceSearchLauncher.launch(intent)
@@ -260,11 +263,12 @@ class SearchFragment : Fragment() {
 
         isLoadingState.value = true
 
+        val tmdbLang = LanguageManager.getTmdbLanguage(requireContext())
         if (query.isNotEmpty()) {
             tmdbService.searchMovies(
                 query = query,
                 includeAdult = false,
-                language = getString(R.string.tmdb_api_language),
+                language = tmdbLang,
                 page = 1
             ).enqueue(object : Callback<SearchResponse> {
                 override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
@@ -288,7 +292,7 @@ class SearchFragment : Fragment() {
         } else {
             tmdbService.discoverMovies(
                 apiKey = API_KEY,
-                language = getString(R.string.tmdb_api_language),
+                language = tmdbLang,
                 sortBy = sortBy,
                 withGenres = genreId?.toString(),
                 primaryReleaseYear = year,
@@ -317,6 +321,49 @@ class SearchFragment : Fragment() {
         val doc = documentID ?: return
         val name = listName ?: return
 
+        val lang = LanguageManager.getTmdbLanguage(requireContext())
+        if (lang.startsWith("es")) {
+            movie.titleEs = movie.title
+            movie.overviewEs = movie.overview
+        } else {
+            movie.titleEn = movie.title
+            movie.overviewEn = movie.overview
+        }
+
+        val altLang = if (lang.startsWith("es")) "en-US" else "es-ES"
+        val needsAlt = if (lang.startsWith("es")) movie.titleEn.isNullOrBlank() else movie.titleEs.isNullOrBlank()
+
+        if (movie.id != 0 && needsAlt) {
+            tmdbService.getMovieDetails(movie.id, API_KEY, altLang).enqueue(object : Callback<MovieDetails> {
+                override fun onResponse(call: Call<MovieDetails>, response: Response<MovieDetails>) {
+                    if (response.isSuccessful && response.body() != null) {
+                        val body = response.body()!!
+                        val altTitle = body.title?.takeIf { it.isNotBlank() }
+                        val altOverview = body.overview?.takeIf { it.isNotBlank() }
+                        if (altLang.startsWith("es")) {
+                            if (altTitle != null) movie.titleEs = altTitle
+                            if (altOverview != null) movie.overviewEs = altOverview
+                        } else {
+                            if (altTitle != null) movie.titleEn = altTitle
+                            if (altOverview != null) movie.overviewEn = altOverview
+                        }
+                        if (movie.overview.isNullOrBlank()) {
+                            movie.overview = movie.overviewEs ?: movie.overviewEn
+                        }
+                    }
+                    saveMovieToList(col, doc, movie, name)
+                }
+
+                override fun onFailure(call: Call<MovieDetails>, t: Throwable) {
+                    saveMovieToList(col, doc, movie, name)
+                }
+            })
+        } else {
+            saveMovieToList(col, doc, movie, name)
+        }
+    }
+
+    private fun saveMovieToList(col: String, doc: String, movie: Movie, name: String) {
         firebaseManager.addMovieToList(col, doc, movie) { result, error ->
             if (error != null) {
                 showMessage(context, error.message)
@@ -812,8 +859,9 @@ fun MovieGridItem(
             }
 
             Spacer(modifier = Modifier.height(4.dp))
+            val currentLanguage = LanguageManager.getLanguage(LocalContext.current)
             Text(
-                text = movie.title ?: "",
+                text = movie.getDisplayTitle(currentLanguage),
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onBackground,

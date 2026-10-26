@@ -437,6 +437,14 @@ class FirebaseManager {
             .addOnFailureListener { e -> callback.onComplete(false, e) }
     }
 
+    fun updateMovieListMovies(listID: String, collectionName: String, movies: List<Movie>, callback: TaskCompletionCallback<Boolean>? = null) {
+        val moviesMaps = movies.map { it.toMap() }
+        firebaseFirestore.collection(collectionName).document(listID)
+            .update("movies", moviesMaps)
+            .addOnSuccessListener { callback?.onComplete(true, null) }
+            .addOnFailureListener { e -> callback?.onComplete(false, e) }
+    }
+
     fun postReview(review: Review, callback: TaskCompletionCallback<Review>) {
         val docRef = firebaseFirestore.collection("reviews").document()
         review.id = docRef.id
@@ -455,8 +463,8 @@ class FirebaseManager {
         if (users.size > 1) {
             val otherUsers = users.filter { it != senderUid }
             val listName = documentSnapshot.getString("name") ?: "Lista"
-            val movieTitleEs = movie.title ?: movie.originalTitle ?: "una película"
-            val movieTitleEn = movie.title ?: movie.originalTitle ?: "a movie"
+            val movieTitleEs = movie.titleEs ?: movie.title ?: movie.originalTitle ?: "una película"
+            val movieTitleEn = movie.titleEn ?: movie.title ?: movie.originalTitle ?: "a movie"
             val authorEs = senderName ?: "Un usuario"
             val authorEn = senderName ?: "A user"
 

@@ -28,16 +28,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.merino.ddfilms.R
 import com.merino.ddfilms.api.FirebaseManager
+import com.merino.ddfilms.api.TMDBClient
+import com.merino.ddfilms.api.TMDBService
+import com.merino.ddfilms.configuration.ApiKeyManager
 import com.merino.ddfilms.model.Movie
+import com.merino.ddfilms.model.MovieDetails
 import com.merino.ddfilms.ui.components.MoviePosterCard
 import com.merino.ddfilms.ui.theme.CinematicTheme
 import com.merino.ddfilms.utils.StringUtils.MOVIE_LIST
 import com.merino.ddfilms.utils.Utils.showMessage
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import androidx.compose.ui.platform.LocalContext
+import com.merino.ddfilms.utils.LanguageManager
 import java.util.Locale
 
 class MovieListActivity : AppCompatActivity() {
 
     private val firebaseManager = FirebaseManager.getInstance()
+    private lateinit var tmdbService: TMDBService
     private val movieListState = mutableStateOf<List<Movie>>(emptyList())
     private val usersListState = mutableStateOf<List<String>>(emptyList())
     private val isLoadingState = mutableStateOf(true)
@@ -52,6 +62,9 @@ class MovieListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val apiKey = ApiKeyManager.getInstance().apiKey ?: ""
+        tmdbService = TMDBClient.getClient(apiKey).create(TMDBService::class.java)
 
         listID = intent.getStringExtra("listID") ?: intent.getStringExtra("documentID")
         listNameState.value = intent.getStringExtra("listName") ?: getString(R.string.unnamed_list)
@@ -162,8 +175,90 @@ class MovieListActivity : AppCompatActivity() {
             if (error != null) {
                 showMessage(applicationContext, error.message)
             } else if (movies != null) {
-                movieListState.value = movies.reversed()
+                val list = movies.reversed()
+                movieListState.value = list
                 loadListUsers()
+                fetchMissingTranslations(list, id)
+            }
+        }
+    }
+
+    private fun fetchMissingTranslations(movies: List<Movie>, listID: String) {
+        val lang = LanguageManager.getTmdbLanguage(this)
+        val isEs = lang.startsWith("es", ignoreCase = true)
+        val apiKey = ApiKeyManager.getInstance().apiKey ?: ""
+        if (apiKey.isEmpty()) return
+
+        var anyUpdated = false
+        var remainingCalls = 0
+
+        for (movie in movies) {
+            val needsFetch = if (isEs) {
+                movie.titleEs.isNullOrBlank() || movie.overviewEs.isNullOrBlank()
+            } else {
+                movie.titleEn.isNullOrBlank() || movie.overviewEn.isNullOrBlank() ||
+                        (!movie.overviewEn.isNullOrBlank() && movie.overviewEn == movie.overviewEs)
+            }
+
+            if (needsFetch && movie.id != 0) {
+                remainingCalls++
+                tmdbService.getMovieDetails(movie.id, apiKey, lang).enqueue(object : Callback<MovieDetails> {
+                    override fun onResponse(call: Call<MovieDetails>, response: Response<MovieDetails>) {
+                        if (response.isSuccessful && response.body() != null) {
+                            val details = response.body()!!
+                            val fetchedTitle = details.title?.takeIf { it.isNotBlank() }
+                            val fetchedOverview = details.overview?.takeIf { it.isNotBlank() }
+
+                            if (isEs) {
+                                if (fetchedTitle != null) movie.titleEs = fetchedTitle
+                                if (fetchedOverview != null) movie.overviewEs = fetchedOverview
+                            } else {
+                                if (fetchedTitle != null) movie.titleEn = fetchedTitle
+                                if (fetchedOverview != null) movie.overviewEn = fetchedOverview
+                            }
+
+                            if (movie.overview.isNullOrBlank()) {
+                                movie.overview = fetchedOverview ?: movie.overviewEs ?: movie.overviewEn
+                            }
+                            if (movie.title.isNullOrBlank()) {
+                                movie.title = fetchedTitle ?: movie.titleEs ?: movie.titleEn ?: movie.originalTitle
+                            }
+
+                            anyUpdated = true
+                            movieListState.value = movieListState.value.toList()
+
+                            // If this language has no overview on TMDB, try alternate language as fallback so description is never empty
+                            if (fetchedOverview == null && movie.overview.isNullOrBlank()) {
+                                val altLang = if (isEs) "en-US" else "es-ES"
+                                tmdbService.getMovieDetails(movie.id, apiKey, altLang).enqueue(object : Callback<MovieDetails> {
+                                    override fun onResponse(c: Call<MovieDetails>, r: Response<MovieDetails>) {
+                                        if (r.isSuccessful && r.body() != null) {
+                                            val altOverview = r.body()!!.overview?.takeIf { it.isNotBlank() }
+                                            if (altOverview != null) {
+                                                if (isEs) movie.overviewEn = altOverview else movie.overviewEs = altOverview
+                                                if (movie.overview.isNullOrBlank()) movie.overview = altOverview
+                                                movieListState.value = movieListState.value.toList()
+                                                firebaseManager.updateMovieListMovies(listID, MOVIE_LIST, movieListState.value.reversed())
+                                            }
+                                        }
+                                    }
+                                    override fun onFailure(c: Call<MovieDetails>, t: Throwable) {}
+                                })
+                            }
+                        }
+                        remainingCalls--
+                        if (remainingCalls <= 0 && anyUpdated) {
+                            firebaseManager.updateMovieListMovies(listID, MOVIE_LIST, movieListState.value.reversed())
+                        }
+                    }
+
+                    override fun onFailure(call: Call<MovieDetails>, t: Throwable) {
+                        remainingCalls--
+                        if (remainingCalls <= 0 && anyUpdated) {
+                            firebaseManager.updateMovieListMovies(listID, MOVIE_LIST, movieListState.value.reversed())
+                        }
+                    }
+                })
             }
         }
     }
@@ -629,11 +724,12 @@ fun MovieListItemCard(
             Spacer(modifier = Modifier.width(14.dp))
 
             // Movie Info Details
+            val currentLanguage = LanguageManager.getLanguage(LocalContext.current)
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = movie.title ?: "",
+                    text = movie.getDisplayTitle(currentLanguage),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
@@ -670,7 +766,7 @@ fun MovieListItemCard(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                val overview = movie.overview
+                val overview = movie.getDisplayOverview(currentLanguage)
                 if (!overview.isNullOrEmpty()) {
                     Text(
                         text = overview,

@@ -27,7 +27,7 @@ class DDFilmsMessagingService : FirebaseMessagingService() {
             return
         }
 
-        val lang = Locale.getDefault().language
+        val lang = com.merino.ddfilms.utils.LanguageManager.getLanguage(this)
         val isSpanish = lang.lowercase().startsWith("es")
 
         val title = if (isSpanish) {

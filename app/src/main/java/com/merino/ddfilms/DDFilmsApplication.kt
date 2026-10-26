@@ -31,6 +31,13 @@ class DDFilmsApplication : Application() {
 
         @JvmStatic
         fun applyLanguage(languageMode: String) {
+            val targetLocale = when (languageMode) {
+                "es" -> java.util.Locale("es")
+                "en" -> java.util.Locale("en")
+                else -> java.util.Locale.getDefault()
+            }
+            java.util.Locale.setDefault(targetLocale)
+
             val appLocale = when (languageMode) {
                 "es" -> LocaleListCompat.forLanguageTags("es")
                 "en" -> LocaleListCompat.forLanguageTags("en")

@@ -275,9 +275,10 @@ class MovieAdapter : RecyclerView.Adapter<MovieAdapter.MovieViewHolder>() {
                 .placeholder(R.drawable.placeholder_poster)
                 .error(R.drawable.placeholder_poster)
                 .into(posterImageView)
-            titleTextView.text = movie.title
+            val lang = com.merino.ddfilms.utils.LanguageManager.getLanguage(itemView.context)
+            titleTextView.text = movie.getDisplayTitle(lang)
             yearTextView.text = "(${movie.releaseDate})"
-            overviewTextView.text = movie.overview
+            overviewTextView.text = movie.getDisplayOverview(lang)
             voteAverageTextView.text = String.format("%.1f", movie.voteAverage)
 
             val shouldShowSpinner = !isAddMode && !movie.addedBy.isNullOrEmpty()

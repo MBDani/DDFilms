@@ -125,6 +125,7 @@ class ProfileFragment : Fragment() {
                             languageModeState.value = mode
                             preferences.edit().putString("language_mode", mode).apply()
                             DDFilmsApplication.applyLanguage(mode)
+                            activity?.recreate()
                         },
                         onNotificationsChange = { isChecked ->
                             if (isChecked) {

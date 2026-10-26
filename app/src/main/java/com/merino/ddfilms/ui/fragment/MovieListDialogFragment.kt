@@ -71,6 +71,17 @@ class MovieListDialogFragment(private val movie: Movie) : DialogFragment() {
 
     private fun addMovieToSelectedList(list: com.merino.ddfilms.model.MovieLists) {
         val documentID = list.id
+        val lang = com.merino.ddfilms.utils.LanguageManager.getLanguage(requireContext())
+        if (lang.startsWith("es")) {
+            if (movie.titleEs.isNullOrBlank()) movie.titleEs = movie.title
+            if (movie.overviewEs.isNullOrBlank()) movie.overviewEs = movie.overview
+        } else {
+            if (movie.titleEn.isNullOrBlank()) movie.titleEn = movie.title
+            if (movie.overviewEn.isNullOrBlank()) movie.overviewEn = movie.overview
+        }
+        if (movie.overview.isNullOrBlank()) {
+            movie.overview = movie.overviewEs ?: movie.overviewEn
+        }
         viewModel.addMovieToList(MOVIE_LIST, documentID!!, movie) { result, error ->
             if (error != null) {
                 showMessage(context, error.message)

@@ -170,7 +170,7 @@
     <string name="movies_count_singular">1 movie</string>
     <string name="added_by_user">Added by: %s</string>
     <string name="common_user">Common</string>
-    <string name="add_movies_button">+ Add movies</string>
+    <string name="add_movies_button">Add movies</string>
     <string name="list_options_title">List options</string>
     <string name="edit_list_name">Edit list name</string>
     <string name="share_list">Share list</string>

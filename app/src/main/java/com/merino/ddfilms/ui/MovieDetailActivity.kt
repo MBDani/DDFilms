@@ -63,6 +63,8 @@ import com.merino.ddfilms.ui.components.CinematicRatingBar
 import com.merino.ddfilms.ui.fragment.MovieListDialogFragment
 import com.merino.ddfilms.ui.fragment.WriteReviewDialogFragment
 import com.merino.ddfilms.ui.theme.CinematicTheme
+import androidx.compose.ui.platform.LocalContext
+import com.merino.ddfilms.utils.LanguageManager
 import com.merino.ddfilms.utils.ReviewUtil
 import com.merino.ddfilms.utils.StringUtils.DIARY_LIST
 import com.merino.ddfilms.utils.StringUtils.WATCH_LIST
@@ -347,7 +349,7 @@ class MovieDetailActivity : AppCompatActivity() {
             layoutParams = params
         }
 
-        val currentLanguage = getString(R.string.tmdb_api_language)
+        val currentLanguage = LanguageManager.getLanguage(this)
         titleTextView = TextView(this).apply {
             text = currentMovie?.getDisplayTitle(currentLanguage) ?: ""
             textSize = 20f
@@ -605,42 +607,50 @@ class MovieDetailActivity : AppCompatActivity() {
     }
 
     private fun getMovieDetails(id: Int) {
-        tmdbService.getMovieDetails(id, API_KEY, getString(R.string.tmdb_api_language)).enqueue(object : Callback<MovieDetails> {
+        val curTmdbLang = LanguageManager.getTmdbLanguage(this)
+        tmdbService.getMovieDetails(id, API_KEY, curTmdbLang).enqueue(object : Callback<MovieDetails> {
             override fun onResponse(call: Call<MovieDetails>, response: Response<MovieDetails>) {
                 if (response.isSuccessful && response.body() != null) {
                     val details = response.body()!!
                     detailsState.value = details
-                    val curLang = getString(R.string.tmdb_api_language)
+                    val fetchedTitle = details.title?.takeIf { it.isNotBlank() }
+                    val fetchedOverview = details.overview?.takeIf { it.isNotBlank() }
+
                     movieState.value?.apply {
-                        title = details.title
-                        overview = details.overview
+                        if (fetchedTitle != null) title = fetchedTitle
+                        if (fetchedOverview != null) overview = fetchedOverview
                         releaseDate = details.releaseDate
                         backdropPath = details.backdropPath
-                        if (curLang.startsWith("es")) {
-                            titleEs = details.title
-                            overviewEs = details.overview
+                        if (curTmdbLang.startsWith("es")) {
+                            if (fetchedTitle != null) titleEs = fetchedTitle
+                            if (fetchedOverview != null) overviewEs = fetchedOverview
                         } else {
-                            titleEn = details.title
-                            overviewEn = details.overview
+                            if (fetchedTitle != null) titleEn = fetchedTitle
+                            if (fetchedOverview != null) overviewEn = fetchedOverview
                         }
                     }
-                    val altLang = if (curLang.startsWith("es")) "en-US" else "es-ES"
-                    val needsAlt = if (curLang.startsWith("es")) {
-                        movieState.value?.titleEn.isNullOrBlank()
+                    val altLang = if (curTmdbLang.startsWith("es")) "en-US" else "es-ES"
+                    val needsAlt = if (curTmdbLang.startsWith("es")) {
+                        movieState.value?.titleEn.isNullOrBlank() || movieState.value?.overviewEn.isNullOrBlank()
                     } else {
-                        movieState.value?.titleEs.isNullOrBlank()
+                        movieState.value?.titleEs.isNullOrBlank() || movieState.value?.overviewEs.isNullOrBlank()
                     }
                     if (needsAlt) {
                         tmdbService.getMovieDetails(id, API_KEY, altLang).enqueue(object : Callback<MovieDetails> {
                             override fun onResponse(call: Call<MovieDetails>, res: Response<MovieDetails>) {
                                 if (res.isSuccessful && res.body() != null) {
                                     val altDetails = res.body()!!
+                                    val altTitle = altDetails.title?.takeIf { it.isNotBlank() }
+                                    val altOverview = altDetails.overview?.takeIf { it.isNotBlank() }
                                     if (altLang.startsWith("es")) {
-                                        movieState.value?.titleEs = altDetails.title
-                                        movieState.value?.overviewEs = altDetails.overview
+                                        if (altTitle != null) movieState.value?.titleEs = altTitle
+                                        if (altOverview != null) movieState.value?.overviewEs = altOverview
                                     } else {
-                                        movieState.value?.titleEn = altDetails.title
-                                        movieState.value?.overviewEn = altDetails.overview
+                                        if (altTitle != null) movieState.value?.titleEn = altTitle
+                                        if (altOverview != null) movieState.value?.overviewEn = altOverview
+                                    }
+                                    if (movieState.value?.overview.isNullOrBlank() && altOverview != null) {
+                                        movieState.value?.overview = altOverview
                                     }
                                 }
                             }
@@ -670,7 +680,7 @@ class MovieDetailActivity : AppCompatActivity() {
     }
 
     private fun getMovieCredits(id: Int) {
-        tmdbService.getMovieCredits(id, API_KEY, getString(R.string.tmdb_api_language)).enqueue(object : Callback<Credits> {
+        tmdbService.getMovieCredits(id, API_KEY, LanguageManager.getTmdbLanguage(this)).enqueue(object : Callback<Credits> {
             override fun onResponse(call: Call<Credits>, response: Response<Credits>) {
                 if (response.isSuccessful && response.body() != null) {
                     val resCredits = response.body()!!
@@ -744,7 +754,7 @@ class MovieDetailActivity : AppCompatActivity() {
         }
 
         try {
-            val lang = getString(R.string.tmdb_api_language)
+            val lang = LanguageManager.getLanguage(this)
             val title = movieState.value?.getDisplayTitle(lang) ?: movieState.value?.title ?: ""
             val query = "ver $title en ${availability.platform.displayName}"
             val searchIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=${Uri.encode(query)}"))
@@ -986,7 +996,7 @@ fun MovieDetailBody(
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                 ),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
+                border = ButtonDefaults.outlinedButtonBorder(!isProcessingAction).copy(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
                             Color(0xFF2196F3).copy(alpha = 0.6f),
@@ -1024,7 +1034,7 @@ fun MovieDetailBody(
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                 ),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
+                border = ButtonDefaults.outlinedButtonBorder(!isProcessingAction).copy(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
                             Color(0xFF4CAF50).copy(alpha = 0.6f),
@@ -1058,8 +1068,9 @@ fun MovieDetailBody(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Overview / Synopsis Section
-        val currentLang = stringResource(R.string.tmdb_api_language)
-        val overview = if (!details?.overview.isNullOrEmpty()) details?.overview else movie?.getDisplayOverview(currentLang)
+        val currentLang = LanguageManager.getLanguage(LocalContext.current)
+        val overview = movie?.getDisplayOverview(currentLang)
+            ?: details?.overview?.takeIf { it.isNotBlank() }
         if (!overview.isNullOrEmpty()) {
             SectionHeader(title = stringResource(R.string.synopsis_title))
             Spacer(modifier = Modifier.height(10.dp))

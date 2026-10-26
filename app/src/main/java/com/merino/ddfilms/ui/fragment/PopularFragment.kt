@@ -49,6 +49,8 @@ import com.merino.ddfilms.ui.MovieDetailActivity
 import com.merino.ddfilms.ui.components.MoviePosterCard
 import com.merino.ddfilms.ui.components.ShimmerBrush
 import com.merino.ddfilms.ui.theme.CinematicTheme
+import androidx.compose.ui.platform.LocalContext
+import com.merino.ddfilms.utils.LanguageManager
 import com.merino.ddfilms.utils.Utils.showMessage
 import retrofit2.Call
 import retrofit2.Callback
@@ -107,7 +109,7 @@ class PopularFragment : Fragment() {
 
     private fun loadData() {
         isLoadingState.value = true
-        tmdbService.getPopularMovies(API_KEY, getString(R.string.tmdb_api_language)).enqueue(object : Callback<SearchResponse> {
+        tmdbService.getPopularMovies(API_KEY, LanguageManager.getTmdbLanguage(requireContext())).enqueue(object : Callback<SearchResponse> {
             override fun onResponse(call: Call<SearchResponse>, response: Response<SearchResponse>) {
                 isLoadingState.value = false
                 if (response.isSuccessful && response.body() != null) {
@@ -224,8 +226,9 @@ fun PopularScreen(
                                 .align(Alignment.BottomStart)
                                 .padding(16.dp)
                         ) {
+                            val currentLanguage = LanguageManager.getLanguage(LocalContext.current)
                             Text(
-                                text = movie.title ?: "",
+                                text = movie.getDisplayTitle(currentLanguage),
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onBackground,
@@ -236,7 +239,7 @@ fun PopularScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = movie.overview ?: "",
+                                text = movie.getDisplayOverview(currentLanguage) ?: "",
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
                                 ),
